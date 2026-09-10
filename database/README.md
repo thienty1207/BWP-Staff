@@ -9,7 +9,7 @@ schema script, manual checks, and operational notes.
 - `full_app_schema.sql` is the complete schema script for the application,
   generated from the current database without application rows or credentials.
 - `scripts/backup_database.ps1` refreshes both files from the existing
-  `backend/.env` configuration.
+  `backend/.env` `DATABASE_URL` configuration.
 
 - `scripts/verify_foundation.sql` checks the foundation without changing data.
 - `scripts/performance_baseline.sql` runs bounded representative `EXPLAIN`
@@ -21,11 +21,14 @@ Refresh the backup from the repository root with:
 pwsh -File database/scripts/backup_database.ps1
 ```
 
-SQLx runtime migrations intentionally live in `backend/migrations/` because
-the Rust backend embeds and runs them at startup. Do not copy or move those
-migrations into this directory. The dump and local credentials are ignored by
-the root `.gitignore`; the schema script and operational scripts are source
-files and remain reviewable.
+Runtime SQL migrations intentionally live in `backend/migrations/` because the
+Go backend checks and runs them at startup. The Go runner keeps the existing
+`_sqlx_migrations` ledger compatible with the database already in use; the
+legacy ledger name is retained for data safety, and the runner is independent
+of the old framework.
+Do not copy or move those migrations into this directory. The dump and local
+credentials are ignored by the root `.gitignore`; the schema script and
+operational scripts are source files and remain reviewable.
 
 The initial index set follows the known read paths: ticket queues and history
 use status/owner/department/location plus timestamp and `id` tie-breakers;

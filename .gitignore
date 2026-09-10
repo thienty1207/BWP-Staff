@@ -5,10 +5,14 @@ frontend/.svelte-kit/
 frontend/build/
 frontend/.vercel/
 
-# Rust / Axum build output
+# Build output
 target/
 **/target/
 backend/target/
+backend/bin/
+backend/*.exe
+backend/*.test
+backend/coverage.out
 
 # Environment files and local secrets
 .env

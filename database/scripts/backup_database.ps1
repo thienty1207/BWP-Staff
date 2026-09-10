@@ -23,17 +23,28 @@ foreach ($line in Get-Content -LiteralPath $envPath) {
     }
 }
 
-$requiredKeys = @(
-    'DATABASE_HOST',
-    'DATABASE_PORT',
-    'DATABASE_NAME',
-    'DATABASE_USER',
-    'DATABASE_PASSWORD'
-)
-foreach ($key in $requiredKeys) {
-    if (-not $settings.ContainsKey($key) -or [string]::IsNullOrWhiteSpace($settings[$key])) {
-        throw "Missing $key in backend/.env"
-    }
+if (-not $settings.ContainsKey('DATABASE_URL') -or [string]::IsNullOrWhiteSpace($settings['DATABASE_URL'])) {
+    throw 'Missing DATABASE_URL in backend/.env'
+}
+
+try {
+    $databaseUri = [Uri]$settings['DATABASE_URL']
+} catch {
+    throw 'DATABASE_URL in backend/.env is invalid'
+}
+if ($databaseUri.Scheme -notin @('postgres', 'postgresql') -or [string]::IsNullOrWhiteSpace($databaseUri.Host)) {
+    throw 'DATABASE_URL must use the postgres or postgresql scheme'
+}
+
+$userInfo = $databaseUri.UserInfo.Split(':', 2)
+if ($userInfo.Count -ne 2 -or [string]::IsNullOrWhiteSpace($userInfo[0])) {
+    throw 'DATABASE_URL must contain a database username and password'
+}
+$databaseUser = [Uri]::UnescapeDataString($userInfo[0])
+$databasePassword = [Uri]::UnescapeDataString($userInfo[1])
+$databaseName = [Uri]::UnescapeDataString($databaseUri.AbsolutePath.TrimStart('/'))
+if ([string]::IsNullOrWhiteSpace($databaseName)) {
+    throw 'DATABASE_URL must contain a database name'
 }
 
 $pgDump = (Get-Command pg_dump.exe -ErrorAction SilentlyContinue).Source
@@ -66,13 +77,13 @@ foreach ($path in @($dumpTemp, $schemaTemp)) {
 }
 
 $connectionArguments = @(
-    '--host', $settings['DATABASE_HOST'],
-    '--port', $settings['DATABASE_PORT'],
-    '--username', $settings['DATABASE_USER'],
-    '--dbname', $settings['DATABASE_NAME']
+    '--host', $databaseUri.Host,
+    '--port', $databaseUri.Port,
+    '--username', $databaseUser,
+    '--dbname', $databaseName
 )
 $previousPassword = $env:PGPASSWORD
-$env:PGPASSWORD = $settings['DATABASE_PASSWORD']
+$env:PGPASSWORD = $databasePassword
 $published = $false
 
 try {

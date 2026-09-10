@@ -23,7 +23,7 @@ This specification covers the database schema required for the planned full appl
 - Reporting support
 - Audit logging
 
-The database must be production-oriented from the beginning, but the implementation must remain simple, explicit, maintainable, and easy to evolve through SQLx migrations.
+The database must be production-oriented from the beginning, but the implementation must remain simple, explicit, maintainable, and easy to evolve through sequential PostgreSQL SQL migrations.
 
 This spec does **not** implement business APIs or frontend UI.
 
@@ -32,11 +32,11 @@ This spec does **not** implement business APIs or frontend UI.
 ## 2. Technology
 
 - Database: **PostgreSQL**
-- Backend language: **Rust 2024 Edition**
-- Backend framework: **Axum**
-- Async runtime: **Tokio**
-- Database library: **SQLx**
-- Migration system: **SQLx migrations**
+- Backend language: **Go (current supported version)**
+- Backend framework: **Fiber v3**
+- Request/database context: **standard `context.Context`**
+- Database library: **pgx v5 and pgxpool**
+- Migration system: **explicit Go runner over sequential SQL files**
 
 ---
 
@@ -61,7 +61,8 @@ Avoid:
 - Macro-heavy custom database abstractions
 - ORM-style magic
 
-SQLx should be used directly and transparently.
+pgx and pgxpool should be used directly and transparently. SQL should remain
+visible in the database package.
 
 ---
 
@@ -96,7 +97,7 @@ Use:
 - `snake_case` for table names
 - `snake_case` for column names
 - plural table names
-- singular Rust model names
+- singular Go type names
 
 Examples:
 
@@ -1282,7 +1283,7 @@ email: NULL
 ```
 
 The development password is read from local-only environment configuration and
-hashed with Argon2id by Rust before insertion. Do not place the plaintext
+hashed with Argon2id by Go before insertion. Do not place the plaintext
 password or a reusable credential in a public SQL migration.
 
 Never commit a real production password.
@@ -1306,7 +1307,7 @@ Seed scripts must be clearly marked as development data.
 
 ---
 
-# 26. SQLx Migration Structure
+# 26. SQL Migration Structure
 
 Use sequential migration files under `backend/migrations/`.
 
@@ -1341,34 +1342,32 @@ Do not create one giant migration containing the entire database if splitting im
 
 ---
 
-# 27. Rust Database Module
+# 27. Go Database Package
 
 SPEC-01 should establish only the minimal database foundation required to connect and run migrations.
 
 Suggested structure:
 
 ```text
-src/
-├── main.rs
-├── config.rs
-└── shared/
-    ├── mod.rs
-    └── database.rs
+cmd/
+├── server/main.go
+└── seed_development/main.go
+config/config.go
+shared/database.go
+admin/seed.go
 ```
 
 Example responsibility:
 
 ```text
-config.rs
+config/config.go
     ↓
-read DATABASE_URL or compose a URL from the existing DATABASE_HOST,
-DATABASE_PORT, DATABASE_NAME, DATABASE_USER, and DATABASE_PASSWORD values
+read the single required DATABASE_URL plus bounded pool settings
 
-database.rs
+shared/database.go
     ↓
-create PgPool
+create pgxpool.Pool and ping PostgreSQL
     ↓
-run/check migrations
 ```
 
 Do not implement domain repositories yet unless needed only to validate schema access.
@@ -1377,9 +1376,9 @@ Do not implement domain repositories yet unless needed only to validate schema a
 
 # 28. Connection Pool
 
-Use SQLx `PgPool`.
+Use pgx `pgxpool.Pool`.
 
-Do not wrap `PgPool` in:
+Do not wrap the pool in:
 
 ```text
 Arc
@@ -1387,19 +1386,14 @@ Mutex
 RwLock
 ```
 
-SQLx pool is already designed for concurrent use.
+pgxpool is already designed for concurrent use.
 
 Initial pool configuration should be simple and configurable through environment variables.
 
 Suggested environment variables:
 
 ```text
-DATABASE_URL (optional override)
-DATABASE_HOST
-DATABASE_PORT
-DATABASE_NAME
-DATABASE_USER
-DATABASE_PASSWORD
+DATABASE_URL
 DATABASE_MAX_CONNECTIONS
 DATABASE_MIN_CONNECTIONS
 DATABASE_ACQUIRE_TIMEOUT_SECONDS
@@ -1415,24 +1409,10 @@ Do not prematurely tune the pool for unrealistic traffic.
 
 Use `.env` only for local development.
 
-The existing project configuration uses split PostgreSQL variables:
+The project configuration uses one PostgreSQL connection URL:
 
 ```text
-DATABASE_HOST
-DATABASE_PORT
-DATABASE_NAME
-DATABASE_USER
-DATABASE_PASSWORD
-```
-
-`DATABASE_URL` may be supported as an optional override. Example local values:
-
-```text
-DATABASE_HOST=127.0.0.1
-DATABASE_PORT=5432
-DATABASE_NAME=bwp-sonasea
-DATABASE_USER=postgres
-DATABASE_PASSWORD=<local-only-password>
+DATABASE_URL=postgres://<user>:<local-only-password>@127.0.0.1:5432/bwp-sonasea
 ```
 
 Do not commit production credentials.
@@ -1462,7 +1442,7 @@ The database design must ensure:
 # 31. Performance Requirements
 
 The project has an extremely high database-performance bar. SPEC-01 must make
-the fast path predictable for future Axum + SQLx handlers while keeping the
+the fast path predictable for future Fiber + pgx/pgxpool handlers while keeping the
 schema correct and maintainable.
 
 Performance optimization must be tied to known access patterns rather than
@@ -1524,7 +1504,7 @@ At minimum verify:
 10. Chat index exists.
 11. Development seed data can be inserted successfully.
 12. The development admin password is stored as an Argon2id hash.
-13. SQLx can establish a connection through `PgPool`.
+13. pgxpool can establish and ping a PostgreSQL connection.
 
 Tests should not depend on production data.
 
@@ -1535,18 +1515,20 @@ Tests should not depend on production data.
 Before SPEC-01 is considered complete:
 
 ```bash
-cargo fmt --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test
+gofmt -d .
+go vet ./...
+go test ./...
+go build ./...
+go mod tidy
 ```
 
-SQLx migrations must also successfully run against a fresh PostgreSQL database.
+The Go migration runner must also successfully run against a fresh PostgreSQL database.
 
 Example:
 
 ```bash
-sqlx database create
-sqlx migrate run
+go run ./cmd/server
+go run ./cmd/seed_development
 ```
 
 If an existing development database is used, the migration history must also remain valid.
@@ -1605,12 +1587,13 @@ SPEC-01 is complete only when all of the following are true:
 - User preferences can store dark/light/system theme.
 - Auth sessions can support future server-side session authentication.
 - A development admin can be provisioned by username without storing a plaintext password.
-- SQLx can connect to PostgreSQL.
-- All SQLx migrations run from zero on a clean database.
-- `cargo fmt --check` passes.
-- `cargo clippy --all-targets --all-features -- -D warnings` passes.
-- `cargo test` passes.
-- No unnecessary Rust abstractions were introduced.
+- pgxpool can connect to PostgreSQL.
+- All SQL migrations run from zero on a clean database.
+- `gofmt` passes.
+- `go vet ./...` passes.
+- `go test ./...` passes.
+- `go build ./...` passes.
+- No unnecessary Go abstractions were introduced.
 - No frontend work was started.
 - No authentication business logic was started.
 
@@ -1624,15 +1607,15 @@ After SPEC-01 is complete, the project should be ready for:
 SPEC-02 — Backend Foundation
 ```
 
-SPEC-02 will build the reusable Axum application foundation around the database:
+SPEC-02 will build the reusable Fiber application foundation around the database:
 
 ```text
 config
 AppState
-PgPool
+pgxpool.Pool
 routing
 error handling
-tracing
+logging
 CORS
 health check
 graceful shutdown
@@ -1663,7 +1646,7 @@ public signup, or forgot-password/email-reset flows.
 
 When implementing this specification:
 
-> Prefer boring, explicit, production-quality Rust.
+> Prefer boring, explicit, production-quality Go.
 
 Do not make the code more abstract merely to make it look advanced.
 

@@ -9,6 +9,6 @@ not contain passwords.
 - `performance_baseline.sql` — bounded ticket queue/history plans with
   `EXPLAIN (ANALYZE, BUFFERS)`.
 
-Schema changes belong in the sequential SQLx migrations under
+Schema changes belong in the sequential PostgreSQL SQL migrations under
 `backend/migrations/` so application startup and deployment use one source of
 truth.

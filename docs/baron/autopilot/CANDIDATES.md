@@ -27,7 +27,6 @@ Candidates are untrusted evidence. They require explicit approval through the ex
 - Replacement for: none
 - Decision recorded: `no`
 - Safe action: preserve as untrusted evidence; do not rewrite skills, agents, memory facts, routing, proof policy, or runtime assets from this item alone.
-
 ## candidate-37cf191d2dc439b0-verification
 
 - Status: `candidate`
@@ -62,6 +61,27 @@ Candidates are untrusted evidence. They require explicit approval through the ex
 - Evidence count: `1`
 - Readiness: candidate; explicit review required
 - Provenance: automation:ContextCompiled, automation:PlanStarted, automation:TraceScored, resume:docs/baron/continuity/CURRENT.md, resume:docs/baron/continuity/CURRENT_RECOVERY.md, resume:docs/baron/harness/CURRENT_INTENT.md, resume:docs/baron/plans/CURRENT.md, resume:docs/baron/proofs/INDEX.md, resume:docs/baron/traces/INDEX.md, review:post-task, source:repo-review, source:user-task, task-review:18077d0d49bbf46db0567c3f5b13ebce83303857c487261d57c97da9b0908446
+- Observed automation: ContextCompiled, PlanStarted, TraceScored
+- Resume sources: docs/baron/continuity/CURRENT.md, docs/baron/continuity/CURRENT_RECOVERY.md, docs/baron/harness/CURRENT_INTENT.md, docs/baron/plans/CURRENT.md, docs/baron/proofs/INDEX.md, docs/baron/traces/INDEX.md
+- Contradiction: none
+- Suppressed until: none
+- Replacement for: none
+- Decision recorded: `no`
+- Safe action: preserve as untrusted evidence; do not rewrite skills, agents, memory facts, routing, proof policy, or runtime assets from this item alone.
+
+## candidate-31fdbdfd2d46b96c-verification
+
+- Status: `candidate`
+- Trusted fact: `no`
+- Approval required: `yes`
+- Created: 2026-09-10T21:33:35+07:00
+- Updated: 2026-09-10T21:33:35+07:00
+- Summary: Permanent Go/Fiber v3 backend migration completed with raw verification; Baron proof receipt exists for go test but gate recorder lacks active task id.
+- Scope: `project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098`
+- Impact: `verification`
+- Evidence count: `1`
+- Readiness: candidate; explicit review required
+- Provenance: automation:ContextCompiled, automation:PlanStarted, automation:TraceScored, resume:docs/baron/continuity/CURRENT.md, resume:docs/baron/continuity/CURRENT_RECOVERY.md, resume:docs/baron/harness/CURRENT_INTENT.md, resume:docs/baron/plans/CURRENT.md, resume:docs/baron/proofs/INDEX.md, resume:docs/baron/traces/INDEX.md, review:post-task, source:repo-review, source:user-task, task-review:67b725f25e99e2c97438201d95fd1447bfc503c8623daae0bb1e45460bf4b3e3
 - Observed automation: ContextCompiled, PlanStarted, TraceScored
 - Resume sources: docs/baron/continuity/CURRENT.md, docs/baron/continuity/CURRENT_RECOVERY.md, docs/baron/plans/CURRENT.md, docs/baron/harness/CURRENT_INTENT.md, docs/baron/proofs/INDEX.md, docs/baron/traces/INDEX.md
 - Contradiction: none

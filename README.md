@@ -4,7 +4,7 @@ Monorepo layout for the SonaSea application:
 
 ```text
 frontend/  SvelteKit + TypeScript, managed with Bun
-backend/   Rust + Axum API
+backend/   Go + Fiber v3 API
 database/  PostgreSQL dump, full schema script, and database operations
 docker/    reserved for container files when deployment needs them
 ```
@@ -22,19 +22,20 @@ Start the backend:
 
 ```bash
 cd backend
-cargo run
+go run ./cmd/server
 ```
 
 Before starting it, make sure the existing local `backend/.env` contains the
-PostgreSQL values. Do not create or commit an example env file. The backend
-runs the SQLx migrations from `backend/migrations/` before serving requests.
+PostgreSQL `DATABASE_URL` and bounded pool values. Do not create or commit an
+example env file. The backend checks the PostgreSQL migrations from
+`backend/migrations/` before serving requests.
 
 To initialize development reference data and the development admin account,
 run:
 
 ```bash
 cd backend
-cargo run --bin seed_development
+go run ./cmd/seed_development
 ```
 
 The development account uses username login. Accounts are created by an admin;
@@ -50,13 +51,13 @@ the matching `database/full_app_schema.sql`, with:
 pwsh -File database/scripts/backup_database.ps1
 ```
 
-The backend source root keeps only bootstrap/common configuration files plus
-`client/`, `admin/`, and `shared/`. Client-facing workflows are grouped under
-`backend/src/client/`; administrator controls and seeding live under
-`backend/src/admin/`; shared infrastructure stays under
-`backend/src/shared/`. Runtime SQLx migrations remain under
-`backend/migrations/`; the root `database/` directory is for backup and
-operational schema artifacts.
+The Go backend keeps executable entrypoints under `backend/cmd/` and small
+packages under `backend/app/`, `backend/config/`, `backend/admin/`, and
+`backend/shared/`. Client feature packages will be added under `backend/client/`
+only when their SPEC is implemented; no empty future folders are generated.
+SQL migrations remain under `backend/migrations/`; the root `database/`
+directory is for the crash-recovery dump, full schema script, and operational
+database scripts.
 
 Baron is initialized for the Codex integration at the project root. Baron Core
 files live under `.baron/core/`; host-specific Codex files remain in `.codex/`.

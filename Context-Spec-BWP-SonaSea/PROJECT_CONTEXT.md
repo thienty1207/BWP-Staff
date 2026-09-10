@@ -14,52 +14,31 @@
 
 ## Current repository snapshot
 
-As of 2026-09-10, the repository contains the SPEC-01 database foundation and
-the requested backend feature-module boundaries. The feature files are
-structural boundaries only until their corresponding SPECs implement behavior.
+As of 2026-09-10, the repository contains the SPEC-01 PostgreSQL foundation and
+the initial Go/Fiber v3 backend bootstrap. Feature packages are added only when
+their corresponding SPEC implements behavior; empty future folders are not
+generated.
 
 ```text
 BWP-SonaSea/
 ├── backend/
-│   ├── Cargo.toml
-│   ├── Cargo.lock
-│   ├── .gitignore
+│   ├── go.mod
+│   ├── go.sum
 │   ├── migrations/
-│   ├── src/
-│   │   ├── main.rs
-│   │   ├── app.rs
-│   │   ├── lib.rs
-│   │   ├── config.rs
-│   │   ├── client/
-│   │   │   ├── mod.rs
-│   │   │   ├── auth/
-│   │   │   ├── tickets/
-│   │   │   ├── chat/
-│   │   │   ├── checklist/
-│   │   │   ├── announcements/
-│   │   │   ├── staff_meal/
-│   │   │   ├── reports/
-│   │   │   └── settings/
-│   │   ├── admin/
-│   │   │   ├── mod.rs
-│   │   │   ├── seed.rs
-│   │   │   └── bin/
-│   │   │       └── seed_development.rs
-│   │   └── shared/
-│   │       ├── mod.rs
-│   │       ├── database.rs
-│   │       ├── error.rs
-│   │       ├── state.rs
-│   │       ├── auth.rs
-│   │       ├── pagination.rs
-│   │       └── storage.rs
-│   └── tests/
-│       ├── database_foundation.rs
-│       ├── migration_contract.rs
-│       ├── auth/.gitkeep
-│       ├── tickets/.gitkeep
-│       ├── chat/.gitkeep
-│       └── shared/.gitkeep
+│   ├── cmd/
+│   │   ├── server/main.go
+│   │   └── seed_development/main.go
+│   ├── app/app.go
+│   ├── app/app_test.go
+│   ├── config/config.go
+│   ├── config/config_test.go
+│   ├── shared/
+│   │   ├── database.go
+│   │   ├── migrations_test.go
+│   │   └── foundation_test.go
+│   └── admin/
+│       ├── seed.go
+│       └── seed_test.go
 ├── frontend/
 │   ├── package.json
 │   ├── bun.lock
@@ -102,7 +81,10 @@ BWP-SonaSea/
 ```
 
 `backend/.env` is local-only and ignored by Git. `frontend/node_modules/` and
-`backend/target/` may exist locally as generated output and are also ignored.
+Go build/test output under `backend/bin/`, `backend/*.exe`, and
+`backend/*.test` are also ignored. The legacy `target/` ignore remains as a
+guard against accidentally committing legacy or other build output; the Go
+backend does not generate it.
 The local PostgreSQL backup is kept at `database/bwp-sonasea.dump` and is
 ignored by Git because it contains data. Backend and frontend tests stay with
 the project that owns them; there is no root `test/` folder. The `backend`
@@ -187,24 +169,26 @@ Bun for package management and script execution
 ## Backend
 
 ```text
-Rust
-Axum
-Tokio
-Tower / tower-http
-Tracing
+Go (current supported version)
+Fiber v3
+standard context.Context
+Fiber middleware only when required
+standard log for the foundation
 ```
 
 ## Database
 
 ```text
 PostgreSQL
-SQLx
+pgx v5
+pgxpool
+parameterized SQL
 ```
 
 ## Realtime
 
 ```text
-WebSocket through Axum/Tokio
+Fiber-compatible WebSocket in the realtime SPEC
 ```
 
 Use WebSocket only where realtime behavior is actually required.
@@ -267,7 +251,7 @@ The goal is production-quality software that can still be understood several yea
 
 # 5. Performance Philosophy
 
-The project is expected to be fast, but performance must come from correct architecture rather than complicated Rust syntax.
+The project is expected to be fast, but performance must come from correct architecture rather than complicated Go or framework syntax.
 
 Do not assume:
 
@@ -320,7 +304,7 @@ When a feature feels slow, investigate in this order where applicable:
 11. Actual CPU bottleneck
 ```
 
-Do not immediately rewrite code into advanced Rust.
+Do not immediately rewrite code into advanced Go or framework-specific tricks.
 
 Use evidence.
 
@@ -334,7 +318,8 @@ index inspection
 realistic load tests
 ```
 
-For Rust/backend performance work, use tracing and profiling before changing architecture.
+For Go/backend performance work, use profiling and database measurements before
+changing architecture.
 
 ---
 
@@ -342,7 +327,7 @@ For Rust/backend performance work, use tracing and profiling before changing arc
 
 Database performance is a first-class product requirement, not a cleanup task
 for later. The database foundation must make the fast path obvious and keep
-future Axum + SQLx handlers fast under real data volume.
+future Fiber + pgx/pgxpool handlers fast under real data volume.
 
 Required database performance discipline:
 
@@ -368,9 +353,9 @@ architecture decision.
 
 ---
 
-# 7. Rust Coding Style
+# 7. Go Coding Style
 
-Rust code must remain intentionally simple.
+Go code must remain intentionally simple.
 
 The target style is:
 
@@ -384,13 +369,14 @@ safe
 fast
 ```
 
-A developer who understands basic Rust should be able to follow most application code.
+A developer who understands basic Go should be able to follow most application code.
 
 ---
 
-# 8. Advanced Rust Rule
+# 8. No Over-Engineering Rule
 
-Do not introduce advanced Rust constructs merely because they are idiomatic in some large Rust codebase.
+Do not introduce advanced Go or framework constructs merely because they are
+idiomatic in a large codebase.
 
 Avoid unless there is a concrete requirement:
 
@@ -400,14 +386,11 @@ generic repositories
 generic services
 trait factories
 deep trait-object architecture
-BoxFuture
-Pin manipulation
-custom procedural macros
-manual unsafe code
-complex lifetime-heavy APIs
-Arc<Mutex<...>> everywhere
-Arc<RwLock<...>> everywhere
-nested shared-state containers
+reflection-heavy dependency injection
+code generation without a concrete need
+unsafe code
+deep middleware abstractions
+global mutable state
 ```
 
 These constructs are not forbidden when technically necessary.
@@ -424,79 +407,66 @@ from multiple concurrent tasks.
 Example of an unacceptable reason:
 
 ```text
-"This is how advanced Rust projects usually look."
+"This is how advanced Go projects usually look."
 ```
 
 ---
 
-# 9. `Arc`, `Mutex`, and `RwLock`
+# 9. Shared State and Concurrency
 
-Do not use `Arc`, `Mutex`, or `RwLock` by default.
+Do not add synchronization or background workers by default.
 
-Especially do not write state like:
+Do not imitate a database with in-memory state such as:
 
 ```rust
-Arc<Mutex<Vec<Ticket>>>
+var tickets []Ticket
 ```
 
 to imitate a database.
 
 The project uses PostgreSQL.
 
-Use PostgreSQL and SQLx for persistent application state.
+Use PostgreSQL and `pgxpool.Pool` for persistent application state. A pool is
+designed for concurrent use and must not be wrapped in a custom global lock.
 
-`PgPool` is designed for concurrent use and should not be wrapped in a `Mutex`.
+When a handler needs application state, keep it explicit and small:
 
-Preferred application state:
-
-```rust
-#[derive(Clone)]
-pub struct AppState {
-    pub db: PgPool,
+```go
+type AppState struct {
+    DB *pgxpool.Pool
 }
 ```
 
-Later, additional cloneable services may be added explicitly:
-
-```rust
-#[derive(Clone)]
-pub struct AppState {
-    pub db: PgPool,
-    pub chat_tx: broadcast::Sender<ChatEvent>,
-}
-```
-
-Only add synchronization primitives when there is real shared mutable memory that requires synchronization.
+Only add shared mutable memory when a concrete feature requires it. Do not
+retain Fiber request-backed values after a handler returns; copy data before
+passing it to longer-lived work and use `context.Context` for that work.
 
 ---
 
-# 10. Traits
+# 10. Interfaces
 
-Traits are useful, but they must solve a real problem.
+Interfaces are useful, but they must solve a real problem.
 
 Do not automatically create:
 
 ```text
-TicketRepository trait
+TicketRepository interface
 PostgresTicketRepository
 TicketRepositoryFactory
-GenericTicketService<R>
+GenericTicketService[T]
 ```
 
 for ordinary SQL operations.
 
 Prefer a direct function when sufficient:
 
-```rust
-pub async fn find_by_id(
-    db: &PgPool,
-    id: i64,
-) -> Result<Ticket, AppError> {
+```go
+func FindByID(ctx context.Context, db *pgxpool.Pool, id int64) (Ticket, error) {
     // SQL
 }
 ```
 
-A trait may be introduced later when there is a real requirement such as:
+An interface may be introduced later when there is a real requirement such as:
 
 ```text
 multiple implementations
@@ -505,32 +475,21 @@ runtime polymorphism
 shared behavior across meaningful implementations
 ```
 
-Do not use traits only to make the project look more enterprise.
+Do not use interfaces only to make the project look more enterprise.
 
 ---
 
-# 11. Macros
+# 11. Framework and Code Generation
 
-Common ecosystem macros are acceptable.
-
-Examples:
-
-```rust
-#[tokio::main]
-#[derive(Debug, Serialize, Deserialize)]
-```
-
-SQLx compile-time query macros may also be used where appropriate.
-
-Do not introduce custom macro systems unless a clear repetitive problem justifies them.
-
-The application must not depend on hidden custom macro behavior for core business logic.
+Use normal Go code and Fiber handlers. Do not introduce reflection-heavy
+frameworks, code generation, or hidden binding behavior for core business
+logic. SQL remains visible and is executed with parameterized `pgx` queries.
 
 ---
 
-# 12. Axum Style
+# 12. Fiber Style
 
-Axum should remain thin.
+Fiber should remain thin.
 
 Handlers should mainly:
 
@@ -544,14 +503,14 @@ return response
 
 Preferred handler shape:
 
-```rust
-pub async fn get_ticket(
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-) -> Result<Json<Ticket>, AppError> {
-    let ticket = ticket_service::get_by_id(&state.db, id).await?;
-
-    Ok(Json(ticket))
+```go
+func GetTicket(c fiber.Ctx) error {
+	id := c.Params("id")
+	ticket, err := ticketService.GetByID(c.Context(), db, id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(ticket)
 }
 ```
 
@@ -573,8 +532,8 @@ Handler
 Service
      ↓
 Repository
-     ↓
-SQLx
+    ↓
+pgx/pgxpool
      ↓
 PostgreSQL
 ```
@@ -629,104 +588,55 @@ The point is separation of responsibility, not artificial line count.
 
 # 14. Backend Folder Structure
 
-The current backend contains the SPEC-01 foundation: SQLx migrations,
-configuration, database connectivity, development seeding, shared database
-access, and their backend tests. Client-facing feature boundaries are grouped
-under `src/client/`; administrator controls and seeding are under `src/admin/`;
-shared infrastructure remains under `src/shared/`.
-
-Locked backend layout:
+The current backend contains only the SPEC-01 foundation. The layout is
+deliberately small and follows Go package boundaries. Client feature packages
+and shared helpers are created only when a SPEC needs real code; empty future
+folders and placeholder files are not generated.
 
 ```text
 backend/
-├── Cargo.toml
+├── go.mod
+├── go.sum
 ├── migrations/
-│
-├── src/
-│   ├── main.rs
-│   ├── app.rs
-│   ├── lib.rs
-│   ├── config.rs
-│   │
-│   ├── client/
-│   │   ├── mod.rs
-│   │   ├── auth/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── tickets/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── chat/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── checklist/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── announcements/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── staff_meal/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── reports/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   └── settings/
-│   │       ├── mod.rs
-│   │       ├── handler.rs
-│   │       ├── service.rs
-│   │       ├── repository.rs
-│   │       └── model.rs
-│   │
-│   ├── admin/
-│   │   ├── mod.rs
-│   │   ├── seed.rs
-│   │   └── bin/
-│   │       └── seed_development.rs
-│   │
-│   └── shared/
-│       ├── mod.rs
-│       ├── database.rs
-│       ├── error.rs
-│       ├── state.rs
-│       ├── auth.rs
-│       ├── pagination.rs
-│       └── storage.rs
-│
-└── tests/
-    ├── auth/
-    ├── tickets/
-    ├── chat/
-    └── shared/
+├── cmd/
+│   ├── server/main.go
+│   └── seed_development/main.go
+├── app/
+│   ├── app.go
+│   └── app_test.go
+├── config/
+│   ├── config.go
+│   └── config_test.go
+├── database/
+│   ├── database.go
+│   └── migrations_test.go
+└── admin/
+    ├── seed.go
+    └── seed_test.go
 ```
 
-The existing local `backend/.env` is the only development environment file.
-Never generate or commit `.env.example` or another example env file.
+When later client behavior is implemented, use these high-level packages:
 
-The presence of a feature boundary does not mean that its business API is
-implemented. Later SPECs must replace the boundary documentation with the
-corresponding handlers, services, repositories, models, and tests.
+```text
+backend/client/
+├── auth/
+├── tickets/
+├── chat/
+├── checklist/
+├── announcements/
+├── staff_meal/
+├── reports/
+└── settings/
+```
+
+The current `backend/shared/` package owns the database pool and migration
+runner because those are shared infrastructure. Add other shared helpers only
+when multiple implemented packages need a concrete small utility. The
+existing local `backend/.env` is the only development environment file. Never
+generate or commit `.env.example` or another example env file.
+
+The Go packages are not a promise that every product feature is implemented.
+Later SPECs add only their required handlers, business code, SQL, and tests.
 
 ---
 
@@ -774,15 +684,10 @@ Use one clear application error model.
 
 Preferred concept:
 
-```rust
-pub enum AppError {
-    NotFound,
-    Unauthorized,
-    Forbidden,
-    Validation(String),
-    Conflict(String),
-    Database(sqlx::Error),
-    Internal,
+```go
+type AppError struct {
+    Code    string
+    Message string
 }
 ```
 
@@ -806,13 +711,9 @@ when failure is intentionally fatal and obvious.
 
 # 17. Logging and Observability
 
-Use:
-
-```text
-tracing
-tracing-subscriber
-tower-http trace
-```
+Use the standard `log` package for the foundation and add structured logging
+only when the application needs it. Fiber middleware should remain explicit
+and limited to the behavior the current SPEC requires.
 
 Logs should help diagnose real production problems.
 
@@ -849,9 +750,9 @@ PostgreSQL is the source of truth for persistent application data.
 Use:
 
 ```text
-SQLx
-PgPool
-SQLx migrations
+pgx v5
+pgxpool
+sequential PostgreSQL SQL migrations
 parameterized SQL
 transactions where atomicity is required
 ```
@@ -898,7 +799,7 @@ Do not concatenate untrusted input into SQL.
 
 # 20. Database Performance
 
-The database is more likely to become a bottleneck than Axum for this project.
+The database is more likely to become a bottleneck than Fiber for this project.
 
 Every high-frequency query should eventually be evaluated for:
 
@@ -988,7 +889,7 @@ The correct development flow is:
 ```text
 PostgreSQL
     ↓
-Axum API
+Fiber API
     ↓
 SvelteKit
 ```
@@ -1029,7 +930,7 @@ If the developer needs tickets to test the ticket list:
 insert them into PostgreSQL
 ```
 
-Then retrieve them through the real Axum endpoint.
+Then retrieve them through the real Fiber endpoint.
 
 Do not bypass the application architecture for convenience.
 
@@ -1050,9 +951,9 @@ Integration tests should test the real stack:
 ```text
 test
  ↓
-Axum router
+Fiber router
  ↓
-SQLx
+pgx/pgxpool
  ↓
 test PostgreSQL database
 ```
@@ -1231,7 +1132,7 @@ User clicks Accept
         ↓
 UI changes Pending -> Accepted immediately
         ↓
-request sent to Axum
+request sent to Fiber
         ↓
 success -> keep state
 failure -> rollback + show error
@@ -1359,7 +1260,7 @@ Authorization rules belong in the backend.
 
 Frontend button visibility is UX only and is not a security boundary.
 
-An unauthorized user must still be rejected by Axum even if they manually call an API endpoint.
+An unauthorized user must still be rejected by Fiber even if they manually call an API endpoint.
 
 ---
 
@@ -1539,7 +1440,7 @@ Report performance is important.
 Avoid:
 
 ```text
-loading all tickets into Rust
+loading all tickets into Go application memory
 then calculating every report in application memory
 ```
 
@@ -1735,7 +1636,7 @@ Search/filter should be done at the appropriate layer.
 
 Do not fetch the complete database table into SvelteKit and filter everything in the browser for production-scale lists.
 
-For tickets, backend/database should handle query filters such as:
+For tickets, the backend/database layer should handle query filters such as:
 
 ```text
 status
@@ -1818,22 +1719,17 @@ Do not reimplement serious security/crypto primitives manually.
 
 # 57. Backend Dependency Baseline
 
-The backend foundation may include:
+The backend foundation uses only the packages required by the current SPEC:
 
-```toml
-axum
-tokio
-serde
-serde_json
-tower-http
-tracing
-tracing-subscriber
-sqlx
-thiserror
-dotenvy
+```text
+github.com/gofiber/fiber/v3
+github.com/jackc/pgx/v5
+github.com/joho/godotenv
+golang.org/x/crypto/argon2
 ```
 
-The current scaffold does not yet include every dependency in this baseline. Add each dependency when the relevant SPEC requires it and its purpose is clear.
+Add a dependency only when the relevant SPEC requires it and its purpose is
+clear. Use the Go standard library when it solves the problem clearly.
 
 Additional dependencies are added only as corresponding features require them.
 
@@ -1845,39 +1741,20 @@ cookie-related support -> sessions if needed
 uuid       -> if a SPEC chooses UUID identifiers
 ```
 
-Do not add every possible production crate on day one.
+Do not add every possible package on day one.
 
 ---
 
-# 58. Tokio Rule
+# 59. Fiber and Go Runtime Rule
 
-Using:
+Fiber v3 owns the HTTP server and routing. Use `context.Context` for bounded
+database and application work. Do not enable global allocation-heavy options,
+add middleware, or start goroutines unless a concrete requirement justifies it.
 
-```toml
-tokio = { features = ["full"] }
-```
-
-is acceptable during early development if it keeps setup simple.
-
-Production feature minimization may happen later.
-
-Do not optimize Cargo feature flags before application behavior matters.
-
----
-
-# 59. Hyper and Tower
-
-Axum sits on the Tokio/Hyper/Tower ecosystem.
-
-The project does not need to directly depend on Hyper or Tower unless application code directly uses their APIs.
-
-Do not add direct dependencies simply because Axum uses them internally.
-
-`tower-http` is appropriate for HTTP middleware such as:
+Fiber-compatible middleware may provide:
 
 ```text
 CORS
-tracing
 request IDs
 timeouts
 compression where justified
@@ -1908,7 +1785,7 @@ Keep server state and UI state conceptually separate.
 Persistent source of truth:
 
 ```text
-backend/database
+backend/shared/database
 ```
 
 Temporary interactive state:
@@ -2018,7 +1895,7 @@ critical API behavior
 report correctness
 ```
 
-Backend integration tests should prefer real Axum routing + real PostgreSQL test database for important flows.
+Backend integration tests should prefer real Fiber routing + a real PostgreSQL test database for important flows.
 
 Frontend tests should focus on behavior that is easy to regress.
 
@@ -2073,9 +1950,10 @@ These flows must use real application APIs and database state.
 Before a backend SPEC is called complete, run where applicable:
 
 ```bash
-cargo fmt --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test
+gofmt -d .
+go vet ./...
+go test ./...
+go build ./...
 ```
 
 Also verify:
@@ -2159,7 +2037,7 @@ Start with:
 
 ```text
 one SvelteKit frontend
-one Axum backend
+one Fiber v3 backend
 one PostgreSQL database
 ```
 
@@ -2176,7 +2054,7 @@ The backend is a modular monolith.
 Meaning:
 
 ```text
-one deployable Axum service
+one deployable Fiber v3 service
 ```
 
 with clear internal modules.
@@ -2703,7 +2581,7 @@ The agent must not silently:
 
 ```text
 change framework
-replace SQLx
+replace pgx/pgxpool
 introduce an ORM
 introduce microservices
 introduce Redis
@@ -2722,7 +2600,7 @@ unless explicitly instructed.
 
 Do not solve a simple application problem with architecture the human maintainer cannot reasonably understand.
 
-If advanced Rust is genuinely necessary:
+If advanced Go is genuinely necessary:
 
 1. Keep it isolated.
 2. Explain why it is required.
@@ -2838,7 +2716,7 @@ This goal is as important as raw throughput.
 
 The default question is not:
 
-> "What is the most advanced Rust way to implement this?"
+> "What is the most advanced Go way to implement this?"
 
 The default questions are:
 
@@ -2870,10 +2748,10 @@ FRONTEND TOOLING:
 Bun
 
 BACKEND:
-Rust + Axum + Tokio + Tower
+Go + Fiber v3
 
 DATABASE:
-PostgreSQL + SQLx
+PostgreSQL + pgx v5 + pgxpool
 
 ARCHITECTURE:
 Modular monolith
@@ -2885,7 +2763,7 @@ AUTH:
 Server-side sessions
 
 STYLE:
-Boring, explicit, readable Rust
+Boring, explicit, readable Go
 
 PERFORMANCE:
 Measure first; optimize real bottlenecks
@@ -2941,7 +2819,7 @@ Do not fake API success.
 
 Use real PostgreSQL-backed flows.
 
-Keep Rust boring and explicit.
+Keep Go boring and explicit.
 
 Do not add Arc/Mutex/generics/traits without a concrete reason.
 

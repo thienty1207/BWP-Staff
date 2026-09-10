@@ -1,12 +1,12 @@
 # Baron Continuity Resume
 
-- Last updated: 2026-09-10T19:32:54+07:00
+- Last updated: 2026-09-10T21:33:49+07:00
 - Adapter: `codex`
 - Session ID: `none`
 - Request ID: `none`
 - Lifecycle event key: `none`
-- Latest checkpoint: Repository layout normalized: database/scripts now contains manual SQL scripts, backend/migrations remains the SQLx runtime source, root test folder and temporary invalid-migrations quarantine removed, backend/.env.example removed, and active context/docs prohibit example env generation. Backend fmt/clippy/tests pass.
-- Latest automation event: `ContextCompiled`
+- Latest checkpoint: Permanent Go/Fiber v3 migration is ready for commit and push: Rust artifacts removed; pgxpool runner preserves 19 existing migration checksums; fresh/existing PostgreSQL migration and idempotent seed passed; Fiber health, gofmt, go vet, go test, go build, Bun check, backup, schema/index, EXPLAIN, and secret/artifact scans passed. Baron gate recorder remains blocked because no active task id is available.
+- Latest automation event: `TraceScored`
 - Current task: `SPEC-01 database foundation identified continuation`
 - Plan status: `completed`
 - Harness story: `unknown`
@@ -15,7 +15,7 @@
 - Trace status: scored `standard/standard` passed `yes`
 - Recovery outcome: `failed`
 - Recovery next action: Continue with the explicitly authorized bounded layout cleanup and verify repository paths and Rust checks
-- Changed files: .gitignore, README.md, backend/Cargo.lock, backend/Cargo.toml, backend/src/main.rs, database/README.md, test/README.md, Context-Spec-BWP-SonaSea/PROJECT_CONTEXT.md, Context-Spec-BWP-SonaSea/Spec/SPEC-01-database-foundation.md, backend/migrations/0001_extensions.sql, backend/migrations/0002_enums.sql, backend/migrations/0003_departments.sql
+- Changed files: .gitignore, Context-Spec-BWP-SonaSea/PROJECT_CONTEXT.md, Context-Spec-BWP-SonaSea/Spec/SPEC-01-database-foundation.md, README.md, backend/.gitignore, backend/Cargo.lock, backend/Cargo.toml, backend/admin/seed.go, backend/admin/seed_test.go, backend/app/app.go, backend/app/app_test.go, backend/cmd/seed_development/main.go
 - Next action: start the next explicit task
 
 ## Resume Rules
