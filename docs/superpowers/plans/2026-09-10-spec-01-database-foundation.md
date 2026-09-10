@@ -53,3 +53,23 @@ go run ./cmd/seed_development
 The existing development database must remain intact, migration checksums must
 match, the seed must be idempotent, and the Fiber health endpoint must return
 HTTP 200 with `ok` after PostgreSQL startup checks succeed.
+
+## SPEC-01 hardening pass
+
+This continuation audits the implemented foundation only. It does not add a
+later SPEC or application feature.
+
+1. Add real-PostgreSQL behavioral tests in an isolated temporary schema for
+   migration idempotency, schema/enums/indexes, relational constraints, the
+   development seed workflow, Argon2id storage, and pgxpool connectivity.
+2. Keep `0018_seed_development.sql` unchanged for checksum compatibility, but
+   make the normal migration runner record that historical migration without
+   executing its development-only SQL. Move fixture insertion to the explicit
+   guarded development seed command.
+3. Move the small Argon2id hash/verify utility out of the admin seed package;
+   keep the current PHC behavior and tests without adding an authentication
+   flow.
+4. Require explicit TLS for non-loopback PostgreSQL URLs while preserving the
+   current local development URL behavior; add focused configuration tests.
+5. Run the required Go checks, dedicated PostgreSQL checks, security review,
+   migration-history checks, and final GitHub push verification.

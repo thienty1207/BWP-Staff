@@ -2,7 +2,7 @@
 # Baron Stack Map
 
 ## Detected Stack
-- none detected
+- Database migrations (`backend/migrations/0001_extensions.sql`)
 
 ## Entrypoints
 - none detected
@@ -11,7 +11,6 @@
 - none detected
 
 ## Unknown
-- No git repository detected
 - No build command detected
 - No test command detected
 

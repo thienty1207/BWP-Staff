@@ -26,6 +26,10 @@ Go backend checks and runs them at startup. The Go runner keeps the existing
 `_sqlx_migrations` ledger compatible with the database already in use; the
 legacy ledger name is retained for data safety, and the runner is independent
 of the old framework.
+The historical `0018_seed_development.sql` file remains in that sequence for
+ledger/checksum compatibility, but normal startup records it without executing
+its fixture inserts. Development departments, locations, and the admin are
+inserted only by the explicitly guarded `go run ./cmd/seed_development` command.
 Do not copy or move those migrations into this directory. The dump and local
 credentials are ignored by the root `.gitignore`; the schema script and
 operational scripts are source files and remain reviewable.

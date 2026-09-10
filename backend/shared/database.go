@@ -18,12 +18,15 @@ import (
 )
 
 type migration struct {
-	version     int64
-	description string
-	name        string
-	contents    []byte
-	checksum    []byte
+	version         int64
+	description     string
+	name            string
+	contents        []byte
+	checksum        []byte
+	developmentOnly bool
 }
+
+const developmentSeedMigration = "0018_seed_development.sql"
 
 func Connect(ctx context.Context, settings config.Config) (*pgxpool.Pool, error) {
 	poolConfig, err := pgxpool.ParseConfig(settings.DatabaseURL)
@@ -110,9 +113,11 @@ WHERE version = $1`, migration.version).Scan(&storedChecksum, &success)
 		if err != nil {
 			return fmt.Errorf("begin migration %s: %w", migration.name, err)
 		}
-		if _, err := transaction.Exec(ctx, string(migration.contents)); err != nil {
-			_ = transaction.Rollback(ctx)
-			return fmt.Errorf("execute migration %s: %w", migration.name, err)
+		if !migration.developmentOnly {
+			if _, err := transaction.Exec(ctx, string(migration.contents)); err != nil {
+				_ = transaction.Rollback(ctx)
+				return fmt.Errorf("execute migration %s: %w", migration.name, err)
+			}
 		}
 		_, err = transaction.Exec(ctx, `
 INSERT INTO _sqlx_migrations (version, description, installed_on, success, checksum, execution_time)
@@ -154,11 +159,12 @@ func readMigrations(directory string) ([]migration, error) {
 		}
 		checksum := sha512.Sum384(contents)
 		migrations = append(migrations, migration{
-			version:     version,
-			description: description,
-			name:        entry.Name(),
-			contents:    contents,
-			checksum:    checksum[:],
+			version:         version,
+			description:     description,
+			name:            entry.Name(),
+			contents:        contents,
+			checksum:        checksum[:],
+			developmentOnly: entry.Name() == developmentSeedMigration,
 		})
 	}
 	sort.Slice(migrations, func(i, j int) bool { return migrations[i].version < migrations[j].version })

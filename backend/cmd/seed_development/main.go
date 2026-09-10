@@ -32,6 +32,9 @@ func main() {
 	if err := shared.RunMigrations(context.Background(), pool, "migrations", time.Duration(settings.DatabaseAcquireTimeoutSeconds)*time.Second); err != nil {
 		log.Fatal(err)
 	}
+	if err := admin.SeedDevelopmentFixtures(context.Background(), pool); err != nil {
+		log.Fatal(err)
+	}
 	outcome, err := admin.SeedDevelopmentAdmin(context.Background(), pool, settings.SeedAdmin)
 	if err != nil {
 		log.Fatal(err)

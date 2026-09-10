@@ -28,10 +28,11 @@ go run ./cmd/server
 Before starting it, make sure the existing local `backend/.env` contains the
 PostgreSQL `DATABASE_URL` and bounded pool values. Do not create or commit an
 example env file. The backend checks the PostgreSQL migrations from
-`backend/migrations/` before serving requests.
+`backend/migrations/` before serving requests. Normal startup applies schema
+migrations only; it does not insert development fixtures.
 
 To initialize development reference data and the development admin account,
-run:
+run the explicitly guarded seed command:
 
 ```bash
 cd backend

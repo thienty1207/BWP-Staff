@@ -29,3 +29,51 @@ func TestLoadRequiresDatabaseURL(t *testing.T) {
 		t.Fatal("expected missing DATABASE_URL error")
 	}
 }
+
+func TestLoadRejectsRemoteDatabaseWithoutExplicitTLS(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://postgres:secret@db.example.com:5432/bwp-sonasea")
+	t.Setenv("SEED_DEVELOPMENT_DATA", "false")
+
+	if _, err := Load(); err == nil {
+		t.Fatal("expected remote database URL without sslmode to be rejected")
+	}
+}
+
+func TestLoadRejectsInsecureRemoteTLSMode(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://postgres:secret@db.example.com:5432/bwp-sonasea?sslmode=prefer")
+	t.Setenv("SEED_DEVELOPMENT_DATA", "false")
+
+	if _, err := Load(); err == nil {
+		t.Fatal("expected remote database URL with sslmode=prefer to be rejected")
+	}
+}
+
+func TestLoadAcceptsRemoteDatabaseWithExplicitTLS(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://postgres:secret@db.example.com:5432/bwp-sonasea?sslmode=verify-full")
+	t.Setenv("SEED_DEVELOPMENT_DATA", "false")
+
+	if _, err := Load(); err != nil {
+		t.Fatalf("expected remote database URL with sslmode=verify-full to be accepted: %v", err)
+	}
+}
+
+func TestLoadRejectsPoolAboveSafeLimit(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://postgres@127.0.0.1:5432/bwp-sonasea")
+	t.Setenv("DATABASE_MAX_CONNECTIONS", "101")
+	t.Setenv("DATABASE_MIN_CONNECTIONS", "1")
+	t.Setenv("SEED_DEVELOPMENT_DATA", "false")
+
+	if _, err := Load(); err == nil {
+		t.Fatal("expected database pool above the safe limit to be rejected")
+	}
+}
+
+func TestLoadRejectsAcquireTimeoutAboveSafeLimit(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://postgres@127.0.0.1:5432/bwp-sonasea")
+	t.Setenv("DATABASE_ACQUIRE_TIMEOUT_SECONDS", "61")
+	t.Setenv("SEED_DEVELOPMENT_DATA", "false")
+
+	if _, err := Load(); err == nil {
+		t.Fatal("expected database acquire timeout above the safe limit to be rejected")
+	}
+}

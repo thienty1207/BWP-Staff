@@ -97,7 +97,7 @@
     {
       "owner": "core",
       "relative_path": ".baron/core/skills\\database-engineering\\SKILL.md",
-      "base_sha256": "ae9d7edadf3f3ed0e21bb68d56e030ccf2da421f51074fc7d0ec05287f3256e0",
+      "base_sha256": "e35998a30895c89e2bb4cd32bd70783dfbfb6ea0306e77a872acafcca9f1f4fa",
       "installed_version": "5.0.0",
       "merge_kind": "full_text"
     },
@@ -174,7 +174,7 @@
     {
       "owner": "core",
       "relative_path": ".baron/core/skills\\mobile-application-engineering\\SKILL.md",
-      "base_sha256": "42b9a832543a1af125f71607166969cd570d8bc54a066dfbe59856d166ea2c16",
+      "base_sha256": "021613d8811a61f12d9fa2b4d3ee99880ef14db4490cff74bfef5d1fff8ccb49",
       "installed_version": "5.0.0",
       "merge_kind": "full_text"
     },

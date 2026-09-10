@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"strconv"
@@ -11,7 +12,9 @@ import (
 const (
 	defaultMaxConnections        int32 = 10
 	defaultMinConnections        int32 = 1
+	maxAllowedConnections        int32 = 100
 	defaultAcquireTimeoutSeconds       = 5
+	maxAcquireTimeoutSeconds           = 60
 )
 
 type Config struct {
@@ -41,6 +44,9 @@ func Load() (Config, error) {
 	if err != nil || (parsedURL.Scheme != "postgres" && parsedURL.Scheme != "postgresql") || parsedURL.Host == "" {
 		return Config{}, fmt.Errorf("invalid DATABASE_URL")
 	}
+	if err := validateDatabaseTLS(parsedURL); err != nil {
+		return Config{}, err
+	}
 
 	maxConnections, err := int32Value("DATABASE_MAX_CONNECTIONS", defaultMaxConnections)
 	if err != nil {
@@ -50,7 +56,7 @@ func Load() (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	if maxConnections <= 0 || minConnections < 0 || minConnections > maxConnections {
+	if maxConnections <= 0 || maxConnections > maxAllowedConnections || minConnections < 0 || minConnections > maxConnections {
 		return Config{}, fmt.Errorf("invalid database pool bounds")
 	}
 
@@ -58,8 +64,8 @@ func Load() (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	if acquireTimeoutSeconds <= 0 {
-		return Config{}, fmt.Errorf("DATABASE_ACQUIRE_TIMEOUT_SECONDS must be positive")
+	if acquireTimeoutSeconds <= 0 || acquireTimeoutSeconds > maxAcquireTimeoutSeconds {
+		return Config{}, fmt.Errorf("DATABASE_ACQUIRE_TIMEOUT_SECONDS must be between 1 and %d", maxAcquireTimeoutSeconds)
 	}
 
 	appEnv := valueOrDefault("APP_ENV", "development")
@@ -143,5 +149,22 @@ func boolValue(name string, fallback bool) (bool, error) {
 		return false, nil
 	default:
 		return false, fmt.Errorf("invalid %s", name)
+	}
+}
+
+func validateDatabaseTLS(databaseURL *url.URL) error {
+	host := strings.TrimSuffix(strings.ToLower(databaseURL.Hostname()), ".")
+	if host == "localhost" || host == "127.0.0.1" || host == "::1" {
+		return nil
+	}
+	if ip := net.ParseIP(host); ip != nil && ip.IsLoopback() {
+		return nil
+	}
+
+	switch strings.ToLower(strings.TrimSpace(databaseURL.Query().Get("sslmode"))) {
+	case "require", "verify-ca", "verify-full":
+		return nil
+	default:
+		return fmt.Errorf("DATABASE_URL for a non-loopback database must set sslmode=require, verify-ca, or verify-full")
 	}
 }

@@ -34,4 +34,14 @@ func TestSpec01MigrationsRemainSequential(t *testing.T) {
 			t.Fatalf("missing migration %s: %v", name, err)
 		}
 	}
+
+	migrations, err := readMigrations(filepath.Join("..", "migrations"))
+	if err != nil {
+		t.Fatalf("read migrations: %v", err)
+	}
+	for _, migration := range migrations {
+		if migration.name == developmentSeedMigration && !migration.developmentOnly {
+			t.Fatal("development seed migration must be marked development-only")
+		}
+	}
 }

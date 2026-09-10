@@ -1305,6 +1305,15 @@ Villa
 
 Seed scripts must be clearly marked as development data.
 
+The normal server migration path must not insert these fixtures into a
+production database. The historical `0018_seed_development.sql` entry remains
+in the sequential migration list because an existing database may already
+have its checksum recorded in `_sqlx_migrations`. The Go migration runner
+therefore records that entry as successful with its original checksum without
+executing its development-only SQL. The guarded
+`cmd/seed_development` workflow inserts the departments and locations through
+real PostgreSQL transactions, then seeds the development admin.
+
 ---
 
 # 26. SQL Migration Structure
@@ -1340,6 +1349,11 @@ Exact filenames may differ if there is a clear reason.
 
 Do not create one giant migration containing the entire database if splitting improves readability.
 
+Do not modify or rewrite an already-applied migration solely to change its
+behavior. Preserve its ledger checksum and use a forward-compatible runner or
+explicit seed workflow when a historical migration contains development-only
+data.
+
 ---
 
 # 27. Go Database Package
@@ -1355,6 +1369,8 @@ cmd/
 config/config.go
 shared/database.go
 admin/seed.go
+admin/fixtures.go
+shared/security/password.go
 ```
 
 Example responsibility:
@@ -1400,6 +1416,11 @@ DATABASE_ACQUIRE_TIMEOUT_SECONDS
 ```
 
 Reasonable development defaults may be used.
+
+Configuration must reject a pool maximum above 100 connections or an acquire
+timeout above 60 seconds. These are resource-safety ceilings; the defaults
+remain small (`10` maximum connections, `1` minimum connection, and a `5`
+second acquire timeout) and should be changed only with measured evidence.
 
 Do not prematurely tune the pool for unrealistic traffic.
 
@@ -1542,7 +1563,7 @@ SPEC-01 does **not** implement:
 - Login API
 - Logout API
 - `/auth/me`
-- Password verification
+- Password verification as part of an authentication/login flow
 - Cookie handling
 - Authorization middleware
 - Ticket CRUD APIs

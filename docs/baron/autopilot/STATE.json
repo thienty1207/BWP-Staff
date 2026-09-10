@@ -191,8 +191,8 @@
       "resume_sources": [
         "docs/baron/continuity/CURRENT.md",
         "docs/baron/continuity/CURRENT_RECOVERY.md",
-        "docs/baron/plans/CURRENT.md",
         "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/plans/CURRENT.md",
         "docs/baron/proofs/INDEX.md",
         "docs/baron/traces/INDEX.md"
       ],
@@ -210,6 +210,114 @@
       "semantic_key": "permanent go fiber v3 backend migration completed with raw verification baron proof receipt exists for go test but gate recorder lacks active task id",
       "evidence_keys": [
         "c1124cd5408c808b74b72ba45ed7f7915f4865f97324b4e1f42da6df409d17fa"
+      ]
+    },
+    {
+      "id": "candidate-83dc0320354e4b96-decision",
+      "summary": ".",
+      "scope": "project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098",
+      "impact": "project_decision",
+      "status": "rejected",
+      "trusted": false,
+      "evidence_count": 1,
+      "provenance": [
+        "automation:ContextCompiled",
+        "automation:PlanStarted",
+        "automation:PreCompact",
+        "automation:TraceScored",
+        "resume:docs/baron/continuity/CURRENT.md",
+        "resume:docs/baron/continuity/CURRENT_RECOVERY.md",
+        "resume:docs/baron/harness/CURRENT_INTENT.md",
+        "resume:docs/baron/plans/CURRENT.md",
+        "resume:docs/baron/proofs/INDEX.md",
+        "resume:docs/baron/traces/INDEX.md",
+        "review:post-task",
+        "source:repo-review",
+        "source:user-task",
+        "task-review:cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8"
+      ],
+      "observed_automation": [
+        "ContextCompiled",
+        "PlanStarted",
+        "PreCompact",
+        "TraceScored"
+      ],
+      "resume_sources": [
+        "docs/baron/continuity/CURRENT.md",
+        "docs/baron/continuity/CURRENT_RECOVERY.md",
+        "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/plans/CURRENT.md",
+        "docs/baron/proofs/INDEX.md",
+        "docs/baron/traces/INDEX.md"
+      ],
+      "contradiction": null,
+      "readiness": "rejected; repeat prompts suppressed",
+      "created_at": "2026-09-11T00:16:12+07:00",
+      "updated_at": "2026-09-11T00:18:34+07:00",
+      "correlation": {
+        "task_id": "9f653d66a50d1942cd92376fb5beaba78d18815577e49e360e1dfd1a25332da7"
+      },
+      "suppressed_until": "never",
+      "replacement_for": null,
+      "decision_recorded": false,
+      "proposal_key": "",
+      "semantic_key": "",
+      "evidence_keys": [
+        "21a7564b482f31da117585114f6aed5360aeae55c79b2449d629ca85bfaa5978"
+      ]
+    },
+    {
+      "id": "candidate-8e91ddeec8c39710-decision",
+      "summary": "SPEC-01 hardening audit review",
+      "scope": "project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098",
+      "impact": "project_decision",
+      "status": "candidate",
+      "trusted": false,
+      "evidence_count": 1,
+      "provenance": [
+        "automation:ContextCompiled",
+        "automation:PlanStarted",
+        "automation:PreCompact",
+        "automation:TraceScored",
+        "resume:docs/baron/continuity/CURRENT.md",
+        "resume:docs/baron/continuity/CURRENT_RECOVERY.md",
+        "resume:docs/baron/harness/CURRENT_INTENT.md",
+        "resume:docs/baron/plans/CURRENT.md",
+        "resume:docs/baron/proofs/INDEX.md",
+        "resume:docs/baron/traces/INDEX.md",
+        "review:post-task",
+        "source:repo-review",
+        "source:user-task",
+        "task-review:38d1334ad387c9312e26e41a2956bd4788a11883f4d13c98714a3dd496166b1d"
+      ],
+      "observed_automation": [
+        "ContextCompiled",
+        "PlanStarted",
+        "PreCompact",
+        "TraceScored"
+      ],
+      "resume_sources": [
+        "docs/baron/continuity/CURRENT.md",
+        "docs/baron/continuity/CURRENT_RECOVERY.md",
+        "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/plans/CURRENT.md",
+        "docs/baron/proofs/INDEX.md",
+        "docs/baron/traces/INDEX.md"
+      ],
+      "contradiction": null,
+      "readiness": "candidate; explicit review required",
+      "created_at": "2026-09-11T00:18:22+07:00",
+      "updated_at": "2026-09-11T00:18:22+07:00",
+      "correlation": {
+        "task_id": "f2abe15a51bb0d6c92f56703568ca6a0589e7c0f196b1ee4c5e620ab3d592011"
+      },
+      "suppressed_until": null,
+      "replacement_for": null,
+      "decision_recorded": false,
+      "proposal_key": "spec 01 hardening audit review",
+      "semantic_key": "spec 01 hardening audit review",
+      "evidence_keys": [
+        "d442f2f077331dd7d3f1035f28d803e4da89a6fdaf19cdc26e4c339e76f2006c"
       ]
     }
   ],

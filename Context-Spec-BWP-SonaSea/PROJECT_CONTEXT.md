@@ -35,10 +35,13 @@ BWP-SonaSea/
 │   ├── shared/
 │   │   ├── database.go
 │   │   ├── migrations_test.go
-│   │   └── foundation_test.go
+│   │   ├── foundation_test.go
+│   │   └── security/
+│   │       ├── password.go
+│   │       └── password_test.go
 │   └── admin/
 │       ├── seed.go
-│       └── seed_test.go
+│       └── fixtures.go
 ├── frontend/
 │   ├── package.json
 │   ├── bun.lock
@@ -607,12 +610,16 @@ backend/
 ├── config/
 │   ├── config.go
 │   └── config_test.go
-├── database/
+├── shared/
 │   ├── database.go
-│   └── migrations_test.go
+│   ├── foundation_test.go
+│   ├── migrations_test.go
+│   └── security/
+│       ├── password.go
+│       └── password_test.go
 └── admin/
     ├── seed.go
-    └── seed_test.go
+    └── fixtures.go
 ```
 
 When later client behavior is implemented, use these high-level packages:
@@ -634,6 +641,13 @@ runner because those are shared infrastructure. Add other shared helpers only
 when multiple implemented packages need a concrete small utility. The
 existing local `backend/.env` is the only development environment file. Never
 generate or commit `.env.example` or another example env file.
+
+The normal server migration path applies schema migrations only. The historical
+`0018_seed_development.sql` file remains in the sequential ledger for checksum
+compatibility, but its development fixture SQL is skipped by normal startup.
+`cmd/seed_development` explicitly inserts the development departments,
+locations, and admin through real PostgreSQL transactions and is guarded by
+`APP_ENV=development` plus `SEED_DEVELOPMENT_DATA=true`.
 
 The Go packages are not a promise that every product feature is implemented.
 Later SPECs add only their required handlers, business code, SQL, and tests.

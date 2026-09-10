@@ -3,15 +3,15 @@
 
 ## Observed Top-Level Paths
 - `.agents`
-- `.baron-vault`
 - `.gitignore`
 - `AGENTS.md`
+- `Context-Spec-BWP-SonaSea`
 - `README.md`
 - `backend`
 - `database`
 - `docker`
 - `frontend`
-- `test`
+- `img`
 
 ## Adaptive Rule
 

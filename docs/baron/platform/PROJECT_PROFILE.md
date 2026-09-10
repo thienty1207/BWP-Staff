@@ -3,7 +3,7 @@
 
 - Primary platform: `fullstack`
 - Extension platforms: none
-- Survey project type: `Unknown`
+- Survey project type: `Backend`
 - Rule: repo evidence and explicit project rules override generic profile guidance.
 - Unknown facts remain unknown.
 <!-- baron:platform:end -->
