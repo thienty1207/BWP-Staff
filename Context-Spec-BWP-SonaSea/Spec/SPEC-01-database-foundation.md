@@ -1306,11 +1306,12 @@ Villa
 Seed scripts must be clearly marked as development data.
 
 The normal server migration path must not insert these fixtures into a
-production database. The historical `0018_seed_development.sql` entry remains
-in the sequential migration list because an existing database may already
-have its checksum recorded in `_sqlx_migrations`. The Go migration runner
-therefore records that entry as successful with its original checksum without
-executing its development-only SQL. The guarded
+production database. `backend/migrations/` contains schema migrations only;
+the historical fixture-only `0018_seed_development.sql` file is no longer in
+that active directory. Existing databases may retain a version 18 ledger row
+and any fixture data it previously inserted, but startup must not reset or
+delete that data. The generic Go migration runner executes every migration it
+discovers and does not contain development-seed knowledge. The guarded
 `cmd/seed_development` workflow inserts the departments and locations through
 real PostgreSQL transactions, then seeds the development admin.
 
@@ -1341,18 +1342,24 @@ backend/migrations/
 ├── 0015_notifications.sql
 ├── 0016_audit_logs.sql
 ├── 0017_indexes.sql
-├── 0018_seed_development.sql
 └── 0019_announcement_author_index.sql
 ```
 
 Exact filenames may differ if there is a clear reason.
 
+Migration version 18 is intentionally retired because the historical file was
+fixture-only, not schema. Existing migration ledgers may still contain version
+18; do not reuse that version for a future schema migration. The next new
+migration version is 0020.
+
 Do not create one giant migration containing the entire database if splitting improves readability.
 
-Do not modify or rewrite an already-applied migration solely to change its
-behavior. Preserve its ledger checksum and use a forward-compatible runner or
-explicit seed workflow when a historical migration contains development-only
-data.
+Do not modify or rewrite an already-applied schema migration solely to change
+its behavior. A historical fixture-only migration may be retired from the
+active migration directory when the project is still pre-production, but
+existing ledgers must be left intact and must not be reset. Development-only
+data belongs in the explicit guarded seed workflow, not in the migration
+runner.
 
 ---
 

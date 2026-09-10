@@ -642,9 +642,11 @@ when multiple implemented packages need a concrete small utility. The
 existing local `backend/.env` is the only development environment file. Never
 generate or commit `.env.example` or another example env file.
 
-The normal server migration path applies schema migrations only. The historical
-`0018_seed_development.sql` file remains in the sequential ledger for checksum
-compatibility, but its development fixture SQL is skipped by normal startup.
+The normal server migration path discovers schema migrations only from
+`backend/migrations/`. Development fixtures are not migrations. The historical
+fixture-only version `0018` has been retired from the active migration
+directory; existing databases may retain its old `_sqlx_migrations` ledger row
+and fixture data, which must not be reset or deleted as part of startup.
 `cmd/seed_development` explicitly inserts the development departments,
 locations, and admin through real PostgreSQL transactions and is guarded by
 `APP_ENV=development` plus `SEED_DEVELOPMENT_DATA=true`.

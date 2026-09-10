@@ -37,12 +37,35 @@ func TestSPEC01PostgreSQLFoundation(t *testing.T) {
 			t.Fatalf("ping PostgreSQL pool: %v", err)
 		}
 
-		var migrationCount int
-		if err := pool.QueryRow(ctx, "SELECT COUNT(*) FROM _sqlx_migrations WHERE success = TRUE").Scan(&migrationCount); err != nil {
-			t.Fatalf("count successful migrations: %v", err)
+		expectedMigrationVersions := []int64{
+			1, 2, 3, 4, 5, 6, 7, 8, 9,
+			10, 11, 12, 13, 14, 15, 16, 17, 19,
 		}
-		if migrationCount != 19 {
-			t.Fatalf("expected 19 successful migrations, got %d", migrationCount)
+		rows, err := pool.Query(ctx, `
+SELECT version, success
+FROM _sqlx_migrations
+ORDER BY version`)
+		if err != nil {
+			t.Fatalf("read migration ledger: %v", err)
+		}
+		defer rows.Close()
+		actualMigrationVersions := make([]int64, 0, len(expectedMigrationVersions))
+		for rows.Next() {
+			var version int64
+			var success bool
+			if err := rows.Scan(&version, &success); err != nil {
+				t.Fatalf("scan migration ledger: %v", err)
+			}
+			if !success {
+				t.Fatalf("migration %d was recorded as unsuccessful", version)
+			}
+			actualMigrationVersions = append(actualMigrationVersions, version)
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatalf("read migration ledger: %v", err)
+		}
+		if !reflect.DeepEqual(actualMigrationVersions, expectedMigrationVersions) {
+			t.Fatalf("unexpected schema migration versions: got=%v want=%v", actualMigrationVersions, expectedMigrationVersions)
 		}
 
 		var departmentCount, locationCount int
@@ -356,6 +379,50 @@ VALUES ($1, $2, $3, $4)`, seededAdminID, departmentID, "invalid status", "not-a-
 	})
 }
 
+func TestSPEC01MigrationRunnerExecutesEveryDiscoveredMigration(t *testing.T) {
+	pool, ctx := openSPEC01Pool(t)
+	migrationsDirectory := t.TempDir()
+
+	writeTestMigration(t, migrationsDirectory, "0001_create_runner_contract.sql", `
+CREATE TABLE migration_runner_contract (
+    id INTEGER PRIMARY KEY,
+    marker TEXT NOT NULL
+);`)
+	writeTestMigration(t, migrationsDirectory, "0002_insert_runner_contract.sql", `
+INSERT INTO migration_runner_contract (id, marker)
+VALUES (1, 'executed');`)
+
+	if err := shared.RunMigrations(ctx, pool, migrationsDirectory, 5*time.Second); err != nil {
+		t.Fatalf("run test migrations: %v", err)
+	}
+	if err := shared.RunMigrations(ctx, pool, migrationsDirectory, 5*time.Second); err != nil {
+		t.Fatalf("run test migrations a second time: %v", err)
+	}
+
+	var marker string
+	if err := pool.QueryRow(ctx, "SELECT marker FROM migration_runner_contract WHERE id = 1").Scan(&marker); err != nil {
+		t.Fatalf("read migration result: %v", err)
+	}
+	if marker != "executed" {
+		t.Fatalf("unexpected migration result: got %q want %q", marker, "executed")
+	}
+
+	var rowCount int
+	if err := pool.QueryRow(ctx, "SELECT COUNT(*) FROM migration_runner_contract").Scan(&rowCount); err != nil {
+		t.Fatalf("count migration results: %v", err)
+	}
+	if rowCount != 1 {
+		t.Fatalf("second migration run duplicated data: got %d rows", rowCount)
+	}
+
+	writeTestMigration(t, migrationsDirectory, "0002_insert_runner_contract.sql", `
+INSERT INTO migration_runner_contract (id, marker)
+VALUES (1, 'changed');`)
+	if err := shared.RunMigrations(ctx, pool, migrationsDirectory, 5*time.Second); err == nil || !strings.Contains(err.Error(), "checksum mismatch") {
+		t.Fatalf("expected migration checksum mismatch, got %v", err)
+	}
+}
+
 func openSPEC01Pool(t *testing.T) (*pgxpool.Pool, context.Context) {
 	t.Helper()
 
@@ -445,6 +512,13 @@ func openSPEC01Pool(t *testing.T) (*pgxpool.Pool, context.Context) {
 		t.Fatalf("PostgreSQL test pool is not isolated: got schema %q, want %q", currentSchema, schema)
 	}
 	return pool, ctx
+}
+
+func writeTestMigration(t *testing.T, directory, name, contents string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(directory, name), []byte(contents), 0o600); err != nil {
+		t.Fatalf("write test migration %s: %v", name, err)
+	}
 }
 
 func insertTestUser(t *testing.T, ctx context.Context, pool *pgxpool.Pool, username, employeeCode string, email *string) int64 {

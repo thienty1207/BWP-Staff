@@ -62,10 +62,11 @@ later SPEC or application feature.
 1. Add real-PostgreSQL behavioral tests in an isolated temporary schema for
    migration idempotency, schema/enums/indexes, relational constraints, the
    development seed workflow, Argon2id storage, and pgxpool connectivity.
-2. Keep `0018_seed_development.sql` unchanged for checksum compatibility, but
-   make the normal migration runner record that historical migration without
-   executing its development-only SQL. Move fixture insertion to the explicit
-   guarded development seed command.
+2. Retire the fixture-only `0018_seed_development.sql` from the active
+   migration path, keep `0019_announcement_author_index.sql` at version 0019,
+   and leave any existing version-18 ledger row/data untouched. The generic
+   migration runner executes every discovered migration normally. Keep fixture
+   insertion in the explicit guarded development seed command.
 3. Move the small Argon2id hash/verify utility out of the admin seed package;
    keep the current PHC behavior and tests without adding an authentication
    flow.

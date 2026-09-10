@@ -91,27 +91,6 @@ Candidates are untrusted evidence. They require explicit approval through the ex
 - Decision recorded: `no`
 - Safe action: preserve as untrusted evidence; do not rewrite skills, agents, memory facts, routing, proof policy, or runtime assets from this item alone.
 
-## candidate-83dc0320354e4b96-decision
-
-- Status: `rejected`
-- Trusted fact: `no`
-- Approval required: `no`
-- Created: 2026-09-11T00:16:12+07:00
-- Updated: 2026-09-11T00:18:34+07:00
-- Summary: .
-- Scope: `project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098`
-- Impact: `project_decision`
-- Evidence count: `1`
-- Readiness: rejected; repeat prompts suppressed
-- Provenance: automation:ContextCompiled, automation:PlanStarted, automation:PreCompact, automation:TraceScored, resume:docs/baron/continuity/CURRENT.md, resume:docs/baron/continuity/CURRENT_RECOVERY.md, resume:docs/baron/harness/CURRENT_INTENT.md, resume:docs/baron/plans/CURRENT.md, resume:docs/baron/proofs/INDEX.md, resume:docs/baron/traces/INDEX.md, review:post-task, source:repo-review, source:user-task, task-review:cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8
-- Observed automation: ContextCompiled, PlanStarted, PreCompact, TraceScored
-- Resume sources: docs/baron/continuity/CURRENT.md, docs/baron/continuity/CURRENT_RECOVERY.md, docs/baron/harness/CURRENT_INTENT.md, docs/baron/plans/CURRENT.md, docs/baron/proofs/INDEX.md, docs/baron/traces/INDEX.md
-- Contradiction: none
-- Suppressed until: never
-- Replacement for: none
-- Decision recorded: `no`
-- Safe action: preserve as untrusted evidence; do not rewrite skills, agents, memory facts, routing, proof policy, or runtime assets from this item alone.
-
 ## candidate-8e91ddeec8c39710-decision
 
 - Status: `candidate`
@@ -129,6 +108,48 @@ Candidates are untrusted evidence. They require explicit approval through the ex
 - Resume sources: docs/baron/continuity/CURRENT.md, docs/baron/continuity/CURRENT_RECOVERY.md, docs/baron/harness/CURRENT_INTENT.md, docs/baron/plans/CURRENT.md, docs/baron/proofs/INDEX.md, docs/baron/traces/INDEX.md
 - Contradiction: none
 - Suppressed until: none
+- Replacement for: none
+- Decision recorded: `no`
+- Safe action: preserve as untrusted evidence; do not rewrite skills, agents, memory facts, routing, proof policy, or runtime assets from this item alone.
+
+## candidate-655efe85950f901a-decision
+
+- Status: `candidate`
+- Trusted fact: `no`
+- Approval required: `yes`
+- Created: 2026-09-11T00:42:28+07:00
+- Updated: 2026-09-11T00:42:28+07:00
+- Summary: SPEC-01 migration architecture cleanup review
+- Scope: `project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098`
+- Impact: `project_decision`
+- Evidence count: `1`
+- Readiness: candidate; explicit review required
+- Provenance: automation:ContextCompiled, automation:PlanStarted, automation:PreCompact, automation:TraceScored, resume:docs/baron/continuity/CURRENT.md, resume:docs/baron/continuity/CURRENT_RECOVERY.md, resume:docs/baron/harness/CURRENT_INTENT.md, resume:docs/baron/plans/CURRENT.md, resume:docs/baron/proofs/INDEX.md, resume:docs/baron/traces/INDEX.md, review:post-task, source:repo-review, source:user-task, task-review:8391c08f4c65e93b365a546d2b2e3662aa3a342e78822680689e36ec37d01bb3
+- Observed automation: ContextCompiled, PlanStarted, PreCompact, TraceScored
+- Resume sources: docs/baron/continuity/CURRENT.md, docs/baron/continuity/CURRENT_RECOVERY.md, docs/baron/plans/CURRENT.md, docs/baron/harness/CURRENT_INTENT.md, docs/baron/proofs/INDEX.md, docs/baron/traces/INDEX.md
+- Contradiction: none
+- Suppressed until: none
+- Replacement for: none
+- Decision recorded: `no`
+- Safe action: preserve as untrusted evidence; do not rewrite skills, agents, memory facts, routing, proof policy, or runtime assets from this item alone.
+
+## candidate-83dc0320354e4b96-decision
+
+- Status: `rejected`
+- Trusted fact: `no`
+- Approval required: `no`
+- Created: 2026-09-11T00:16:12+07:00
+- Updated: 2026-09-11T00:18:34+07:00
+- Summary: .
+- Scope: `project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098`
+- Impact: `project_decision`
+- Evidence count: `1`
+- Readiness: rejected; repeat prompts suppressed
+- Provenance: automation:ContextCompiled, automation:PlanStarted, automation:PreCompact, automation:TraceScored, resume:docs/baron/continuity/CURRENT.md, resume:docs/baron/continuity/CURRENT_RECOVERY.md, resume:docs/baron/harness/CURRENT_INTENT.md, resume:docs/baron/plans/CURRENT.md, resume:docs/baron/proofs/INDEX.md, resume:docs/baron/traces/INDEX.md, review:post-task, source:repo-review, source:user-task, task-review:cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8
+- Observed automation: ContextCompiled, PlanStarted, PreCompact, TraceScored
+- Resume sources: docs/baron/continuity/CURRENT.md, docs/baron/continuity/CURRENT_RECOVERY.md, docs/baron/harness/CURRENT_INTENT.md, docs/baron/plans/CURRENT.md, docs/baron/proofs/INDEX.md, docs/baron/traces/INDEX.md
+- Contradiction: none
+- Suppressed until: never
 - Replacement for: none
 - Decision recorded: `no`
 - Safe action: preserve as untrusted evidence; do not rewrite skills, agents, memory facts, routing, proof policy, or runtime assets from this item alone.

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestSpec01MigrationsRemainSequential(t *testing.T) {
+func TestSpec01MigrationDirectoryContainsSchemaMigrationsOnly(t *testing.T) {
 	required := []string{
 		"0001_extensions.sql",
 		"0002_enums.sql",
@@ -25,7 +25,6 @@ func TestSpec01MigrationsRemainSequential(t *testing.T) {
 		"0015_notifications.sql",
 		"0016_audit_logs.sql",
 		"0017_indexes.sql",
-		"0018_seed_development.sql",
 		"0019_announcement_author_index.sql",
 	}
 
@@ -35,13 +34,23 @@ func TestSpec01MigrationsRemainSequential(t *testing.T) {
 		}
 	}
 
+	legacySeed := filepath.Join("..", "migrations", "0018_seed_development.sql")
+	if _, err := os.Stat(legacySeed); err == nil {
+		t.Fatalf("development fixture migration must not remain in the normal migration directory")
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("check development fixture migration: %v", err)
+	}
+
 	migrations, err := readMigrations(filepath.Join("..", "migrations"))
 	if err != nil {
 		t.Fatalf("read migrations: %v", err)
 	}
-	for _, migration := range migrations {
-		if migration.name == developmentSeedMigration && !migration.developmentOnly {
-			t.Fatal("development seed migration must be marked development-only")
+	if len(migrations) != len(required) {
+		t.Fatalf("expected %d schema migrations, got %d", len(required), len(migrations))
+	}
+	for index, migration := range migrations {
+		if migration.name != required[index] {
+			t.Fatalf("migration %d is %s, want %s", index, migration.name, required[index])
 		}
 	}
 }
