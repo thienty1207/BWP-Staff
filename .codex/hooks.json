@@ -1,0 +1,65 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "baron automation hook pre-compact --adapter codex",
+            "commandWindows": "baron automation hook pre-compact --adapter codex",
+            "timeout": 120,
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit|Write|apply_patch"
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "command": "baron automation hook pre-compact --adapter codex",
+            "commandWindows": "baron automation hook pre-compact --adapter codex",
+            "timeout": 120,
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "baron automation hook session-start --adapter codex",
+            "commandWindows": "baron automation hook session-start --adapter codex",
+            "timeout": 120,
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "baron automation hook stop --adapter codex",
+            "commandWindows": "baron automation hook stop --adapter codex",
+            "timeout": 120,
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": "baron automation hook user-prompt-submit --adapter codex",
+            "commandWindows": "baron automation hook user-prompt-submit --adapter codex",
+            "timeout": 120,
+            "type": "command"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,3 @@
+# Baron Codex Workspace
+
+Start with root `AGENTS.md`. Baron Core lives at `.baron/core/**`; the native bridge is `.agents/skills/baron-engine/`; Codex quality-agent projections live under `.codex/agents/`. Do not recursively load every skill; read only the route-selected Core resources. Core routing covers Superpowers, `frontend-design`, `vibe-security-scan`, `api-and-interface-design`, `observability-and-instrumentation`, `performance-optimization`, and `deprecation-and-migration`; these names identify canonical Core resources rather than copied Codex files. `.codex/hooks.json` is an optional accelerator and never the sole correctness path.

@@ -1,0 +1,6 @@
+name: baron-engine
+description: Explicit Codex bridge to Baron Core; AGENTS.md owns automatic routing.
+policy:
+  allow_implicit_invocation: false
+  products:
+    - codex

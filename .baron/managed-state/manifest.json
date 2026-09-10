@@ -1,0 +1,1169 @@
+{
+  "schema_version": 2,
+  "installed_version": "5.0.0",
+  "minimum_writer_schema": 2,
+  "records": [
+    {
+      "owner": "codex",
+      "relative_path": ".agents/skills/baron-engine/SKILL.md",
+      "base_sha256": "ee18599c5886fed1ab261ebd8c5fc660b7b7f47416edaad34474e1c8058f110b",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "codex",
+      "relative_path": ".agents/skills/baron-engine/agents/openai.yaml",
+      "base_sha256": "d02fb6332d93313c03ecd168c8f0f97f5bdf28a57ef48ddea0bd1da0d67766da",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/agents\\code-reviewer.toml",
+      "base_sha256": "9ba5e5f57f2e712734d05f3da1583f4ae0bf53d4e00b71d2572de1906497e7c5",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/agents\\security-auditor.toml",
+      "base_sha256": "b82ee4c25b02e0c060ff7efd6753647749f8c56c92e972d2437f116caf27379d",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/agents\\test-engineer.toml",
+      "base_sha256": "853dde1d317411391904908f915a683b7c39b0b6c2d267e3af5455ddb59c938f",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/agents\\web-performance-auditor.toml",
+      "base_sha256": "8afcf489e15bad5d9940fcf309041be174316bd0223b5b1f00eeb178019089c4",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\api-and-interface-design\\NOTICE.md",
+      "base_sha256": "e28ac197404c3eb226aee9b4fe96f9e75242ea64e7dc544d1ab3936e37495528",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\api-and-interface-design\\SKILL.md",
+      "base_sha256": "da8133e86e72ec175ae65919bf5ae678cfecb992c51d21e0c52a2ada91f50bad",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\api-and-interface-design\\references\\deep-module-boundaries.md",
+      "base_sha256": "faf466b3917dec01980b42c0b6600012cd8840f6fa505911d7a638eb18bfb6f9",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\apk-mobile-analysis\\NOTICE.md",
+      "base_sha256": "64b700d70cd00149e5c9671c8a432634e75ad15988c9cb5eeccdae951cbc8788",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\apk-mobile-analysis\\SKILL.md",
+      "base_sha256": "0465ec7574c57bc86d7174210825f90881b304307d49b1c2b582d7c1c5aa1152",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\binary-reverse-analysis\\NOTICE.md",
+      "base_sha256": "9d3b501d8682d182e9346144e276054872e0872be3b0ff73157a7c98cb540ab2",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\binary-reverse-analysis\\SKILL.md",
+      "base_sha256": "c3328428453f0fcc32fda6c087e101cc3ba32f384ba2328f2dcc24c40940aa34",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\database-engineering\\SKILL.md",
+      "base_sha256": "ae9d7edadf3f3ed0e21bb68d56e030ccf2da421f51074fc7d0ec05287f3256e0",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\deprecation-and-migration\\NOTICE.md",
+      "base_sha256": "747b3a50c8b5a0ed97599d600db97cf9d2003d52d89f7293c7234322a7c6711f",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\deprecation-and-migration\\SKILL.md",
+      "base_sha256": "976a03c74968c2b2298373823f97229f5cc03500cf166dfa5337dcdd6f8f7fe2",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\frontend-design\\LICENSE.txt",
+      "base_sha256": "ba8bf36012687cb06c793af990b737992e4b96ed8b15556056e7605835715237",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\frontend-design\\NOTICE.md",
+      "base_sha256": "be4ca3cc03dc6b0b3b051d0dfb29a30670d13a87773fe1d54cf1a6ac93722330",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\frontend-design\\SKILL.md",
+      "base_sha256": "e325dc8dffe473d38bf06cb07eed58eb50bc198fe4937feae282ae2c143cc6e8",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\frontend-design\\references\\anti-template-gates.md",
+      "base_sha256": "894c33c8446478e20dd02fa268c34a4e7a36112829e224c939c5469a31bc29db",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\frontend-design\\references\\brief-fingerprint.md",
+      "base_sha256": "379523ff5c558ba78c3a8bc316b16ce1a7e44828c645565f2b5412949338ee30",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\frontend-design\\references\\responsive-state-proof.md",
+      "base_sha256": "d2ac8d0a985b42c1476d0030f78b308aa52e7f5e90e0f75175a8244378b5fae1",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\malware-triage\\NOTICE.md",
+      "base_sha256": "0bd8db5b2c18cd58e52f95236d5548efaaa21cf05eb7272d6c2d252ce59cfe82",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\malware-triage\\SKILL.md",
+      "base_sha256": "fade50ee4d378bec78127adc11281b6b70ec70556764b6b38b9541b0f415c342",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\mobile-application-engineering\\SKILL.md",
+      "base_sha256": "42b9a832543a1af125f71607166969cd570d8bc54a066dfbe59856d166ea2c16",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\observability-and-instrumentation\\NOTICE.md",
+      "base_sha256": "61c44e15be8ac3b63bf1dc7e5c544ad35821e0da0756c278c273b2564254529f",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\observability-and-instrumentation\\SKILL.md",
+      "base_sha256": "41bd1b7c3719223dd5218832e6eb9f7406af1f200cc7d99e65fed946203a26f1",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\performance-optimization\\NOTICE.md",
+      "base_sha256": "8022489e10c3532d6bb80d2482c9e9a7c00c65d9273a2fabb00ffb608ddca40e",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\performance-optimization\\SKILL.md",
+      "base_sha256": "3bd1c016a32f94545cbc6c17a92bed36ccbe421f9733db10041e2326f05849ee",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\LICENSE.txt",
+      "base_sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\NOTICE.md",
+      "base_sha256": "54cc29e33261456828c52b174fe70010f93b1a97d416ba013d8bf90ecc2192d9",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\README.md",
+      "base_sha256": "805a9ee11e2c0451a9dfa47f0abc6e872d835f7e3417ab161bb46343947ca4c7",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\README.upstream.md",
+      "base_sha256": "1a2fe6c114a33c48115eb8d94f8745c8e2c49ddf5e170a53afb598094692c897",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\SKILL.md",
+      "base_sha256": "2e06f97b66e97b2012c20b463acc59acf70b230a8c0c301690b7df6ee7476880",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\UPSTREAM.json",
+      "base_sha256": "0620645e8ecaae94df0c1bbf3ff2dfeeb6c0ea60f20941208d7a07e8c10a8179",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\brainstorming\\SKILL.md",
+      "base_sha256": "4a54a4858b99807f3155ed1614b2f116e35ea5c1b788e793f565dd837fd3891f",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\brainstorming\\scripts\\frame-template.html",
+      "base_sha256": "6a8a4e58bd6a44b904e2e3c57de774481d909204597e1498de53f1b2fecc4c4e",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\brainstorming\\scripts\\helper.js",
+      "base_sha256": "43c6d69954a46ec34a2a262bcc62a9a7e83e839c739f199cb72646d397c686e3",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\brainstorming\\scripts\\server.cjs",
+      "base_sha256": "90d3564a5deb42e7803c005724b07352de67b1f867fd8878e8379239fa44457b",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\brainstorming\\scripts\\start-server.sh",
+      "base_sha256": "a4e5ae84275bcaacd2f84345afeabe59cf7b00ba080e123da7cc1fb226f12847",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\brainstorming\\scripts\\stop-server.sh",
+      "base_sha256": "0b5ccbbd57f62d3ed88993f7940b5ee0e5c0fc9b21c550c623da4f6292e47daf",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\brainstorming\\spec-document-reviewer-prompt.md",
+      "base_sha256": "95a0a195de9d984be2fffa95bab16fc8c563bc296a9cfc5e9c29cb3ece0d7457",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\brainstorming\\visual-companion.md",
+      "base_sha256": "60cbad29b9dd7eaf08da020e301c498a72230b2e13c1813fa967a135ffcc1d71",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\dispatching-parallel-agents\\SKILL.md",
+      "base_sha256": "1968923066f3b707eb01d1992cdf4c42284c3855f70253b9cd5000ff45fca13c",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\executing-plans\\SKILL.md",
+      "base_sha256": "c4c3d8b628c51114cd165fb8246fe02744cd8be180032328391252e653028d9b",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\finishing-a-development-branch\\SKILL.md",
+      "base_sha256": "d0ac8360ed9d59121776ef95c84bcb38e9747de0d7ae7e227dca81e437593b9b",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\receiving-code-review\\SKILL.md",
+      "base_sha256": "091df1629510af1b92fc4abd6f96732ebedb4cb2c0f3457e8f2740b0504a2438",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\requesting-code-review\\SKILL.md",
+      "base_sha256": "d71cc01ba56d2325cf8af5f7c11837819b63ecd57de0bfdb812f7f3ff7751df8",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\requesting-code-review\\code-reviewer.md",
+      "base_sha256": "b2f2ec7596925fe52dac158fdfbca19b3a7d779d619c481e6706a6c0001662d3",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\subagent-driven-development\\SKILL.md",
+      "base_sha256": "349a08ad8b59b19b86c13a7d2f34a1a38719bf88257004a863eefefa8d9f9e40",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\subagent-driven-development\\implementer-prompt.md",
+      "base_sha256": "946601616a6f76ab3f165ef98377390968f1ec124ecef87422bc3553404e0332",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\subagent-driven-development\\re-review-prompt.md",
+      "base_sha256": "e1d8e0e65e58ccde6dc920843da9148d23e65aeb0f8932bcc30be1341a703c4c",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\subagent-driven-development\\scripts\\review-package",
+      "base_sha256": "fac3d4bd7f94369e8037b9ead2a8a502dca6ab333902b560b9455dbb3c450ebe",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\subagent-driven-development\\scripts\\sdd-workspace",
+      "base_sha256": "95a09d9d3983ad1aafd093ca72b4587946dea885c6e302caa02a779a2f911c31",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\subagent-driven-development\\scripts\\task-brief",
+      "base_sha256": "d6954ef7841c7da3d77373e6ff5118b3f2f2e998606fd95d33e6527851bce044",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\subagent-driven-development\\task-reviewer-prompt.md",
+      "base_sha256": "e3b4a1bfe7cd55ed0459e5ca9cdddb6ff086c345b99e9097036db6a18545729e",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\systematic-debugging\\CREATION-LOG.md",
+      "base_sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\systematic-debugging\\SKILL.md",
+      "base_sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\systematic-debugging\\condition-based-waiting-example.ts",
+      "base_sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\systematic-debugging\\condition-based-waiting.md",
+      "base_sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\systematic-debugging\\defense-in-depth.md",
+      "base_sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\systematic-debugging\\find-polluter.sh",
+      "base_sha256": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\systematic-debugging\\root-cause-tracing.md",
+      "base_sha256": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\systematic-debugging\\test-academic.md",
+      "base_sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\systematic-debugging\\test-pressure-1.md",
+      "base_sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\systematic-debugging\\test-pressure-2.md",
+      "base_sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\systematic-debugging\\test-pressure-3.md",
+      "base_sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\test-driven-development\\SKILL.md",
+      "base_sha256": "bf1b8216e523851a411e91d429a7c1c2a173e79d88957bc78e348218d50edd54",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\test-driven-development\\writing-good-tests.md",
+      "base_sha256": "51471c853306ff92ca8bb41dcaea05f31c0e46b03651f8f3c99754b7172f4ae1",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\using-git-worktrees\\SKILL.md",
+      "base_sha256": "8cfb86f121269e8f7f12361e6795c4f6738828340e28964c9229d365666c9edd",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\using-superpowers\\SKILL.md",
+      "base_sha256": "55379fe7c1c473a02c61961c822996bff30e1320d6921d9062509bc508482c05",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\using-superpowers\\references\\antigravity-tools.md",
+      "base_sha256": "4880f6de3da4e32f9659ebe7a72b9e0ebfff04e028c2ed96173f86d0387a04c0",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\using-superpowers\\references\\codex-tools.md",
+      "base_sha256": "d3f113a8ebbd748e8ba847b09b57b7685442775ca4ee194d693ce3663f8fac68",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\using-superpowers\\references\\gemini-tools.md",
+      "base_sha256": "62b9157bcb0ee3c6784e3d0da0798ddfa5872f9e0c34bea48f3079dabea71965",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\using-superpowers\\references\\pi-tools.md",
+      "base_sha256": "703dbc83d23ecab9c6f388460c38abc482e9dee2fe6772a8c7a255152ad3a4d5",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\verification-before-completion\\SKILL.md",
+      "base_sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\writing-plans\\SKILL.md",
+      "base_sha256": "72190c88b2b5a67a96b91d66aa72b9161913e10e8769da3f28a226f4cc7b99d0",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\writing-plans\\plan-document-reviewer-prompt.md",
+      "base_sha256": "aa728b96aad603c8be28875a4305637f6c984aa81ffcadcb13e743202fa2a0c7",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\writing-skills\\SKILL.md",
+      "base_sha256": "d34db5c8aed6a4e0440132bd0613aace70a693ec7819d5637ad77481d8e10d1b",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\writing-skills\\anthropic-best-practices.md",
+      "base_sha256": "217629b356c09c9bd11017c9788e8fc654ca1b32c92d4a51cd490e16dd65e59a",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\writing-skills\\examples\\CLAUDE_MD_TESTING.md",
+      "base_sha256": "0b379a3415e185d3c434b3ad283d8aa132f3022c2a4f210f168865b5986bcef0",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\writing-skills\\graphviz-conventions.dot",
+      "base_sha256": "e2890a593c91370e384b42f2f67b1a6232c9e69dddea7891a0c1c46d7b20b694",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\writing-skills\\persuasion-principles.md",
+      "base_sha256": "a51bc9bf75189ea73a27b3fb504a2fdfdb966fb1f7f1cdf03203230a216ccc03",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\writing-skills\\render-graphs.js",
+      "base_sha256": "ccda971a87bb185f8febf81c56b556a20d026fa980c17b35fa3e8824fbb37852",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\superpowers\\writing-skills\\testing-skills-with-subagents.md",
+      "base_sha256": "c711346852c911b24a84aa161e0cff06a4cd7f4e2fa9e9c0a266cead5afcbade",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\LICENSE.txt",
+      "base_sha256": "0ccdb122ab93102194c09d0e3c111b450ddc9f44e660b47d627250e1d0f96bee",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\NOTICE.md",
+      "base_sha256": "dd3c9f3e788631ba0779b89282b2e05be3786355648e4e5d7e5acaaa113c7e61",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\SKILL.md",
+      "base_sha256": "b955fce5e1623b28ef73f878f931901603fbf8e825e272ecadd70082ab374040",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\references\\chunking-strategy.md",
+      "base_sha256": "e20547197a4effe4cff3cc496df04d5b37cf9245f1d0c5eb433652cc910a4679",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\references\\data-flow-classification.md",
+      "base_sha256": "da3d8a7a00cd0d14c149352c9db013b788c275b2ed57a90151663235bda511f3",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\references\\i18n\\en.md",
+      "base_sha256": "f4ba1da36cfe724016426b400cb72c01dfe992481e81b414d55c3e3172e04bed",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\references\\i18n\\vi.md",
+      "base_sha256": "38ea6c1801b69acf52c4a4f11f000df540dd91db6f540795a5646f83c54379af",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\references\\language-detection.md",
+      "base_sha256": "6f31f8eec212be5658b2f7db3768843ff696da33af9410e707d2d5607c4b2537",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\references\\output-format.md",
+      "base_sha256": "7366d15187e057403529f08ba37e44abcc2c17161598a724879bea7195d096a4",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\01-hardcoded-secret.md",
+      "base_sha256": "17f750ea462b6225e5df1a4f6a92450ec7808769ae196952f0b90d88dfe8a67b",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\02-sql-injection.md",
+      "base_sha256": "47183521ab6e587d5bc21224c71ae601025fbcd72c36c7a4136f0db25062e933",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\03-xss.md",
+      "base_sha256": "0ef41cabc5b73f78badf613a5f961c86a5f78c1292d16a9c2857610d24452b91",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\04-idor.md",
+      "base_sha256": "a3fc8278c3756e594748da138a8aa99f400a617a48e5493ec7bdb111d4a981fa",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\05-slopsquatting.md",
+      "base_sha256": "e82cf54ea1329e94494b49c247fc34a8af2485611b68ae4b25884f6a68935417",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\06-brute-force.md",
+      "base_sha256": "32c9e25d887093c74677284d3551bc382dbe14d71dbf6b520d3eeaac0785a34e",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\07-mass-assignment.md",
+      "base_sha256": "53178e43bdc5036308262495a836643ef3c11d6a5d8272c9f1ecb2d53409d92e",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\08-insecure-deserialization.md",
+      "base_sha256": "97c75ee85c050233eb790899ce2ba660cfd0445dada57d0891c5de0cd5a9e3fb",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\09-ssrf.md",
+      "base_sha256": "b33042ac576886b41efb57a5fa0b3db8e894d5620a3b3b94068521ecf0d088c6",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\10-path-traversal.md",
+      "base_sha256": "57cb23ed0980b91c0ad8c371ead6f3c9a4435a214e83a881474e89d4131894db",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\11-csrf.md",
+      "base_sha256": "a2c915007fc10f75d8e069af0f5e1852ecbb90a145ad12d698630869dd87c44e",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\12-broken-access-control.md",
+      "base_sha256": "f57a8ca915ef32031570e7485d46ebf44e39ab65f69eba602f30cd5f0812822d",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\13-weak-password-hashing.md",
+      "base_sha256": "d36b4d1c6293ecb205fcb370e7d09482c5c7bc60b5290cf36aa063469e4c120b",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\14-jwt-none-algorithm.md",
+      "base_sha256": "c9d966c18d7d8a3e575b61dc59a613133e5552ec26f3b9708a2d54cca841ea52",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\15-cors-misconfig.md",
+      "base_sha256": "785f0bbd4062f55d836d269f048fbc2450ab6a7cb1b33d2f10718c288087bd68",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\16-unrestricted-file-upload.md",
+      "base_sha256": "b659d2de478fa74720db9a40b6989bcc3a2ea9589f1730f4abdcb4d9bd324d25",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\17-verbose-error-debug-mode.md",
+      "base_sha256": "dcf578fbd75299c82fbc82a49f4d4dd5a21887021f645bf1437ec082032935c6",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\18-missing-rate-limit.md",
+      "base_sha256": "65207651b649fab2024188588151aa82189e3a74172c06a7561b4e9902b6bb4c",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\19-race-condition.md",
+      "base_sha256": "fb1e5746ea5bc9693cf4f82985ff9713b7a399cc45ac9888e2ace6c10665a47b",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\20-outdated-dependency.md",
+      "base_sha256": "50c7d404fd5c92aaa3234c01d89c3086ab03ce6ed0e32548f03c8257252fa549",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\generic\\21-command-injection.md",
+      "base_sha256": "464f4e811056bf132912d5ad316aca1d1e972619de6a28b851512bea7aa79ede",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\README.md",
+      "base_sha256": "c46ce988808395b4526b231916ea93c3fea64854441a1f37bf53ab4dd0792482",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\go\\02-sql-injection.md",
+      "base_sha256": "8b1fe2cb7b593ed2b8bc003a68bfb701768c2ba3b81735373c6226ddadfdc94a",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\go\\08-insecure-deserialization.md",
+      "base_sha256": "946605a49968a9b91b15b16f1872bfd1f3ec52cf748e6bb51c11a0194d53fdd8",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\go\\09-ssrf.md",
+      "base_sha256": "db3ba1c224affa246635e788c7b78a9f869b2181a065f5a08e4ed414745f5002",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\go\\17-verbose-error-debug-mode.md",
+      "base_sha256": "328a459e400d95e437288e98836a085a9a256001d6327b186f6c3db8f82c1e15",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\go\\21-command-injection.md",
+      "base_sha256": "7ce8b77c06ce4df4bc7b5b751bc5ba8255262cde16254f603b6fcc3ba6b55a63",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\go\\README.md",
+      "base_sha256": "dd95acd4077ab6214f0fa5126dc46b1e4366c0cb6e921a97abe9e5a9863fe694",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\php\\02-sql-injection.md",
+      "base_sha256": "a3cd8856bff57fcc042fd81de43727c38c70c754b63d24bfe9c3749dbe074065",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\php\\08-insecure-deserialization.md",
+      "base_sha256": "9885440d3e40f854c2d7ec3d1cdee23cd32d843459337a27906990e09d0f73d2",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\php\\11-csrf.md",
+      "base_sha256": "02099595864bc99bf15f9cf2fc34ab23e1bee3f6e813f26593d322194933be06",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\php\\17-verbose-error-debug-mode.md",
+      "base_sha256": "09ad3f01f0f45cf41e3d5a98ee224bf001b7ab4390be387dc39bf71b34fe0aab",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\php\\21-command-injection.md",
+      "base_sha256": "fa11ac23d661271a22df150973f866e08b881bd4bf4bed4d2b456eebb0cc41e0",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\php\\README.md",
+      "base_sha256": "2cf3666e3cec5ffff2738a526aadd328bb6ce915a2d9514c5a05a29a52809ed8",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\python\\02-sql-injection.md",
+      "base_sha256": "b3b2334d8d7cb4dd3ef8601f204aa05c99862ccdb1dfa90b299c7157bdaf6b28",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\python\\07-mass-assignment.md",
+      "base_sha256": "aceb111744b65df76465435b4b4de5091ab40c290391aa6dad88c284489dee7e",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\python\\08-insecure-deserialization.md",
+      "base_sha256": "6b207eeb4d96f97e15799b9108772bd920b716441d66fe45c19944dcae83a979",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\python\\09-ssrf.md",
+      "base_sha256": "12fa36f37a56c057f5d5a5e6c5b303caee3ff3e3bd29b220f654436616236316",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\python\\11-csrf.md",
+      "base_sha256": "5ab5b5820c499dacaea2d1c988adf85b9fbfb7a37912de1a72d0a6e13b93e9c4",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\python\\14-jwt-none-algorithm.md",
+      "base_sha256": "5e181e3a23069fa3df1949a4ca6094f435e7da1784406f0adf9d569e25774e3d",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\python\\15-cors-misconfig.md",
+      "base_sha256": "90a0dbaa87310480e306f89904527bfd7619582554ca87dda2a488c1a3fc0ef6",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\python\\17-verbose-error-debug-mode.md",
+      "base_sha256": "90abe93d2a065953acbf84a107d9110bc9459053e5d9fcf822dd52f7ed448fcb",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\python\\21-command-injection.md",
+      "base_sha256": "5b70ec504874adf485fe83a03467db107725bbefe1f30e33667d83945fe08270",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\python\\README.md",
+      "base_sha256": "cfbdad21d90f3889ae58fd92ca97d7da5136daec8003c0f64bafcfde2843aa1d",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\rust\\02-sql-injection.md",
+      "base_sha256": "280e690ca674bacf96b559e0df3a2b7b1b65904117636ec22aeea2cf8a74f79c",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\rust\\08-insecure-deserialization.md",
+      "base_sha256": "fa36b324bf1325866636b1a8faf32887d6c7e9bb0f1336cde7bc7bcc5dcc1fd9",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\rust\\09-ssrf.md",
+      "base_sha256": "4572c58fa9b1e7ce408676b085745fbf8e5f5a97a03e1e7ad68c90c708e3238d",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\rust\\10-path-traversal.md",
+      "base_sha256": "4599e1fe3bbf016aaaaf38051451daa6fe05266196b0b0806dadd93d5e4d2c63",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\rust\\15-cors-misconfig.md",
+      "base_sha256": "3f7214cabf1e5136fdcfaac635898b8524e581a459e8ee15edd0d3d7e9942cd7",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\rust\\17-verbose-error-debug-mode.md",
+      "base_sha256": "dbd60f9aba752c4b07ae71f633348975a4b0799a73fef14a751df781f5646af7",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\rust\\21-command-injection.md",
+      "base_sha256": "ef6e3bbd39470a8b02d4d0bb503b80745bd8df10f47e31dcf83813dd6f9b39a0",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\rust\\README.md",
+      "base_sha256": "2a29f70e79cd0821585c32833abc58d67abb9aa8ee84778768eae9065806eb0d",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\typescript\\02-sql-injection.md",
+      "base_sha256": "6931067346fdda1decb025a977dac3befa15614d303c76b1448a31d0414d94ed",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\typescript\\03-xss.md",
+      "base_sha256": "7fddc13564be0fd4585f510a064177ab0c22367ae87645841a4e9c7a85f8dd02",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\typescript\\07-mass-assignment.md",
+      "base_sha256": "1946c27170e1a89e7579f7560fb4f137b54050b656990d49af63b061c72db9e8",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\typescript\\08-insecure-deserialization.md",
+      "base_sha256": "d822089b4f14a69a1a5ddfcccda783c0cb1ebac0f6991c427a7c151454197ca3",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\typescript\\09-ssrf.md",
+      "base_sha256": "9c7e550f558238caa2dee8a459b0e000c7aed64748ae018e9e7d458000cd87bb",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\typescript\\11-csrf.md",
+      "base_sha256": "9c667a2272ab66c8630b5ab61e5c547f41efe3ef0204b12196963fb406bdffd3",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\typescript\\14-jwt-none-algorithm.md",
+      "base_sha256": "47608c57a135ad4defd5498eb8e859db82d675aaf35749bc7abfacf144ceac37",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\typescript\\15-cors-misconfig.md",
+      "base_sha256": "ea76ae6a47d3946b724accb5d2becc99dd7820bc7fd1bd37488bc47ae3726982",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\typescript\\17-verbose-error-debug-mode.md",
+      "base_sha256": "6ba08cda6d16e6796ff09573f07355f61e208bfe5ecb5656d84257ee9b7891b8",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\typescript\\21-command-injection.md",
+      "base_sha256": "1b1985724ceab39e88feea310b546851dda4ad14577434ebb89f166cd84e79e5",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\rules\\languages\\typescript\\README.md",
+      "base_sha256": "de132c47d4a8c3d30f16080693d3e133954baa07252ef927340196723016eb99",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\workflows\\large-review-sequential.md",
+      "base_sha256": "c29cf3582d8e3556006400f4eb5546bef52e35161aea27d6b6c74ed53ec2eba5",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "core",
+      "relative_path": ".baron/core/skills\\vibe-security-scan\\workflows\\small-review.md",
+      "base_sha256": "6754ebb930088ca73a3eaee3d61e6063df55496fd4e87436974ff224e8f96882",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "codex",
+      "relative_path": ".codex/INDEX.md",
+      "base_sha256": "441b234ed49e2610809aae71e3e5540e2a2c6d1d38469c3280d5442c9b27efcd",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "codex",
+      "relative_path": ".codex/agents/INDEX.md",
+      "base_sha256": "d75bda12e756ac8066a721ba537655cc44b6f274eaed8a0c2f58f4b8710d445f",
+      "installed_version": "5.0.0",
+      "merge_kind": "routing_block"
+    },
+    {
+      "owner": "codex",
+      "relative_path": ".codex/agents/code-reviewer.toml",
+      "base_sha256": "8afd3755c12c7d0aa359d8e5552310306f5069803fa71dc37eeeccb27c70dbc1",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "codex",
+      "relative_path": ".codex/agents/security-auditor.toml",
+      "base_sha256": "714c9ae179d4bcedc369539b7d4fe3330e349b1dda96013636499af87ca9e2ce",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "codex",
+      "relative_path": ".codex/agents/test-engineer.toml",
+      "base_sha256": "a068ca50025ad96c2d5a8978d245fd3a9754bb8738524d178bc54465024d459e",
+      "installed_version": "5.0.0",
+      "merge_kind": "full_text"
+    },
+    {
+      "owner": "codex",
+      "relative_path": ".codex/hooks.json",
+      "base_sha256": "3c55c27f2ca73a2311159c74a9240ad01477ac380e3273d6db2973d97a78142d",
+      "installed_version": "5.0.0",
+      "merge_kind": "json_owned_entries"
+    },
+    {
+      "owner": "codex",
+      "relative_path": "AGENTS.md",
+      "base_sha256": "c674c638ec8b76d57ca8c0116dd64e7dff5a8caec8d0f72a78638a23572ebd4b",
+      "installed_version": "5.0.0",
+      "merge_kind": "marker_block"
+    }
+  ]
+}

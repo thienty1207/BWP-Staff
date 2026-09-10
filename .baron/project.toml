@@ -1,0 +1,14 @@
+schema_version = 4
+project_id = "a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098"
+identity_binding = "858c29a54bd8ff713b771f447c7acd6b3855005f0277a4bd8eaf831eb4dca596"
+project_slug = "bwp-sonasea"
+platform = "fullstack"
+adapters = ["codex"]
+active_adapter = "codex"
+
+[automation]
+context = true
+plan = true
+harness = true
+proof = true
+trace = true

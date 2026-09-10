@@ -1,0 +1,24 @@
+{
+  "repository": "obra/superpowers",
+  "version": "6.2.0",
+  "tag": "v6.2.0",
+  "commit": "3dcbd5c4b48e02263fbf4a3c01e3fe4f81d584d9",
+  "vendoredPath": "skills",
+  "vendoredFileCount": 50,
+  "upstreamTreeSha256": "e76b5a985b27d626b7338028e292ecd944664ef5d85981c6fd05a8ae71b9291a",
+  "vendoredTreeSha256": "baa4c2ba5519fb8ffb94f4c7ce6e35a438db1324fc4b2f4f91cd89b23e53a7c0",
+  "vendoredTreeHashNormalization": "LF",
+  "license": "MIT",
+  "baronPatches": [
+    {
+      "path": "brainstorming/scripts/server.cjs",
+      "reason": "Remove the remote brand image, telemetry signal, and live branding link, then read the pinned version from local UPSTREAM.json so the visual companion remains local and self-contained."
+    }
+  ],
+  "baronOwnedFiles": [
+    "SKILL.md",
+    "README.md",
+    "NOTICE.md",
+    "UPSTREAM.json"
+  ]
+}

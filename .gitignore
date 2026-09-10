@@ -1,0 +1,40 @@
+# JavaScript / Bun dependencies and build output
+node_modules/
+frontend/node_modules/
+frontend/.svelte-kit/
+frontend/build/
+frontend/.vercel/
+
+# Rust / Axum build output
+target/
+**/target/
+backend/target/
+
+# Environment files and local secrets
+.env
+.env.*
+!**/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Local data and tooling
+.baron-vault/
+.baron/.baron-mutation.lock
+database/*.sqlite
+database/*.sqlite3
+database/*.db
+docker/.env
+*.log
+
+# Nested repository metadata
+**/.git/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*.local.json
