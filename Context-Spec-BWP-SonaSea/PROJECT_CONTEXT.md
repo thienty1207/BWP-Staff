@@ -418,7 +418,7 @@ Do not add synchronization or background workers by default.
 
 Do not imitate a database with in-memory state such as:
 
-```rust
+```go
 var tickets []Ticket
 ```
 
@@ -970,10 +970,10 @@ Never connect automated tests to the production database.
 
 Do not implement unfinished backend code like:
 
-```rust
-return Ok(Json(json!({
-    "success": true
-})));
+```go
+return c.JSON(fiber.Map{
+    "success": true,
+})
 ```
 
 just to make the frontend appear functional.
@@ -2329,19 +2329,25 @@ actual concurrent users
 
 Prefer:
 
-```rust
-let ticket = ticket_repository::find_by_id(&state.db, id).await?;
+```go
+ticket, err := tickets.FindByID(ctx, state.DB, id)
+if err != nil {
+    return err
+}
 ```
 
 over a clever abstraction requiring several files and generic constraints to understand.
 
 Prefer:
 
-```rust
-match ticket.status {
-    TicketStatus::Pending => { ... }
-    TicketStatus::Accepted => { ... }
-    TicketStatus::Closed => { ... }
+```go
+switch ticket.Status {
+case TicketStatusPending:
+    // ...
+case TicketStatusAccepted:
+    // ...
+case TicketStatusClosed:
+    // ...
 }
 ```
 
@@ -2397,14 +2403,17 @@ Do not comment obvious syntax.
 
 Bad:
 
-```rust
+```go
 // Get ticket
-let ticket = get_ticket(id).await?;
+ticket, err := getTicket(ctx, id)
+if err != nil {
+    return err
+}
 ```
 
 Useful:
 
-```rust
+```go
 // Assignment does not transition ticket status.
 // A ticket remains `accepted` while assigned to a technician.
 ```

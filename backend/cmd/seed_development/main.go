@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/thienty1207/BWP-Staff/backend/admin"
@@ -28,7 +29,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	if err := shared.RunMigrations(context.Background(), pool, "migrations"); err != nil {
+	if err := shared.RunMigrations(context.Background(), pool, "migrations", time.Duration(settings.DatabaseAcquireTimeoutSeconds)*time.Second); err != nil {
 		log.Fatal(err)
 	}
 	outcome, err := admin.SeedDevelopmentAdmin(context.Background(), pool, settings.SeedAdmin)

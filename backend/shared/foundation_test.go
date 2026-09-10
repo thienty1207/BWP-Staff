@@ -30,7 +30,7 @@ func TestFoundationAgainstExplicitTestDatabase(t *testing.T) {
 	}
 	defer pool.Close()
 
-	if err := RunMigrations(ctx, pool, filepath.Join("..", "migrations")); err != nil {
+	if err := RunMigrations(ctx, pool, filepath.Join("..", "migrations"), 5*time.Second); err != nil {
 		t.Fatalf("run migrations: %v", err)
 	}
 

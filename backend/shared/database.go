@@ -47,18 +47,26 @@ func Connect(ctx context.Context, settings config.Config) (*pgxpool.Pool, error)
 	return pool, nil
 }
 
-func RunMigrations(ctx context.Context, pool *pgxpool.Pool, directory string) error {
-	connection, err := pool.Acquire(ctx)
+func RunMigrations(ctx context.Context, pool *pgxpool.Pool, directory string, acquireTimeout time.Duration) error {
+	if acquireTimeout <= 0 {
+		return fmt.Errorf("migration acquire timeout must be positive")
+	}
+	acquireContext, cancel := context.WithTimeout(ctx, acquireTimeout)
+	defer cancel()
+
+	connection, err := pool.Acquire(acquireContext)
 	if err != nil {
 		return fmt.Errorf("acquire migration connection: %w", err)
 	}
 	defer connection.Release()
 
-	if _, err := connection.Exec(ctx, `SELECT pg_advisory_lock(hashtext('bwp-sonasea:migrations'))`); err != nil {
+	if _, err := connection.Exec(acquireContext, `SELECT pg_advisory_lock(hashtext('bwp-sonasea:migrations'))`); err != nil {
 		return fmt.Errorf("lock migrations: %w", err)
 	}
 	defer func() {
-		_, _ = connection.Exec(context.Background(), `SELECT pg_advisory_unlock(hashtext('bwp-sonasea:migrations'))`)
+		unlockContext, unlockCancel := context.WithTimeout(context.Background(), acquireTimeout)
+		defer unlockCancel()
+		_, _ = connection.Exec(unlockContext, `SELECT pg_advisory_unlock(hashtext('bwp-sonasea:migrations'))`)
 	}()
 
 	if _, err := connection.Exec(ctx, `
