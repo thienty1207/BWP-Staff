@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "project_id": "a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098",
+  "candidates": [
+    {
+      "id": "candidate-9c7eb18268cb53f3-verification",
+      "summary": "SPEC-01 implementation and verification completed with the requested extremely-performance database foundation.",
+      "scope": "project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098",
+      "impact": "verification",
+      "status": "candidate",
+      "trusted": false,
+      "evidence_count": 1,
+      "provenance": [
+        "adapter:codex",
+        "automation:ContextCompiled",
+        "automation:PlanStarted",
+        "resume:docs/baron/continuity/CURRENT.md",
+        "resume:docs/baron/continuity/CURRENT_RECOVERY.md",
+        "resume:docs/baron/harness/CURRENT_INTENT.md",
+        "resume:docs/baron/plans/CURRENT.md",
+        "resume:docs/baron/proofs/INDEX.md",
+        "resume:docs/baron/traces/INDEX.md",
+        "review:post-task",
+        "source:repo-review",
+        "source:user-task",
+        "task-review:2bdfdbd4f877208e6b7542058bc517c88cff38fec6e04140f330f85740611231"
+      ],
+      "observed_automation": [
+        "ContextCompiled",
+        "PlanStarted"
+      ],
+      "resume_sources": [
+        "docs/baron/continuity/CURRENT.md",
+        "docs/baron/continuity/CURRENT_RECOVERY.md",
+        "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/plans/CURRENT.md",
+        "docs/baron/proofs/INDEX.md",
+        "docs/baron/traces/INDEX.md"
+      ],
+      "contradiction": null,
+      "readiness": "candidate; explicit review required",
+      "created_at": "2026-09-10T19:18:45+07:00",
+      "updated_at": "2026-09-10T19:18:45+07:00",
+      "correlation": {
+        "adapter": "codex",
+        "session_id": "01a08a73-06cb-7d52-b575-5f2debbf48ee",
+        "request_id": "01a08aed-69ab-7fb1-83cf-8578717bc08f",
+        "task_id": "857951cb7ca53735303bfef0b4e0b99ffc73cfbfbf5f499be54fef06b8ff9426"
+      },
+      "suppressed_until": null,
+      "replacement_for": null,
+      "decision_recorded": false,
+      "proposal_key": "spec 01 implementation and verification completed with the requested extremely performance database foundation",
+      "semantic_key": "spec 01 implementation and verification completed with the requested extremely performance database foundation",
+      "evidence_keys": [
+        "e867c96714ef6e1dc8ca6925b1e000d56bcfc5e67374903c8ffb635f16094a44"
+      ]
+    },
+    {
+      "id": "candidate-37cf191d2dc439b0-verification",
+      "summary": "SPEC-01 implementation and verification completed; future work can proceed from the database foundation.",
+      "scope": "project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098",
+      "impact": "verification",
+      "status": "candidate",
+      "trusted": false,
+      "evidence_count": 1,
+      "provenance": [
+        "automation:ContextCompiled",
+        "automation:PlanStarted",
+        "automation:TraceScored",
+        "resume:docs/baron/continuity/CURRENT.md",
+        "resume:docs/baron/continuity/CURRENT_RECOVERY.md",
+        "resume:docs/baron/harness/CURRENT_INTENT.md",
+        "resume:docs/baron/plans/CURRENT.md",
+        "resume:docs/baron/proofs/INDEX.md",
+        "resume:docs/baron/traces/INDEX.md",
+        "review:post-task",
+        "source:repo-review",
+        "source:user-task",
+        "task-review:8b7dfe2e41e9ce7ba8d2125d7bc1539bc316fab13c3b91e7a75b45423fc2644a"
+      ],
+      "observed_automation": [
+        "ContextCompiled",
+        "PlanStarted",
+        "TraceScored"
+      ],
+      "resume_sources": [
+        "docs/baron/continuity/CURRENT.md",
+        "docs/baron/continuity/CURRENT_RECOVERY.md",
+        "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/plans/CURRENT.md",
+        "docs/baron/proofs/INDEX.md",
+        "docs/baron/traces/INDEX.md"
+      ],
+      "contradiction": null,
+      "readiness": "candidate; explicit review required",
+      "created_at": "2026-09-10T19:20:02+07:00",
+      "updated_at": "2026-09-10T19:20:02+07:00",
+      "correlation": {
+        "task_id": "2de6cb75ed8a533063e46dc45998c1ce7b1726e28392ae6306009ca722e36ed9"
+      },
+      "suppressed_until": null,
+      "replacement_for": null,
+      "decision_recorded": false,
+      "proposal_key": "spec 01 implementation and verification completed future work can proceed from the database foundation",
+      "semantic_key": "spec 01 implementation and verification completed future work can proceed from the database foundation",
+      "evidence_keys": [
+        "6828531bd451b95d9ea151565c30a2587cae388064b75b297b5275363f9ba842"
+      ]
+    },
+    {
+      "id": "candidate-59319d71b9d1e5d0-verification",
+      "summary": "Repository layout normalized: database scripts are under database/scripts, SQLx migrations remain under backend/migrations, tests stay with backend/frontend owners, root test is removed, and example env files are prohibited.",
+      "scope": "project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098",
+      "impact": "verification",
+      "status": "candidate",
+      "trusted": false,
+      "evidence_count": 1,
+      "provenance": [
+        "automation:ContextCompiled",
+        "automation:PlanStarted",
+        "automation:TraceScored",
+        "resume:docs/baron/continuity/CURRENT.md",
+        "resume:docs/baron/continuity/CURRENT_RECOVERY.md",
+        "resume:docs/baron/harness/CURRENT_INTENT.md",
+        "resume:docs/baron/plans/CURRENT.md",
+        "resume:docs/baron/proofs/INDEX.md",
+        "resume:docs/baron/traces/INDEX.md",
+        "review:post-task",
+        "source:repo-review",
+        "source:user-task",
+        "task-review:18077d0d49bbf46db0567c3f5b13ebce83303857c487261d57c97da9b0908446"
+      ],
+      "observed_automation": [
+        "ContextCompiled",
+        "PlanStarted",
+        "TraceScored"
+      ],
+      "resume_sources": [
+        "docs/baron/continuity/CURRENT.md",
+        "docs/baron/continuity/CURRENT_RECOVERY.md",
+        "docs/baron/plans/CURRENT.md",
+        "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/proofs/INDEX.md",
+        "docs/baron/traces/INDEX.md"
+      ],
+      "contradiction": null,
+      "readiness": "candidate; explicit review required",
+      "created_at": "2026-09-10T19:33:26+07:00",
+      "updated_at": "2026-09-10T19:33:26+07:00",
+      "correlation": {
+        "task_id": "68cbe3538b9a4c69de281ceb69175b640c48d491aafad8b9d0a7ab0bc045b559"
+      },
+      "suppressed_until": null,
+      "replacement_for": null,
+      "decision_recorded": false,
+      "proposal_key": "repository layout normalized database scripts are under database scripts sqlx migrations remain under backend migrations tests stay with backend frontend owners root test is removed and example env files are prohibited",
+      "semantic_key": "repository layout normalized database scripts are under database scripts sqlx migrations remain under backend migrations tests stay with backend frontend owners root test is removed and example env files are prohibited",
+      "evidence_keys": [
+        "5c45fbd1f2d87642680d2e76bbceffd154d4914f8c5872250110c664e9eded7d"
+      ]
+    }
+  ],
+  "responses": [],
+  "archived": []
+}

@@ -13,13 +13,10 @@ backend/target/
 # Environment files and local secrets
 .env
 .env.*
-!**/.env.example
 frontend/.env
 frontend/.env.*
-!frontend/.env.example
 backend/.env
 backend/.env.*
-!backend/.env.example
 
 # Local data and tooling
 .baron-vault/
@@ -27,6 +24,8 @@ backend/.env.*
 database/*.sqlite
 database/*.sqlite3
 database/*.db
+database/*.dump
+database/*.partial
 docker/.env
 *.log
 
