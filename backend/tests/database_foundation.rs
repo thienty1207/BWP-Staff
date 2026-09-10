@@ -2,8 +2,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use backend::{
+    admin::seed::{SeedOutcome, seed_development_admin},
     config::Config,
-    seed::{SeedOutcome, seed_development_admin},
     shared::database,
 };
 use sqlx::{PgPool, Row};

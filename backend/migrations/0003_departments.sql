@@ -11,3 +11,4 @@ CREATE TABLE departments (
     CONSTRAINT departments_code_not_blank CHECK (btrim(code) <> ''),
     CONSTRAINT departments_name_not_blank CHECK (btrim(name) <> '')
 );
+

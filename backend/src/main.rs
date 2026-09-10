@@ -1,4 +1,4 @@
-use backend::{app, config::Config, seed::seed_development_admin, shared::database};
+use backend::{admin::seed::seed_development_admin, app, config::Config, shared::database};
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 

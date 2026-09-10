@@ -21,3 +21,4 @@ CREATE TABLE message_attachments (
     CONSTRAINT message_attachments_storage_key_not_blank CHECK (btrim(storage_key) <> ''),
     CONSTRAINT message_attachments_mime_type_not_blank CHECK (btrim(mime_type) <> '')
 );
+

@@ -17,3 +17,4 @@ VALUES
     ('ROOM-7309', 'Room 7309', 'Development location seed data'),
     ('VILLA', 'Villa', 'Development location seed data')
 ON CONFLICT (code) DO NOTHING;
+

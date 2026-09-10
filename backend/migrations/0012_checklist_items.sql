@@ -37,3 +37,4 @@ CREATE TABLE checklist_items (
     CONSTRAINT checklist_items_completed_state_check
         CHECK (NOT is_completed OR (completed_by IS NOT NULL AND completed_at IS NOT NULL))
 );
+

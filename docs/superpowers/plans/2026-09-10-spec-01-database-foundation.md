@@ -33,7 +33,7 @@ Execution: inline in the current task after the user approved the design.
 Files:
 - Create: backend/src/lib.rs
 - Create: backend/src/config.rs with tests first
-- Create: backend/src/seed.rs with tests first
+- Create: backend/src/admin/seed.rs with tests first
 - Modify: backend/Cargo.toml
 
 Interfaces:
@@ -131,10 +131,10 @@ Steps:
 ### Task 5: Add Argon2id development admin provisioning
 
 Files:
-- Modify: backend/src/seed.rs
+- Modify: backend/src/admin/seed.rs
 - Modify: backend/src/config.rs
 - Modify: backend/src/main.rs
-- Create: backend/src/bin/seed_development.rs
+- Create: backend/src/admin/bin/seed_development.rs
 - Modify: backend/tests/database_foundation.rs
 
 Interfaces:

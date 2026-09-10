@@ -16,3 +16,4 @@ CREATE TABLE audit_logs (
     CONSTRAINT audit_logs_metadata_object_check
         CHECK (metadata IS NULL OR jsonb_typeof(metadata) = 'object')
 );
+

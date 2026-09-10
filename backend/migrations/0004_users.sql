@@ -24,3 +24,4 @@ CREATE TABLE users (
     CONSTRAINT users_password_hash_not_blank CHECK (btrim(password_hash) <> ''),
     CONSTRAINT users_full_name_not_blank CHECK (btrim(full_name) <> '')
 );
+

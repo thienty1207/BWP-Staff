@@ -9,3 +9,4 @@ CREATE TABLE locations (
     CONSTRAINT locations_code_key UNIQUE (code),
     CONSTRAINT locations_name_not_blank CHECK (btrim(name) <> '')
 );
+

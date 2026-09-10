@@ -57,3 +57,4 @@ CREATE TABLE tickets (
     CONSTRAINT tickets_closed_closure_check
         CHECK (status <> 'closed' OR (closed_by IS NOT NULL AND closed_at IS NOT NULL))
 );
+

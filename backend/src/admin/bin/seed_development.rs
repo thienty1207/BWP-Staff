@@ -1,6 +1,6 @@
 use std::io;
 
-use backend::{config::Config, seed::seed_development_admin, shared::database};
+use backend::{admin::seed::seed_development_admin, config::Config, shared::database};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

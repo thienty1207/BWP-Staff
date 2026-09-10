@@ -18,3 +18,4 @@ CREATE TABLE staff_meals (
     CONSTRAINT staff_meals_valid_range_check
         CHECK (valid_from IS NULL OR valid_to IS NULL OR valid_to >= valid_from)
 );
+

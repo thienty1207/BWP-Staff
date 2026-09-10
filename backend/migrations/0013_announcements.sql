@@ -16,3 +16,4 @@ CREATE TABLE announcements (
     CONSTRAINT announcements_published_state_check
         CHECK ((is_published AND published_at IS NOT NULL) OR (NOT is_published AND published_at IS NULL))
 );
+

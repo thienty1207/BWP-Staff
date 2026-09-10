@@ -17,3 +17,4 @@ CREATE TABLE auth_sessions (
     CONSTRAINT auth_sessions_token_hash_not_blank CHECK (btrim(session_token_hash) <> ''),
     CONSTRAINT auth_sessions_expiry_after_creation CHECK (expires_at > created_at)
 );
+

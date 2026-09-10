@@ -17,3 +17,4 @@ CREATE TABLE ticket_messages (
         ON UPDATE RESTRICT
         ON DELETE RESTRICT
 );
+

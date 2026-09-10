@@ -30,59 +30,21 @@ BWP-SonaSea/
 │   │   ├── app.rs
 │   │   ├── lib.rs
 │   │   ├── config.rs
-│   │   ├── seed.rs
-│   │   ├── bin/
-│   │   │   └── seed_development.rs
-│   │   ├── auth/
+│   │   ├── client/
 │   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── tickets/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── chat/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── checklist/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── announcements/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── staff_meal/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── reports/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
-│   │   ├── settings/
-│   │   │   ├── mod.rs
-│   │   │   ├── handler.rs
-│   │   │   ├── service.rs
-│   │   │   ├── repository.rs
-│   │   │   └── model.rs
+│   │   │   ├── auth/
+│   │   │   ├── tickets/
+│   │   │   ├── chat/
+│   │   │   ├── checklist/
+│   │   │   ├── announcements/
+│   │   │   ├── staff_meal/
+│   │   │   ├── reports/
+│   │   │   └── settings/
 │   │   ├── admin/
-│   │   │   └── mod.rs
+│   │   │   ├── mod.rs
+│   │   │   ├── seed.rs
+│   │   │   └── bin/
+│   │   │       └── seed_development.rs
 │   │   └── shared/
 │   │       ├── mod.rs
 │   │       ├── database.rs
@@ -669,9 +631,9 @@ The point is separation of responsibility, not artificial line count.
 
 The current backend contains the SPEC-01 foundation: SQLx migrations,
 configuration, database connectivity, development seeding, shared database
-access, and their backend tests. It also now follows the requested
-feature-oriented module layout so later SPECs have stable implementation
-boundaries.
+access, and their backend tests. Client-facing feature boundaries are grouped
+under `src/client/`; administrator controls and seeding are under `src/admin/`;
+shared infrastructure remains under `src/shared/`.
 
 Locked backend layout:
 
@@ -683,67 +645,65 @@ backend/
 ├── src/
 │   ├── main.rs
 │   ├── app.rs
+│   ├── lib.rs
 │   ├── config.rs
 │   │
-│   ├── auth/
+│   ├── client/
 │   │   ├── mod.rs
-│   │   ├── handler.rs
-│   │   ├── service.rs
-│   │   ├── repository.rs
-│   │   └── model.rs
-│   │
-│   ├── tickets/
-│   │   ├── mod.rs
-│   │   ├── handler.rs
-│   │   ├── service.rs
-│   │   ├── repository.rs
-│   │   └── model.rs
-│   │
-│   ├── chat/
-│   │   ├── mod.rs
-│   │   ├── handler.rs
-│   │   ├── service.rs
-│   │   ├── repository.rs
-│   │   └── model.rs
-│   │
-│   ├── checklist/
-│   │   ├── mod.rs
-│   │   ├── handler.rs
-│   │   ├── service.rs
-│   │   ├── repository.rs
-│   │   └── model.rs
-│   │
-│   ├── announcements/
-│   │   ├── mod.rs
-│   │   ├── handler.rs
-│   │   ├── service.rs
-│   │   ├── repository.rs
-│   │   └── model.rs
-│   │
-│   ├── staff_meal/
-│   │   ├── mod.rs
-│   │   ├── handler.rs
-│   │   ├── service.rs
-│   │   ├── repository.rs
-│   │   └── model.rs
-│   │
-│   ├── reports/
-│   │   ├── mod.rs
-│   │   ├── handler.rs
-│   │   ├── service.rs
-│   │   ├── repository.rs
-│   │   └── model.rs
-│   │
-│   ├── settings/
-│   │   ├── mod.rs
-│   │   ├── handler.rs
-│   │   ├── service.rs
-│   │   ├── repository.rs
-│   │   └── model.rs
+│   │   ├── auth/
+│   │   │   ├── mod.rs
+│   │   │   ├── handler.rs
+│   │   │   ├── service.rs
+│   │   │   ├── repository.rs
+│   │   │   └── model.rs
+│   │   ├── tickets/
+│   │   │   ├── mod.rs
+│   │   │   ├── handler.rs
+│   │   │   ├── service.rs
+│   │   │   ├── repository.rs
+│   │   │   └── model.rs
+│   │   ├── chat/
+│   │   │   ├── mod.rs
+│   │   │   ├── handler.rs
+│   │   │   ├── service.rs
+│   │   │   ├── repository.rs
+│   │   │   └── model.rs
+│   │   ├── checklist/
+│   │   │   ├── mod.rs
+│   │   │   ├── handler.rs
+│   │   │   ├── service.rs
+│   │   │   ├── repository.rs
+│   │   │   └── model.rs
+│   │   ├── announcements/
+│   │   │   ├── mod.rs
+│   │   │   ├── handler.rs
+│   │   │   ├── service.rs
+│   │   │   ├── repository.rs
+│   │   │   └── model.rs
+│   │   ├── staff_meal/
+│   │   │   ├── mod.rs
+│   │   │   ├── handler.rs
+│   │   │   ├── service.rs
+│   │   │   ├── repository.rs
+│   │   │   └── model.rs
+│   │   ├── reports/
+│   │   │   ├── mod.rs
+│   │   │   ├── handler.rs
+│   │   │   ├── service.rs
+│   │   │   ├── repository.rs
+│   │   │   └── model.rs
+│   │   └── settings/
+│   │       ├── mod.rs
+│   │       ├── handler.rs
+│   │       ├── service.rs
+│   │       ├── repository.rs
+│   │       └── model.rs
 │   │
 │   ├── admin/
 │   │   ├── mod.rs
-│   │   └── ...
+│   │   ├── seed.rs
+│   │   └── bin/
+│   │       └── seed_development.rs
 │   │
 │   └── shared/
 │       ├── mod.rs

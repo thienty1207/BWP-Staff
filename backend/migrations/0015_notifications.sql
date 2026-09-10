@@ -28,3 +28,4 @@ CREATE TABLE notifications (
     CONSTRAINT notifications_read_state_check
         CHECK ((is_read AND read_at IS NOT NULL) OR (NOT is_read AND read_at IS NULL))
 );
+

@@ -1,13 +1,5 @@
 pub mod admin;
-pub mod announcements;
 pub mod app;
-pub mod auth;
-pub mod chat;
-pub mod checklist;
+pub mod client;
 pub mod config;
-pub mod reports;
-pub mod seed;
-pub mod settings;
 pub mod shared;
-pub mod staff_meal;
-pub mod tickets;

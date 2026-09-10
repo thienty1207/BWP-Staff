@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2024"
 default-run = "backend"
 
+[[bin]]
+name = "seed_development"
+path = "src/admin/bin/seed_development.rs"
+
 [dependencies]
 axum = "0.8.9"
 argon2 = "0.5"

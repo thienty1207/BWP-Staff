@@ -16,3 +16,4 @@ CREATE TABLE user_preferences (
         CHECK (theme IN ('dark', 'light', 'system')),
     CONSTRAINT user_preferences_language_not_blank CHECK (btrim(language) <> '')
 );
+

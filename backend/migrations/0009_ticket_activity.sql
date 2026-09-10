@@ -19,3 +19,4 @@ CREATE TABLE ticket_activity (
     CONSTRAINT ticket_activity_metadata_object_check
         CHECK (metadata IS NULL OR jsonb_typeof(metadata) = 'object')
 );
+

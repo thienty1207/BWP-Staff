@@ -24,3 +24,4 @@ CREATE TYPE audit_action AS ENUM (
     'publish',
     'unpublish'
 );
+

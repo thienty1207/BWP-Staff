@@ -50,9 +50,13 @@ the matching `database/full_app_schema.sql`, with:
 pwsh -File database/scripts/backup_database.ps1
 ```
 
-The requested backend module boundaries live under `backend/src/`. Runtime
-SQLx migrations remain under `backend/migrations/`; the root `database/`
-directory is for the backup and operational schema artifacts.
+The backend source root keeps only bootstrap/common configuration files plus
+`client/`, `admin/`, and `shared/`. Client-facing workflows are grouped under
+`backend/src/client/`; administrator controls and seeding live under
+`backend/src/admin/`; shared infrastructure stays under
+`backend/src/shared/`. Runtime SQLx migrations remain under
+`backend/migrations/`; the root `database/` directory is for backup and
+operational schema artifacts.
 
 Baron is initialized for the Codex integration at the project root. Baron Core
 files live under `.baron/core/`; host-specific Codex files remain in `.codex/`.
