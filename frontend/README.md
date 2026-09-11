@@ -1,42 +1,29 @@
-# sv
+# BWP SonaSea frontend
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
-
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-bun x sv@0.17.0 create --template minimal --types ts --install bun frontend
-```
+The frontend uses SvelteKit, Svelte 5, TypeScript, Vite, and Bun.
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Install the locked dependencies and start the development server:
 
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+```bash
+bun install --frozen-lockfile
+bun run dev
 ```
+
+The local Vite server proxies `/api/*` to the Go backend at
+`http://127.0.0.1:3000`. Start the backend separately, then open
+`http://localhost:5173/login`.
 
 ## Building
 
-To create a production version of your app:
+Run the frontend checks and create a production build with:
 
-```sh
-npm run build
+```bash
+bun run check
+bun run build
 ```
 
-You can preview the production build with `npm run preview`.
+You can preview the production build with `bun run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.

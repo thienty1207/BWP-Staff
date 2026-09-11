@@ -23,8 +23,8 @@
 ## Current repository snapshot
 
 As of 2026-09-11, the repository contains the SPEC-01 PostgreSQL foundation,
-the SPEC-02 Go/Fiber v3 HTTP foundation, and the SPEC-03 authentication
-backend. Feature packages are added only when
+the SPEC-02 Go/Fiber v3 HTTP foundation, the SPEC-03 authentication backend,
+and the SPEC-04 login UI/auth integration. Feature packages are added only when
 their corresponding SPEC implements behavior; empty future folders are not
 generated.
 
@@ -76,15 +76,24 @@ BWP-SonaSea/
 │   ├── tsconfig.json
 │   ├── .gitignore
 │   ├── static/
+│   ├── tests/
+│   │   └── auth-api.test.ts
 │   └── src/
 │       ├── app.d.ts
 │       ├── app.html
 │       ├── lib/
 │       │   ├── assets/
+│       │   ├── client/auth/
+│       │   │   ├── api.ts
+│       │   │   └── model.ts
+│       │   ├── components/ThemeToggle.svelte
+│       │   ├── styles/app.css
+│       │   ├── theme.ts
 │       │   └── index.ts
 │       └── routes/
 │           ├── +layout.svelte
-│           └── +page.svelte
+│           ├── +page.svelte
+│           └── login/+page.svelte
 ├── database/
 │   ├── README.md
 │   ├── bwp-sonasea.dump
@@ -106,7 +115,8 @@ BWP-SonaSea/
 │   └── Spec/
 │       ├── SPEC-01-database-foundation.md
 │       ├── SPEC-02-backend-foundation.md
-│       └── SPEC-03-authentication-backend.md
+│       ├── SPEC-03-authentication-backend.md
+│       └── SPEC-04-login-ui-auth-integration.md
 ├── .gitignore
 ├── AGENTS.md
 └── README.md
@@ -1155,9 +1165,7 @@ Do not fake completion.
 
 # 26. Frontend Architecture
 
-The current frontend is a minimal SvelteKit scaffold using Bun for dependency installation and script execution. It currently contains the root layout/page, shared library entrypoint, static assets, and Vite/TypeScript configuration.
-
-The feature-specific API, component, store, and route-group directories below are planned additions. Create them as the relevant SPECs are implemented rather than treating them as current folders.
+The current frontend is a minimal SvelteKit application using Bun for dependency installation and script execution. SPEC-04 adds the real login route, authenticated identity entry page, focused auth client, theme foundation, and Vite `/api` proxy. The remaining feature-specific API, component, store, and route-group directories below are planned additions and must be created only by their relevant SPECs.
 
 Planned structure:
 
