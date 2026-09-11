@@ -465,8 +465,8 @@
       "resume_sources": [
         "docs/baron/continuity/CURRENT.md",
         "docs/baron/continuity/CURRENT_RECOVERY.md",
-        "docs/baron/plans/CURRENT.md",
         "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/plans/CURRENT.md",
         "docs/baron/proofs/INDEX.md",
         "docs/baron/traces/INDEX.md"
       ],
@@ -484,6 +484,62 @@
       "semantic_key": "spec 03 authentication backend implementation review",
       "evidence_keys": [
         "d01075400ac58068646f0bfe8c1a81409c74afb2af0c0b6b509d8c5b58eda4f4"
+      ]
+    },
+    {
+      "id": "candidate-122a8ef894c59c63-verification",
+      "summary": "SPEC-05 implementation complete; verification and staged diff review completed; mobile exact viewport resize unavailable.",
+      "scope": "project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098",
+      "impact": "verification",
+      "status": "candidate",
+      "trusted": false,
+      "evidence_count": 1,
+      "provenance": [
+        "automation:ContextCompiled",
+        "automation:PlanStarted",
+        "automation:PreCompact",
+        "automation:ProofRecorded",
+        "automation:TraceScored",
+        "resume:docs/baron/continuity/CURRENT.md",
+        "resume:docs/baron/continuity/CURRENT_RECOVERY.md",
+        "resume:docs/baron/harness/CURRENT_INTENT.md",
+        "resume:docs/baron/plans/CURRENT.md",
+        "resume:docs/baron/proofs/INDEX.md",
+        "resume:docs/baron/traces/INDEX.md",
+        "review:post-task",
+        "source:repo-review",
+        "source:user-task",
+        "task-review:32715fd0d05c488a3b2481de3d95b293bcfdbad21c034346a8f39fb7b30ed72b"
+      ],
+      "observed_automation": [
+        "ContextCompiled",
+        "PlanStarted",
+        "PreCompact",
+        "ProofRecorded",
+        "TraceScored"
+      ],
+      "resume_sources": [
+        "docs/baron/continuity/CURRENT.md",
+        "docs/baron/continuity/CURRENT_RECOVERY.md",
+        "docs/baron/plans/CURRENT.md",
+        "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/proofs/INDEX.md",
+        "docs/baron/traces/INDEX.md"
+      ],
+      "contradiction": null,
+      "readiness": "candidate; explicit review required",
+      "created_at": "2026-09-11T20:35:04+07:00",
+      "updated_at": "2026-09-11T20:35:04+07:00",
+      "correlation": {
+        "task_id": "ead88ff1d7b26894516a3958b86f3b5fc7d90ab4ef7cd40cbcd946d899a5aeef"
+      },
+      "suppressed_until": null,
+      "replacement_for": null,
+      "decision_recorded": false,
+      "proposal_key": "spec 05 implementation complete verification and staged diff review completed mobile exact viewport resize unavailable",
+      "semantic_key": "spec 05 implementation complete verification and staged diff review completed mobile exact viewport resize unavailable",
+      "evidence_keys": [
+        "abed4ea2978b85194c329b28262f52fdee751ecb234b63e239bbfe7a060bf584"
       ]
     }
   ],

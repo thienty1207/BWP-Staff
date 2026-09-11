@@ -189,6 +189,27 @@ Candidates are untrusted evidence. They require explicit approval through the ex
 - Readiness: candidate; explicit review required
 - Provenance: automation:ContextCompiled, automation:PlanStarted, automation:PreCompact, automation:ProofRecorded, automation:TraceScored, resume:docs/baron/continuity/CURRENT.md, resume:docs/baron/continuity/CURRENT_RECOVERY.md, resume:docs/baron/harness/CURRENT_INTENT.md, resume:docs/baron/plans/CURRENT.md, resume:docs/baron/proofs/INDEX.md, resume:docs/baron/traces/INDEX.md, review:post-task, source:repo-review, source:user-task, task-review:b09306bbad930f044feb79dc32024fab51976d49d789d4d0c7a9b24993b6a498
 - Observed automation: ContextCompiled, PlanStarted, PreCompact, ProofRecorded, TraceScored
+- Resume sources: docs/baron/continuity/CURRENT.md, docs/baron/continuity/CURRENT_RECOVERY.md, docs/baron/harness/CURRENT_INTENT.md, docs/baron/plans/CURRENT.md, docs/baron/proofs/INDEX.md, docs/baron/traces/INDEX.md
+- Contradiction: none
+- Suppressed until: none
+- Replacement for: none
+- Decision recorded: `no`
+- Safe action: preserve as untrusted evidence; do not rewrite skills, agents, memory facts, routing, proof policy, or runtime assets from this item alone.
+
+## candidate-122a8ef894c59c63-verification
+
+- Status: `candidate`
+- Trusted fact: `no`
+- Approval required: `yes`
+- Created: 2026-09-11T20:35:04+07:00
+- Updated: 2026-09-11T20:35:04+07:00
+- Summary: SPEC-05 implementation complete; verification and staged diff review completed; mobile exact viewport resize unavailable.
+- Scope: `project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098`
+- Impact: `verification`
+- Evidence count: `1`
+- Readiness: candidate; explicit review required
+- Provenance: automation:ContextCompiled, automation:PlanStarted, automation:PreCompact, automation:ProofRecorded, automation:TraceScored, resume:docs/baron/continuity/CURRENT.md, resume:docs/baron/continuity/CURRENT_RECOVERY.md, resume:docs/baron/harness/CURRENT_INTENT.md, resume:docs/baron/plans/CURRENT.md, resume:docs/baron/proofs/INDEX.md, resume:docs/baron/traces/INDEX.md, review:post-task, source:repo-review, source:user-task, task-review:32715fd0d05c488a3b2481de3d95b293bcfdbad21c034346a8f39fb7b30ed72b
+- Observed automation: ContextCompiled, PlanStarted, PreCompact, ProofRecorded, TraceScored
 - Resume sources: docs/baron/continuity/CURRENT.md, docs/baron/continuity/CURRENT_RECOVERY.md, docs/baron/plans/CURRENT.md, docs/baron/harness/CURRENT_INTENT.md, docs/baron/proofs/INDEX.md, docs/baron/traces/INDEX.md
 - Contradiction: none
 - Suppressed until: none

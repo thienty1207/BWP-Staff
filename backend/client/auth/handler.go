@@ -14,7 +14,7 @@ import (
 	"github.com/thienty1207/BWP-Staff/backend/shared/httperror"
 )
 
-func RegisterRoutes(api fiber.Router, pool *pgxpool.Pool, settings config.Config) {
+func RegisterRoutes(api fiber.Router, pool *pgxpool.Pool, settings config.Config) *Service {
 	repository := NewRepository(pool)
 	service := NewService(repository, time.Duration(settings.AuthSessionTTLHours)*time.Hour)
 	handler := &handler{
@@ -26,6 +26,7 @@ func RegisterRoutes(api fiber.Router, pool *pgxpool.Pool, settings config.Config
 	authRoutes.Post("/login", handler.login)
 	authRoutes.Post("/logout", handler.logout)
 	authRoutes.Get("/me", service.RequireAuth(), handler.me)
+	return service
 }
 
 type handler struct {

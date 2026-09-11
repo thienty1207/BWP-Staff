@@ -24,9 +24,10 @@
 
 As of 2026-09-11, the repository contains the SPEC-01 PostgreSQL foundation,
 the SPEC-02 Go/Fiber v3 HTTP foundation, the SPEC-03 authentication backend,
-the SPEC-04 login UI/auth integration, and the SPEC-04.1 login branding polish.
-Feature packages are added only when their corresponding SPEC implements
-behavior; empty future folders are not generated.
+the SPEC-04 login UI/auth integration, the SPEC-04.1 login branding polish,
+and the SPEC-05 authenticated shell plus read-only tickets list. Feature
+packages are added only when their corresponding SPEC implements behavior;
+empty future folders are not generated.
 
 ```text
 BWP-SonaSea/
@@ -51,6 +52,12 @@ BWP-SonaSea/
 │   ├── client/auth/
 │   │   ├── handler.go
 │   │   ├── middleware.go
+│   │   ├── model.go
+│   │   ├── repository.go
+│   │   ├── service.go
+│   │   └── *_test.go
+│   ├── client/tickets/
+│   │   ├── handler.go
 │   │   ├── model.go
 │   │   ├── repository.go
 │   │   ├── service.go
@@ -81,13 +88,17 @@ BWP-SonaSea/
 │   │       └── login-background.jpg
 │   ├── tests/
 │   │   ├── auth-api.test.ts
-│   │   └── branding-assets.test.ts
+│   │   ├── branding-assets.test.ts
+│   │   └── tickets-api.test.ts
 │   └── src/
 │       ├── app.d.ts
 │       ├── app.html
 │       ├── lib/
 │       │   ├── assets/
 │       │   ├── client/auth/
+│       │   │   ├── api.ts
+│       │   │   └── model.ts
+│       │   ├── client/tickets/
 │       │   │   ├── api.ts
 │       │   │   └── model.ts
 │       │   ├── components/ThemeToggle.svelte
@@ -121,7 +132,8 @@ BWP-SonaSea/
 │       ├── SPEC-02-backend-foundation.md
 │       ├── SPEC-03-authentication-backend.md
 │       ├── SPEC-04-login-ui-auth-integration.md
-│       └── SPEC-04.1-login-branding-background.md
+│       ├── SPEC-04.1-login-branding-background.md
+│       └── SPEC-05-authenticated-shell-tickets-list.md
 ├── .gitignore
 ├── AGENTS.md
 └── README.md
@@ -1170,7 +1182,7 @@ Do not fake completion.
 
 # 26. Frontend Architecture
 
-The current frontend is a minimal SvelteKit application using Bun for dependency installation and script execution. SPEC-04 adds the real login route, authenticated identity entry page, focused auth client, theme foundation, and Vite `/api` proxy. SPEC-04.1 adds the supplied BWP logo, a CSS-only blurred login background, and theme-aware visual treatment while preserving the auth flow. The remaining feature-specific API, component, store, and route-group directories below are planned additions and must be created only by their relevant SPECs.
+The current frontend is a SvelteKit application using Bun for dependency installation and script execution. SPEC-04 adds the real login route, authenticated identity entry page, focused auth client, theme foundation, and Vite `/api` proxy. SPEC-04.1 adds the supplied BWP logo, a CSS-only blurred login background, and theme-aware visual treatment while preserving the auth flow. SPEC-05 adds the authenticated Tickets shell, focused ticket-list client, and real PostgreSQL-backed Open/Closed list at `/`. Remaining feature-specific API, component, store, and route-group directories below are planned additions and must be created only by their relevant SPECs.
 
 Planned structure:
 
@@ -2900,11 +2912,13 @@ Do not create documentation directories full of empty placeholders.
 
 # 87. SPEC Workflow
 
-The repository is currently at the database/backend-foundation and
-authentication-backend stage. `SPEC-01-database-foundation.md`,
-`SPEC-02-backend-foundation.md`, and `SPEC-03-authentication-backend.md` are
-stored under `Context-Spec-BWP-SonaSea/Spec/`; later SPECs should add the
-corresponding production modules incrementally.
+The repository is currently at the authenticated shell and tickets read/list
+stage. `SPEC-01-database-foundation.md`, `SPEC-02-backend-foundation.md`,
+`SPEC-03-authentication-backend.md`, `SPEC-04-login-ui-auth-integration.md`,
+`SPEC-04.1-login-branding-background.md`, and
+`SPEC-05-authenticated-shell-tickets-list.md` are stored under
+`Context-Spec-BWP-SonaSea/Spec/`; later SPECs should add the corresponding
+production modules incrementally.
 
 The intended implementation sequence is approximately:
 
@@ -2922,10 +2936,10 @@ SPEC-04
 Login UI + Authentication Integration
 
 SPEC-05
-Application Shell + Navigation + Responsive Foundation
+Authenticated Shell + Tickets Read/List Foundation
 
 SPEC-06
-Ticket Create + Ticket List + Search/Filter/Pagination
+Ticket Create + Search/Filter
 
 SPEC-07
 Ticket Detail + Accept/Assign/Close
