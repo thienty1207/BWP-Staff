@@ -79,9 +79,9 @@ func TestReadyEndpointReturnsSafeErrorWhenDatabaseIsUnavailable(t *testing.T) {
 	pool := openAppTestPool(t)
 	pool.Close()
 
-	const requestID = "ready-error-request"
+	const clientRequestID = "client-supplied-request-id"
 	request := httptest.NewRequest(http.MethodGet, "/ready", nil)
-	request.Header.Set("X-Request-ID", requestID)
+	request.Header.Set("X-Request-ID", clientRequestID)
 	response, err := New(AppState{DB: pool}, testAppSettings()).Test(request)
 	if err != nil {
 		t.Fatalf("request readiness endpoint: %v", err)
@@ -94,8 +94,12 @@ func TestReadyEndpointReturnsSafeErrorWhenDatabaseIsUnavailable(t *testing.T) {
 	if contentType := response.Header.Get("Content-Type"); !strings.HasPrefix(contentType, "application/json") {
 		t.Fatalf("expected JSON content type, got %q", contentType)
 	}
-	if response.Header.Get("X-Request-ID") != requestID {
-		t.Fatalf("expected request ID %q, got %q", requestID, response.Header.Get("X-Request-ID"))
+	responseRequestID := response.Header.Get("X-Request-ID")
+	if responseRequestID == "" {
+		t.Fatal("expected generated request ID")
+	}
+	if responseRequestID == clientRequestID {
+		t.Fatal("server reused client-supplied request ID")
 	}
 
 	var body errorResponse
@@ -105,8 +109,8 @@ func TestReadyEndpointReturnsSafeErrorWhenDatabaseIsUnavailable(t *testing.T) {
 	if body.Error.Code != "not_ready" || body.Error.Message != "Service not ready" {
 		t.Fatalf("unexpected readiness error: %+v", body.Error)
 	}
-	if body.Error.RequestID != requestID {
-		t.Fatalf("expected error request ID %q, got %q", requestID, body.Error.RequestID)
+	if body.Error.RequestID != responseRequestID {
+		t.Fatalf("expected error request ID %q, got %q", responseRequestID, body.Error.RequestID)
 	}
 	if strings.Contains(body.Error.Message, "127.0.0.1") || strings.Contains(body.Error.Message, "password") {
 		t.Fatal("readiness error exposed database details")
@@ -135,10 +139,7 @@ func TestReadyEndpointReturnsReadyForHealthyPostgreSQL(t *testing.T) {
 }
 
 func TestUnknownRouteReturnsStableJSONError(t *testing.T) {
-	const requestID = "not-found-request"
-	request := httptest.NewRequest(http.MethodGet, "/does-not-exist", nil)
-	request.Header.Set("X-Request-ID", requestID)
-	response, err := New(AppState{}, testAppSettings()).Test(request)
+	response, err := New(AppState{}, testAppSettings()).Test(httptest.NewRequest(http.MethodGet, "/does-not-exist", nil))
 	if err != nil {
 		t.Fatalf("request unknown route: %v", err)
 	}
@@ -154,8 +155,31 @@ func TestUnknownRouteReturnsStableJSONError(t *testing.T) {
 	if body.Error.Code != "not_found" || body.Error.Message != "Resource not found" {
 		t.Fatalf("unexpected not-found error: %+v", body.Error)
 	}
-	if body.Error.RequestID != requestID {
-		t.Fatalf("expected error request ID %q, got %q", requestID, body.Error.RequestID)
+	responseRequestID := response.Header.Get("X-Request-ID")
+	if responseRequestID == "" {
+		t.Fatal("expected generated request ID")
+	}
+	if body.Error.RequestID != responseRequestID {
+		t.Fatalf("expected error request ID %q, got %q", responseRequestID, body.Error.RequestID)
+	}
+}
+
+func TestClientRequestIDIsIgnored(t *testing.T) {
+	const clientRequestID = "client-supplied-request-id"
+	request := httptest.NewRequest(http.MethodGet, "/health", nil)
+	request.Header.Set("X-Request-ID", clientRequestID)
+	response, err := New(AppState{}, testAppSettings()).Test(request)
+	if err != nil {
+		t.Fatalf("request health endpoint with client request ID: %v", err)
+	}
+	defer response.Body.Close()
+
+	serverRequestID := response.Header.Get("X-Request-ID")
+	if serverRequestID == "" {
+		t.Fatal("expected server-generated request ID")
+	}
+	if serverRequestID == clientRequestID {
+		t.Fatal("server reused client-supplied request ID")
 	}
 }
 
@@ -212,7 +236,7 @@ func TestKnownAppErrorUsesSafeJSONError(t *testing.T) {
 func TestUnknownHandlerErrorIsSafeAndLogged(t *testing.T) {
 	const (
 		internalMessage = "database password must not be exposed"
-		requestID       = "internal-error-request"
+		clientRequestID = "client-supplied-request-id"
 	)
 	server := New(AppState{}, testAppSettings())
 	server.Get("/test-internal-error", func(fiber.Ctx) error {
@@ -225,7 +249,7 @@ func TestUnknownHandlerErrorIsSafeAndLogged(t *testing.T) {
 	defer log.SetOutput(previousWriter)
 
 	request := httptest.NewRequest(http.MethodGet, "/test-internal-error", nil)
-	request.Header.Set("X-Request-ID", requestID)
+	request.Header.Set("X-Request-ID", clientRequestID)
 	response, err := server.Test(request)
 	if err != nil {
 		t.Fatalf("request internal error: %v", err)
@@ -242,19 +266,34 @@ func TestUnknownHandlerErrorIsSafeAndLogged(t *testing.T) {
 	if strings.Contains(string(body), internalMessage) {
 		t.Fatal("internal error text leaked into response")
 	}
-	if !strings.Contains(logs.String(), internalMessage) || !strings.Contains(logs.String(), "request_id="+requestID) {
+	serverRequestID := response.Header.Get("X-Request-ID")
+	if serverRequestID == "" || serverRequestID == clientRequestID {
+		t.Fatal("expected a server-generated request ID")
+	}
+	if !strings.Contains(logs.String(), internalMessage) || !strings.Contains(logs.String(), "request_id="+serverRequestID) {
 		t.Fatalf("internal error log lacks error/request context: %q", logs.String())
+	}
+	if strings.Contains(logs.String(), "request_id="+clientRequestID) {
+		t.Fatal("request log used client-supplied request ID")
 	}
 }
 
-func TestPanicRecoveryReturnsSafeErrorAndKeepsAppAlive(t *testing.T) {
+func TestPanicRecoveryReturnsSafeErrorIsLoggedAndKeepsAppAlive(t *testing.T) {
 	const panicMessage = "panic secret"
 	server := New(AppState{}, testAppSettings())
 	server.Get("/test-panic", func(fiber.Ctx) error {
 		panic(panicMessage)
 	})
 
-	response, err := server.Test(httptest.NewRequest(http.MethodGet, "/test-panic", nil))
+	var logs bytes.Buffer
+	previousWriter := log.Writer()
+	log.SetOutput(&logs)
+	defer log.SetOutput(previousWriter)
+
+	const clientRequestID = "client-supplied-request-id"
+	request := httptest.NewRequest(http.MethodGet, "/test-panic", nil)
+	request.Header.Set("X-Request-ID", clientRequestID)
+	response, err := server.Test(request)
 	if err != nil {
 		t.Fatalf("request panic route: %v", err)
 	}
@@ -268,6 +307,31 @@ func TestPanicRecoveryReturnsSafeErrorAndKeepsAppAlive(t *testing.T) {
 	}
 	if strings.Contains(string(body), panicMessage) {
 		t.Fatal("panic detail leaked into response")
+	}
+	serverRequestID := response.Header.Get("X-Request-ID")
+	if serverRequestID == "" || serverRequestID == clientRequestID {
+		t.Fatal("expected a server-generated request ID")
+	}
+	var errorBody errorResponse
+	if err := json.Unmarshal(body, &errorBody); err != nil {
+		t.Fatalf("decode panic error response: %v", err)
+	}
+	if errorBody.Error.RequestID != serverRequestID {
+		t.Fatalf("expected panic error request ID %q, got %q", serverRequestID, errorBody.Error.RequestID)
+	}
+	for _, field := range []string{
+		"request_id=" + serverRequestID,
+		"method=GET",
+		"path=/test-panic",
+		"status=500",
+		"latency=",
+	} {
+		if !strings.Contains(logs.String(), field) {
+			t.Fatalf("panic request log missing %q: %q", field, logs.String())
+		}
+	}
+	if strings.Contains(logs.String(), "request_id="+clientRequestID) {
+		t.Fatal("panic request log used client-supplied request ID")
 	}
 
 	healthResponse, err := server.Test(httptest.NewRequest(http.MethodGet, "/health", nil))
@@ -319,6 +383,9 @@ func TestConfiguredOriginPreflightReceivesExplicitCORSPolicy(t *testing.T) {
 	if !strings.Contains(response.Header.Get("Access-Control-Allow-Methods"), http.MethodPost) {
 		t.Fatalf("expected POST in CORS preflight methods, got %q", response.Header.Get("Access-Control-Allow-Methods"))
 	}
+	if allowHeaders := response.Header.Get("Access-Control-Allow-Headers"); allowHeaders != "Content-Type, Accept" {
+		t.Fatalf("expected explicit CORS request headers, got %q", allowHeaders)
+	}
 }
 
 func TestUnrelatedOriginDoesNotReceivePermissiveCORSHeaders(t *testing.T) {
@@ -337,23 +404,27 @@ func TestUnrelatedOriginDoesNotReceivePermissiveCORSHeaders(t *testing.T) {
 }
 
 func TestRequestLoggingIncludesRequestContext(t *testing.T) {
-	const requestID = "logging-request"
+	const clientRequestID = "client-supplied-request-id"
 	var logs bytes.Buffer
 	previousWriter := log.Writer()
 	log.SetOutput(&logs)
 	defer log.SetOutput(previousWriter)
 
 	request := httptest.NewRequest(http.MethodGet, "/health", nil)
-	request.Header.Set("X-Request-ID", requestID)
+	request.Header.Set("X-Request-ID", clientRequestID)
 	response, err := New(AppState{}, testAppSettings()).Test(request)
 	if err != nil {
 		t.Fatalf("request logged health endpoint: %v", err)
 	}
 	response.Body.Close()
 
+	serverRequestID := response.Header.Get("X-Request-ID")
+	if serverRequestID == "" || serverRequestID == clientRequestID {
+		t.Fatal("expected a server-generated request ID")
+	}
 	logged := logs.String()
 	for _, field := range []string{
-		"request_id=" + requestID,
+		"request_id=" + serverRequestID,
 		"method=GET",
 		"path=/health",
 		"status=200",
@@ -362,5 +433,8 @@ func TestRequestLoggingIncludesRequestContext(t *testing.T) {
 		if !strings.Contains(logged, field) {
 			t.Fatalf("request log missing %q: %q", field, logged)
 		}
+	}
+	if strings.Contains(logged, "request_id="+clientRequestID) {
+		t.Fatal("request log used client-supplied request ID")
 	}
 }

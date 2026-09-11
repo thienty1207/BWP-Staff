@@ -8,6 +8,14 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/requestid"
 )
 
+func serverRequestID() fiber.Handler {
+	requestID := requestid.New()
+	return func(c fiber.Ctx) error {
+		c.Request().Header.Del(fiber.HeaderXRequestID)
+		return requestID(c)
+	}
+}
+
 func requestLogger() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		startedAt := time.Now()

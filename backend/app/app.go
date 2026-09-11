@@ -4,7 +4,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/recover"
-	"github.com/gofiber/fiber/v3/middleware/requestid"
 	"github.com/thienty1207/BWP-Staff/backend/config"
 )
 
@@ -15,9 +14,9 @@ func New(state AppState, settings config.Config) *fiber.App {
 		ErrorHandler: handleError,
 	})
 
-	server.Use(requestid.New())
-	server.Use(recover.New())
+	server.Use(serverRequestID())
 	server.Use(requestLogger())
+	server.Use(recover.New())
 	server.Use(corsMiddleware(settings.FrontendOrigin))
 
 	server.Get("/health", healthHandler)
@@ -39,7 +38,6 @@ func corsMiddleware(frontendOrigin string) fiber.Handler {
 			fiber.MethodOptions,
 		},
 		AllowHeaders: []string{
-			fiber.HeaderOrigin,
 			fiber.HeaderContentType,
 			fiber.HeaderAccept,
 		},
