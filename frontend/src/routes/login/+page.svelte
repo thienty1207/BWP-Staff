@@ -79,12 +79,11 @@
 	<meta name="description" content="Sign in to the BWP SonaSea staff portal" />
 </svelte:head>
 
-<main class="page-shell">
+<main class="page-shell login-shell">
 	<div class="auth-layout">
 		<header class="topbar">
-			<div class="brand" aria-label="BWP SonaSea">
-				<span class="brand-mark" aria-hidden="true">BWP</span>
-				<span>BWP SonaSea</span>
+			<div class="brand">
+				<img class="brand-logo" src="/images/bwp-logo.png" alt="BWP SonaSea" />
 			</div>
 			<ThemeToggle />
 		</header>

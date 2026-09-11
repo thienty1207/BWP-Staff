@@ -69,9 +69,8 @@
 <main class="page-shell">
 	<div class="auth-layout">
 		<header class="topbar">
-			<div class="brand" aria-label="BWP SonaSea">
-				<span class="brand-mark" aria-hidden="true">BWP</span>
-				<span>BWP SonaSea</span>
+			<div class="brand">
+				<img class="brand-logo" src="/images/bwp-logo.png" alt="BWP SonaSea" />
 			</div>
 			<ThemeToggle />
 		</header>

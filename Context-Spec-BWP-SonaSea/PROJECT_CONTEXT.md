@@ -24,9 +24,9 @@
 
 As of 2026-09-11, the repository contains the SPEC-01 PostgreSQL foundation,
 the SPEC-02 Go/Fiber v3 HTTP foundation, the SPEC-03 authentication backend,
-and the SPEC-04 login UI/auth integration. Feature packages are added only when
-their corresponding SPEC implements behavior; empty future folders are not
-generated.
+the SPEC-04 login UI/auth integration, and the SPEC-04.1 login branding polish.
+Feature packages are added only when their corresponding SPEC implements
+behavior; empty future folders are not generated.
 
 ```text
 BWP-SonaSea/
@@ -76,8 +76,12 @@ BWP-SonaSea/
 │   ├── tsconfig.json
 │   ├── .gitignore
 │   ├── static/
+│   │   └── images/
+│   │       ├── bwp-logo.png
+│   │       └── login-background.jpg
 │   ├── tests/
-│   │   └── auth-api.test.ts
+│   │   ├── auth-api.test.ts
+│   │   └── branding-assets.test.ts
 │   └── src/
 │       ├── app.d.ts
 │       ├── app.html
@@ -116,7 +120,8 @@ BWP-SonaSea/
 │       ├── SPEC-01-database-foundation.md
 │       ├── SPEC-02-backend-foundation.md
 │       ├── SPEC-03-authentication-backend.md
-│       └── SPEC-04-login-ui-auth-integration.md
+│       ├── SPEC-04-login-ui-auth-integration.md
+│       └── SPEC-04.1-login-branding-background.md
 ├── .gitignore
 ├── AGENTS.md
 └── README.md
@@ -1165,7 +1170,7 @@ Do not fake completion.
 
 # 26. Frontend Architecture
 
-The current frontend is a minimal SvelteKit application using Bun for dependency installation and script execution. SPEC-04 adds the real login route, authenticated identity entry page, focused auth client, theme foundation, and Vite `/api` proxy. The remaining feature-specific API, component, store, and route-group directories below are planned additions and must be created only by their relevant SPECs.
+The current frontend is a minimal SvelteKit application using Bun for dependency installation and script execution. SPEC-04 adds the real login route, authenticated identity entry page, focused auth client, theme foundation, and Vite `/api` proxy. SPEC-04.1 adds the supplied BWP logo, a CSS-only blurred login background, and theme-aware visual treatment while preserving the auth flow. The remaining feature-specific API, component, store, and route-group directories below are planned additions and must be created only by their relevant SPECs.
 
 Planned structure:
 

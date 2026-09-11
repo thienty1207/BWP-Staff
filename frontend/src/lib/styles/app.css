@@ -67,6 +67,7 @@ button:disabled {
 }
 
 .page-shell {
+	position: relative;
 	min-height: 100svh;
 	padding: clamp(1rem, 3vw, 2.5rem);
 	background:
@@ -74,7 +75,43 @@ button:disabled {
 		var(--bg);
 }
 
+.login-shell {
+	isolation: isolate;
+	overflow: hidden;
+	background: transparent;
+}
+
+.login-shell::before,
+.login-shell::after {
+	position: absolute;
+	inset: -1.5rem;
+	content: '';
+	pointer-events: none;
+}
+
+.login-shell::before {
+	z-index: 0;
+	background: url('/images/login-background.jpg') center / cover no-repeat;
+	filter: blur(14px);
+	transform: scale(1.06);
+}
+
+.login-shell::after {
+	z-index: 1;
+	background: var(--login-overlay);
+}
+
+:root {
+	--login-overlay: linear-gradient(135deg, rgb(255 255 255 / 60%), rgb(224 235 249 / 72%));
+}
+
+:root[data-theme='dark'] {
+	--login-overlay: linear-gradient(135deg, rgb(5 7 10 / 68%), rgb(35 10 15 / 74%));
+}
+
 .auth-layout {
+	position: relative;
+	z-index: 2;
 	display: flex;
 	width: min(100%, 1040px);
 	min-height: calc(100svh - clamp(2rem, 6vw, 5rem));
@@ -93,25 +130,16 @@ button:disabled {
 .brand {
 	display: inline-flex;
 	align-items: center;
-	gap: 0.75rem;
-	color: var(--text);
-	font-size: 1rem;
-	font-weight: 750;
-	letter-spacing: -0.02em;
+	min-width: 0;
 }
 
-.brand-mark {
-	display: grid;
-	width: 2.25rem;
-	height: 2.25rem;
-	place-items: center;
-	border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
-	border-radius: 0.75rem;
-	background: color-mix(in srgb, var(--accent) 14%, var(--surface));
-	color: var(--accent);
-	font-size: 0.85rem;
-	font-weight: 850;
-	letter-spacing: -0.08em;
+.brand-logo {
+	display: block;
+	width: auto;
+	height: clamp(2.4rem, 5vw, 3.7rem);
+	max-width: min(100%, 15rem);
+	object-fit: contain;
+	object-position: left center;
 }
 
 .theme-toggle,
@@ -150,6 +178,11 @@ button:disabled {
 	border-radius: 1.25rem;
 	background: color-mix(in srgb, var(--surface) 94%, transparent);
 	box-shadow: var(--shadow);
+}
+
+.login-shell .auth-card,
+.login-shell .status-panel {
+	background: color-mix(in srgb, var(--surface) 89%, transparent);
 }
 
 .auth-card {
@@ -359,7 +392,12 @@ h2 {
 	}
 
 	.brand {
-		font-size: 0.95rem;
+		max-width: calc(100% - 5.5rem);
+	}
+
+	.brand-logo {
+		height: 2.5rem;
+		max-width: 100%;
 	}
 
 	.auth-card,
