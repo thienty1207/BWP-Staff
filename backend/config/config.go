@@ -10,11 +10,15 @@ import (
 )
 
 const (
-	defaultMaxConnections        int32 = 10
-	defaultMinConnections        int32 = 1
-	maxAllowedConnections        int32 = 100
-	defaultAcquireTimeoutSeconds       = 5
-	maxAcquireTimeoutSeconds           = 60
+	defaultMaxConnections         int32 = 10
+	defaultMinConnections         int32 = 1
+	maxAllowedConnections         int32 = 100
+	defaultAcquireTimeoutSeconds        = 5
+	maxAcquireTimeoutSeconds            = 60
+	defaultBackendBindAddress           = "127.0.0.1:3000"
+	defaultFrontendOrigin               = "http://localhost:5173"
+	defaultShutdownTimeoutSeconds       = 10
+	maxShutdownTimeoutSeconds           = 60
 )
 
 type Config struct {
@@ -23,6 +27,9 @@ type Config struct {
 	DatabaseMinConnections        int32
 	DatabaseAcquireTimeoutSeconds int
 	AppEnv                        string
+	BackendBindAddress            string
+	FrontendOrigin                string
+	BackendShutdownTimeoutSeconds int
 	SeedDevelopmentData           bool
 	SeedAdmin                     SeedAdmin
 }
@@ -69,6 +76,24 @@ func Load() (Config, error) {
 	}
 
 	appEnv := valueOrDefault("APP_ENV", "development")
+	backendBindAddress := valueOrDefault("BACKEND_BIND_ADDRESS", defaultBackendBindAddress)
+	if err := validateBindAddress(backendBindAddress); err != nil {
+		return Config{}, err
+	}
+
+	frontendOrigin, err := frontendOriginValue(appEnv)
+	if err != nil {
+		return Config{}, err
+	}
+
+	shutdownTimeoutSeconds, err := intValue("BACKEND_SHUTDOWN_TIMEOUT_SECONDS", defaultShutdownTimeoutSeconds)
+	if err != nil {
+		return Config{}, err
+	}
+	if shutdownTimeoutSeconds <= 0 || shutdownTimeoutSeconds > maxShutdownTimeoutSeconds {
+		return Config{}, fmt.Errorf("BACKEND_SHUTDOWN_TIMEOUT_SECONDS must be between 1 and %d", maxShutdownTimeoutSeconds)
+	}
+
 	seedDevelopmentData, err := boolValue("SEED_DEVELOPMENT_DATA", false)
 	if err != nil {
 		return Config{}, err
@@ -80,6 +105,9 @@ func Load() (Config, error) {
 		DatabaseMinConnections:        minConnections,
 		DatabaseAcquireTimeoutSeconds: acquireTimeoutSeconds,
 		AppEnv:                        appEnv,
+		BackendBindAddress:            backendBindAddress,
+		FrontendOrigin:                frontendOrigin,
+		BackendShutdownTimeoutSeconds: shutdownTimeoutSeconds,
 		SeedDevelopmentData:           seedDevelopmentData,
 	}
 	if seedDevelopmentData && strings.EqualFold(appEnv, "development") {
@@ -150,6 +178,59 @@ func boolValue(name string, fallback bool) (bool, error) {
 	default:
 		return false, fmt.Errorf("invalid %s", name)
 	}
+}
+
+func frontendOriginValue(appEnv string) (string, error) {
+	origin := strings.TrimSpace(os.Getenv("FRONTEND_ORIGIN"))
+	if origin == "" {
+		if strings.EqualFold(appEnv, "development") {
+			return defaultFrontendOrigin, nil
+		}
+		return "", fmt.Errorf("missing FRONTEND_ORIGIN")
+	}
+	if err := validateFrontendOrigin(origin); err != nil {
+		return "", err
+	}
+	return origin, nil
+}
+
+func validateFrontendOrigin(origin string) error {
+	if origin == "*" || strings.Contains(origin, "*") {
+		return fmt.Errorf("invalid FRONTEND_ORIGIN: wildcard origins are not allowed")
+	}
+
+	parsed, err := url.Parse(origin)
+	if err != nil || parsed.Host == "" || parsed.Hostname() == "" {
+		return fmt.Errorf("invalid FRONTEND_ORIGIN")
+	}
+	if !strings.EqualFold(parsed.Scheme, "http") && !strings.EqualFold(parsed.Scheme, "https") {
+		return fmt.Errorf("invalid FRONTEND_ORIGIN: scheme must be http or https")
+	}
+	if parsed.User != nil || parsed.Path != "" || parsed.RawQuery != "" || parsed.Fragment != "" || parsed.Opaque != "" || strings.ContainsAny(origin, "?#") {
+		return fmt.Errorf("invalid FRONTEND_ORIGIN: value must be one HTTP(S) origin")
+	}
+	if port := parsed.Port(); port != "" {
+		portNumber, err := strconv.Atoi(port)
+		if err != nil || portNumber < 1 || portNumber > 65535 {
+			return fmt.Errorf("invalid FRONTEND_ORIGIN: port must be between 1 and 65535")
+		}
+	}
+	return nil
+}
+
+func validateBindAddress(address string) error {
+	if address == "" || strings.TrimSpace(address) != address {
+		return fmt.Errorf("invalid BACKEND_BIND_ADDRESS")
+	}
+	host, port, err := net.SplitHostPort(address)
+	if err != nil || host == "*" || strings.ContainsAny(host, " \t\r\n") || port == "" {
+		return fmt.Errorf("invalid BACKEND_BIND_ADDRESS")
+	}
+	portNumber, err := strconv.Atoi(port)
+	if err != nil || portNumber < 1 || portNumber > 65535 {
+		return fmt.Errorf("invalid BACKEND_BIND_ADDRESS: port must be between 1 and 65535")
+	}
+	return nil
 }
 
 func validateDatabaseTLS(databaseURL *url.URL) error {

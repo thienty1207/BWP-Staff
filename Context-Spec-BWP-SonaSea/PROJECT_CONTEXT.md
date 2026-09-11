@@ -22,8 +22,8 @@
 
 ## Current repository snapshot
 
-As of 2026-09-10, the repository contains the SPEC-01 PostgreSQL foundation and
-the initial Go/Fiber v3 backend bootstrap. Feature packages are added only when
+As of 2026-09-11, the repository contains the SPEC-01 PostgreSQL foundation and
+the SPEC-02 Go/Fiber v3 HTTP foundation. Feature packages are added only when
 their corresponding SPEC implements behavior; empty future folders are not
 generated.
 
@@ -35,15 +35,23 @@ BWP-SonaSea/
 │   ├── migrations/
 │   ├── cmd/
 │   │   ├── server/main.go
+│   │   ├── server/main_test.go
 │   │   └── seed_development/main.go
-│   ├── app/app.go
-│   ├── app/app_test.go
+│   ├── app/
+│   │   ├── app.go
+│   │   ├── errors.go
+│   │   ├── health.go
+│   │   ├── middleware.go
+│   │   ├── state.go
+│   │   ├── app_test.go
+│   │   └── testdb_test.go
 │   ├── config/config.go
 │   ├── config/config_test.go
 │   ├── shared/
 │   │   ├── database.go
 │   │   ├── migrations_test.go
 │   │   ├── foundation_test.go
+│   │   ├── migration_lock_test.go
 │   │   └── security/
 │   │       ├── password.go
 │   │       └── password_test.go
@@ -85,7 +93,8 @@ BWP-SonaSea/
 ├── Context-Spec-BWP-SonaSea/
 │   ├── PROJECT_CONTEXT.md
 │   └── Spec/
-│       └── SPEC-01-database-foundation.md
+│       ├── SPEC-01-database-foundation.md
+│       └── SPEC-02-backend-foundation.md
 ├── .gitignore
 ├── AGENTS.md
 └── README.md
@@ -600,10 +609,11 @@ The point is separation of responsibility, not artificial line count.
 
 # 14. Backend Folder Structure
 
-The current backend contains only the SPEC-01 foundation. The layout is
-deliberately small and follows Go package boundaries. Client feature packages
-and shared helpers are created only when a SPEC needs real code; empty future
-folders and placeholder files are not generated.
+The current backend contains the SPEC-01 database foundation and the SPEC-02
+HTTP foundation. The layout is deliberately small and follows Go package
+boundaries. Client feature packages and shared helpers are created only when a
+SPEC needs real code; empty future folders and placeholder files are not
+generated.
 
 ```text
 backend/
@@ -612,10 +622,16 @@ backend/
 ├── migrations/
 ├── cmd/
 │   ├── server/main.go
+│   ├── server/main_test.go
 │   └── seed_development/main.go
 ├── app/
 │   ├── app.go
-│   └── app_test.go
+│   ├── errors.go
+│   ├── health.go
+│   ├── middleware.go
+│   ├── state.go
+│   ├── app_test.go
+│   └── testdb_test.go
 ├── config/
 │   ├── config.go
 │   └── config_test.go
@@ -623,6 +639,7 @@ backend/
 │   ├── database.go
 │   ├── foundation_test.go
 │   ├── migrations_test.go
+│   ├── migration_lock_test.go
 │   └── security/
 │       ├── password.go
 │       └── password_test.go
@@ -963,13 +980,108 @@ Do not bypass the application architecture for convenience.
 
 # 24. What "No Mock Data" Means for Tests
 
-Automated tests are allowed to create isolated test records because a test must control its own state.
+Automated tests are allowed to create isolated test records because a test must
+control its own state.
 
-However:
+Database-backed tests must still use **real PostgreSQL**.
 
-> Tests should use a **real PostgreSQL test database** where database behavior is under test.
+For local development and local automated tests, the project has one permanent
+environment rule:
 
-Do not replace PostgreSQL with an in-memory fake repository simply to make tests easier unless a SPEC explicitly requires a pure unit test.
+```text
+backend/.env
+    ↓
+official runtime environment variables
+    ↓
+DATABASE_URL
+    ↓
+real PostgreSQL development instance
+    ↓
+temporary isolated PostgreSQL schema per test/test suite
+```
+
+Do **not** create a separate test environment contract.
+
+Forbidden:
+
+```text
+.env.example
+.env.test
+.env.testing
+.env.local
+.env.development
+DATABASE_TEST_URL
+TEST_DATABASE_URL
+TEST_DB_URL
+or any other test-only environment variable invented only for tests
+```
+
+The only local environment file is:
+
+```text
+backend/.env
+```
+
+Tests that need PostgreSQL must use the official `DATABASE_URL` from that real
+local environment configuration.
+
+Database isolation belongs in PostgreSQL schemas, not in extra environment
+files or test-only connection variables.
+
+Required pattern:
+
+```text
+DATABASE_URL
+    ↓
+connect to the configured local development PostgreSQL instance
+    ↓
+create a uniquely named temporary schema
+    ↓
+set search_path to that schema
+    ↓
+run migrations / create test records / execute assertions
+    ↓
+drop only that temporary schema
+```
+
+Tests must not:
+
+```text
+DROP the configured database
+TRUNCATE or reset the development public schema
+delete normal development data
+rewrite the developer's .env
+connect to production for automated tests
+```
+
+Local database-backed tests must fail or skip safely if the configured
+environment is not a development environment suitable for isolated schema
+testing.
+
+`APP_ENV` is an official runtime variable. A unit test may temporarily override
+an **existing official variable** with `t.Setenv` to verify configuration
+validation, but this does not create a new test environment contract.
+
+For example, a config unit test may temporarily set:
+
+```text
+APP_ENV=production
+```
+
+to verify production validation, then allow `t.Setenv` cleanup to restore the
+process environment.
+
+Do not introduce:
+
+```text
+APP_ENV=test
+TEST_ENV
+```
+
+only to make tests run.
+
+Do not replace PostgreSQL with an in-memory fake repository merely to make tests
+easier unless a SPEC explicitly requires a pure unit test.
 
 Integration tests should test the real stack:
 
@@ -980,14 +1092,14 @@ Fiber router
  ↓
 pgx/pgxpool
  ↓
-test PostgreSQL database
+DATABASE_URL from backend/.env
+ ↓
+isolated temporary PostgreSQL schema
 ```
 
 Test fixtures are acceptable.
 
 Mock production behavior is not.
-
-Never connect automated tests to the production database.
 
 ---
 
@@ -1998,7 +2110,7 @@ with credentialed authentication.
 
 # 65. Configuration
 
-Environment-specific values belong in environment/configuration.
+Environment-specific runtime values belong in environment/configuration.
 
 Examples:
 
@@ -2012,10 +2124,76 @@ OBJECT_STORAGE CONFIG
 LOG FILTER
 ```
 
+A new environment variable may be introduced only when a real runtime feature
+actually consumes it.
+
+Do not invent environment variables only for:
+
+```text
+tests
+temporary CI convenience
+fake environments
+duplicate database URLs
+```
+
+## Permanent local environment rule
+
+For local development, the project uses exactly:
+
+```text
+backend/.env
+```
+
+This is the one real local environment file.
+
+Never generate or maintain:
+
+```text
+.env.example
+.env.test
+.env.testing
+.env.local
+.env.development
+.env.production
+```
+
+as project configuration templates or alternate local/test configuration files.
+
+Never create test-only connection variables such as:
+
+```text
+DATABASE_TEST_URL
+TEST_DATABASE_URL
+TEST_DB_URL
+```
+
+Tests must use the same official runtime variable names as the application.
+
+For PostgreSQL tests:
+
+```text
+DATABASE_URL
+```
+
+is the only database connection variable. Isolation is achieved using temporary
+PostgreSQL schemas, never by inventing a second database environment variable.
+
+When a SPEC adds a legitimate runtime configuration value such as:
+
+```text
+FRONTEND_ORIGIN
+BACKEND_BIND_ADDRESS
+```
+
+local development may add that value to the existing ignored
+`backend/.env`. Do not create another env file to document or test it.
+
+Production/deployment secrets and configuration belong in the deployment
+platform's secret/configuration system, not in a committed env file.
+
 Do not hard-code deployment-specific domains or credentials in source code.
 
-Use the existing local `.env` file or the deployment secret manager. Never
-generate `.env.example` files, and never commit local credentials.
+Never commit local credentials or the real `backend/.env` file.
 
 ---
 
@@ -2036,7 +2214,7 @@ critical API behavior
 report correctness
 ```
 
-Backend integration tests should prefer real Fiber routing + a real PostgreSQL test database for important flows.
+Backend integration tests should prefer real Fiber routing + the real PostgreSQL instance configured by `DATABASE_URL`, isolated with temporary PostgreSQL schemas for important flows.
 
 Frontend tests should focus on behavior that is easy to regress.
 

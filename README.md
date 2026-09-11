@@ -42,8 +42,9 @@ go run ./cmd/seed_development
 The development account uses username login. Accounts are created by an admin;
 there is no public signup, email login, or forgot-password flow.
 
-The backend exposes `GET http://127.0.0.1:3000/health` and returns `ok` after
-the database foundation is ready.
+The backend exposes `GET http://127.0.0.1:3000/health` and returns JSON
+`{"status":"ok"}`. `GET http://127.0.0.1:3000/ready` reports whether PostgreSQL
+is reachable.
 
 The local full database backup is `database/bwp-sonasea.dump`; refresh it, and
 the matching `database/full_app_schema.sql`, with:

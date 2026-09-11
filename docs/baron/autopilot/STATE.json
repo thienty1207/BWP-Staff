@@ -353,8 +353,8 @@
       "resume_sources": [
         "docs/baron/continuity/CURRENT.md",
         "docs/baron/continuity/CURRENT_RECOVERY.md",
-        "docs/baron/plans/CURRENT.md",
         "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/plans/CURRENT.md",
         "docs/baron/proofs/INDEX.md",
         "docs/baron/traces/INDEX.md"
       ],
@@ -372,6 +372,60 @@
       "semantic_key": "spec 01 ticket foundation amendment review forward migration 0020 legacy assignment backfill real postgresql tests local backup and raw verification completed",
       "evidence_keys": [
         "4b166b289c76f74faf92e854e576ac122f60c9d764aee5ff84e58cfe7293ca40"
+      ]
+    },
+    {
+      "id": "candidate-4b11695747d86979-verification",
+      "summary": "SPEC-02 backend foundation verification review",
+      "scope": "project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098",
+      "impact": "verification",
+      "status": "rejected",
+      "trusted": false,
+      "evidence_count": 1,
+      "provenance": [
+        "automation:ContextCompiled",
+        "automation:PlanStarted",
+        "automation:PreCompact",
+        "automation:TraceScored",
+        "resume:docs/baron/continuity/CURRENT.md",
+        "resume:docs/baron/continuity/CURRENT_RECOVERY.md",
+        "resume:docs/baron/harness/CURRENT_INTENT.md",
+        "resume:docs/baron/plans/CURRENT.md",
+        "resume:docs/baron/proofs/INDEX.md",
+        "resume:docs/baron/traces/INDEX.md",
+        "review:post-task",
+        "source:repo-review",
+        "source:user-task",
+        "task-review:95953d30649f0a977b16ef6a7cb633d2ea3dbfcade4610dfe56007f33cba0a6a"
+      ],
+      "observed_automation": [
+        "ContextCompiled",
+        "PlanStarted",
+        "PreCompact",
+        "TraceScored"
+      ],
+      "resume_sources": [
+        "docs/baron/continuity/CURRENT.md",
+        "docs/baron/continuity/CURRENT_RECOVERY.md",
+        "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/plans/CURRENT.md",
+        "docs/baron/proofs/INDEX.md",
+        "docs/baron/traces/INDEX.md"
+      ],
+      "contradiction": null,
+      "readiness": "rejected; repeat prompts suppressed",
+      "created_at": "2026-09-11T11:25:59+07:00",
+      "updated_at": "2026-09-11T11:28:26+07:00",
+      "correlation": {
+        "task_id": "8aa28b52801d27be2bebc9a7ed24a756f57052af1120ac9fcd6e23603b51f618"
+      },
+      "suppressed_until": "never",
+      "replacement_for": null,
+      "decision_recorded": false,
+      "proposal_key": "spec 02 backend foundation verification review",
+      "semantic_key": "spec 02 backend foundation verification review",
+      "evidence_keys": [
+        "dc3e5fd3bbf3f65391e16c57dadf3142c0f685fd57209e2a8bd4cf0f0e4b5837"
       ]
     }
   ],

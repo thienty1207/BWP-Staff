@@ -1710,7 +1710,11 @@ Do not prematurely tune the pool for unrealistic traffic.
 
 # 29. Environment Configuration
 
-Use `.env` only for local development.
+Use the existing real local environment file:
+
+```text
+backend/.env
+```
 
 The project configuration uses one PostgreSQL connection URL:
 
@@ -1720,9 +1724,62 @@ DATABASE_URL=postgres://<user>:<local-only-password>@127.0.0.1:5432/bwp-sonasea
 
 Do not commit production credentials.
 
-Use the existing local `backend/.env` file for development configuration.
-Do not generate `.env.example` or any other example environment file. Never
-commit local or production credentials.
+Do not generate or maintain:
+
+```text
+.env.example
+.env.test
+.env.testing
+.env.local
+.env.development
+```
+
+Do not create a second test-only PostgreSQL variable.
+
+Forbidden examples:
+
+```text
+DATABASE_TEST_URL
+TEST_DATABASE_URL
+TEST_DB_URL
+```
+
+`DATABASE_URL` is the only PostgreSQL connection variable for the application
+and local database-backed tests.
+
+Local PostgreSQL tests must isolate themselves with a temporary schema inside
+the PostgreSQL instance configured by `DATABASE_URL`.
+
+Required test model:
+
+```text
+backend/.env
+    ↓
+DATABASE_URL
+    ↓
+development PostgreSQL instance
+    ↓
+unique temporary schema
+    ↓
+test search_path
+    ↓
+test
+    ↓
+drop only the temporary schema
+```
+
+Tests must never reset, truncate, or destroy the normal development `public`
+schema just to obtain isolation.
+
+If the configured environment is not suitable for development test isolation,
+the test must stop safely instead of performing destructive cleanup.
+
+Config unit tests may use `t.Setenv` to temporarily override official existing
+runtime variables when testing validation behavior. They must not invent new
+test-only environment variables or establish `APP_ENV=test` as a project
+environment.
+
+Never commit local or production credentials.
 
 ---
 
@@ -1796,7 +1853,7 @@ SPEC-01 must include database-focused validation.
 
 At minimum verify:
 
-1. A clean database can run all migrations successfully.
+1. A clean isolated PostgreSQL schema can run all migrations successfully.
 2. Required tables exist, including:
    - `ticket_assigned_departments`
    - `ticket_assigned_users`
@@ -1829,7 +1886,50 @@ At minimum verify:
 
 Tests should not depend on production data.
 
-Use a real PostgreSQL test database for PostgreSQL behavior.
+## PostgreSQL test connection rule
+
+Database-backed SPEC-01 tests must use the official:
+
+```text
+DATABASE_URL
+```
+
+loaded from the real local `backend/.env` / process environment.
+
+Do not use or introduce:
+
+```text
+DATABASE_TEST_URL
+TEST_DATABASE_URL
+APP_ENV=test
+.env.test
+```
+
+The existing PostgreSQL isolation strategy must use a unique temporary schema
+and `search_path`.
+
+Conceptually:
+
+```text
+DATABASE_URL
+    ↓
+connect
+    ↓
+CREATE SCHEMA spec01_<unique>
+    ↓
+search_path = spec01_<unique>,public
+    ↓
+run migration/test behavior
+    ↓
+DROP SCHEMA spec01_<unique> CASCADE
+```
+
+Only the temporary test schema may be dropped.
+
+The normal development `public` schema and its data must remain untouched.
+
+Migration lock, checksum, idempotency, fresh-schema, and legacy-upgrade tests
+must continue using real PostgreSQL behavior under this isolated-schema model.
 
 Do not weaken existing migration checksum, idempotency, or lock-timeout tests.
 
@@ -1847,7 +1947,7 @@ go build ./...
 go mod tidy
 ```
 
-The Go migration runner must also successfully run against a fresh PostgreSQL database.
+The Go migration runner must also successfully run against a fresh isolated PostgreSQL schema on the real development PostgreSQL instance configured by `DATABASE_URL`.
 
 Example:
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	"github.com/thienty1207/BWP-Staff/backend/admin"
 	"github.com/thienty1207/BWP-Staff/backend/config"
 	"github.com/thienty1207/BWP-Staff/backend/shared"
@@ -724,9 +726,18 @@ WHERE id = $1`, ticketID).Scan(&priority, &dueAtIsNull); err != nil {
 func openSPEC01Pool(t *testing.T) (*pgxpool.Pool, context.Context) {
 	t.Helper()
 
-	databaseURL := strings.TrimSpace(os.Getenv("DATABASE_TEST_URL"))
+	loadLocalTestEnv(t)
+	databaseURL := strings.TrimSpace(os.Getenv("DATABASE_URL"))
 	if databaseURL == "" {
-		t.Skip("set DATABASE_TEST_URL to run the PostgreSQL foundation contract")
+		t.Skip("set DATABASE_URL to run the PostgreSQL foundation contract")
+	}
+	if appEnv := strings.TrimSpace(os.Getenv("APP_ENV")); appEnv != "" && !strings.EqualFold(appEnv, "development") {
+		t.Skipf("refusing PostgreSQL foundation test with APP_ENV=%q", appEnv)
+	}
+
+	parsedURL, err := url.Parse(databaseURL)
+	if err != nil || !isLoopbackDatabaseURL(parsedURL) {
+		t.Skip("refusing PostgreSQL foundation test unless DATABASE_URL points to a loopback PostgreSQL instance")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -769,11 +780,6 @@ func openSPEC01Pool(t *testing.T) (*pgxpool.Pool, context.Context) {
 		cancel()
 	}
 
-	parsedURL, err := url.Parse(databaseURL)
-	if err != nil {
-		cleanup()
-		t.Fatalf("parse PostgreSQL test URL: %v", err)
-	}
 	query := parsedURL.Query()
 	query.Del("options")
 	encodedQuery := query.Encode()
@@ -787,6 +793,8 @@ func openSPEC01Pool(t *testing.T) (*pgxpool.Pool, context.Context) {
 	t.Setenv("DATABASE_MAX_CONNECTIONS", "2")
 	t.Setenv("DATABASE_MIN_CONNECTIONS", "0")
 	t.Setenv("DATABASE_ACQUIRE_TIMEOUT_SECONDS", "5")
+	t.Setenv("APP_ENV", "development")
+	t.Setenv("FRONTEND_ORIGIN", "")
 	t.Setenv("SEED_DEVELOPMENT_DATA", "false")
 
 	settings, err := config.Load()
@@ -810,6 +818,28 @@ func openSPEC01Pool(t *testing.T) (*pgxpool.Pool, context.Context) {
 		t.Fatalf("PostgreSQL test pool is not isolated: got schema %q, want %q", currentSchema, schema)
 	}
 	return pool, ctx
+}
+
+func loadLocalTestEnv(t *testing.T) {
+	t.Helper()
+	if strings.TrimSpace(os.Getenv("DATABASE_URL")) != "" {
+		return
+	}
+	if err := godotenv.Load(filepath.Join("..", ".env")); err != nil && !os.IsNotExist(err) {
+		t.Fatalf("load local backend/.env for PostgreSQL test: %v", err)
+	}
+}
+
+func isLoopbackDatabaseURL(databaseURL *url.URL) bool {
+	if databaseURL == nil || (databaseURL.Scheme != "postgres" && databaseURL.Scheme != "postgresql") {
+		return false
+	}
+	host := strings.TrimSuffix(strings.ToLower(databaseURL.Hostname()), ".")
+	if host == "localhost" || host == "127.0.0.1" || host == "::1" {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
 func writeTestMigration(t *testing.T, directory, name, contents string) {

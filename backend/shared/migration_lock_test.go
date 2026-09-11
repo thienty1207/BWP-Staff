@@ -1,38 +1,17 @@
-package shared
+package shared_test
 
 import (
 	"context"
 	"errors"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/thienty1207/BWP-Staff/backend/config"
+	"github.com/thienty1207/BWP-Staff/backend/shared"
 )
 
 func TestRunMigrationsTimesOutWhenLockHeld(t *testing.T) {
-	databaseURL := os.Getenv("DATABASE_TEST_URL")
-	if databaseURL == "" {
-		t.Skip("set DATABASE_TEST_URL to run the PostgreSQL migration lock contract")
-	}
-	t.Setenv("DATABASE_URL", databaseURL)
-	t.Setenv("SEED_DEVELOPMENT_DATA", "false")
-
-	settings, err := config.Load()
-	if err != nil {
-		t.Fatalf("load test database config: %v", err)
-	}
-	settings.DatabaseMaxConnections = 2
-	settings.DatabaseMinConnections = 0
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	pool, err := Connect(ctx, settings)
-	if err != nil {
-		t.Fatalf("connect test database: %v", err)
-	}
-	defer pool.Close()
+	pool, ctx := openSPEC01Pool(t)
 
 	blocker, err := pool.Acquire(ctx)
 	if err != nil {
@@ -43,7 +22,7 @@ func TestRunMigrationsTimesOutWhenLockHeld(t *testing.T) {
 		t.Fatalf("hold migration lock: %v", err)
 	}
 
-	err = RunMigrations(context.Background(), pool, filepath.Join("..", "migrations"), 100*time.Millisecond)
+	err = shared.RunMigrations(context.Background(), pool, filepath.Join("..", "migrations"), 100*time.Millisecond)
 	if !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("expected migration lock timeout, got %v", err)
 	}
