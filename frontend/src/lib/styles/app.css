@@ -92,7 +92,7 @@ button:disabled {
 .login-shell::before {
 	z-index: 0;
 	background: url('/images/login-background.jpg') center / cover no-repeat;
-	filter: blur(7px);
+	filter: blur(4px);
 	transform: scale(1.03);
 }
 
