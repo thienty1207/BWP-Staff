@@ -92,8 +92,8 @@ button:disabled {
 .login-shell::before {
 	z-index: 0;
 	background: url('/images/login-background.jpg') center / cover no-repeat;
-	filter: blur(4px);
-	transform: scale(1.03);
+	filter: blur(2px);
+	transform: scale(1.02);
 }
 
 .login-shell::after {
