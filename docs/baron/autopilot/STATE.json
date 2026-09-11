@@ -299,8 +299,8 @@
       "resume_sources": [
         "docs/baron/continuity/CURRENT.md",
         "docs/baron/continuity/CURRENT_RECOVERY.md",
-        "docs/baron/plans/CURRENT.md",
         "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/plans/CURRENT.md",
         "docs/baron/proofs/INDEX.md",
         "docs/baron/traces/INDEX.md"
       ],
@@ -318,6 +318,60 @@
       "semantic_key": "spec 01 migration architecture cleanup review",
       "evidence_keys": [
         "ec129f3aac58a1c5d9e4e31a539a9b256a770a93ff4ee2e91ae68f3dff03fe5c"
+      ]
+    },
+    {
+      "id": "candidate-62153b94721fc204-verification",
+      "summary": "SPEC-01 ticket foundation amendment review: forward migration 0020, legacy assignment backfill, real PostgreSQL tests, local backup, and raw verification completed",
+      "scope": "project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098",
+      "impact": "verification",
+      "status": "candidate",
+      "trusted": false,
+      "evidence_count": 1,
+      "provenance": [
+        "automation:ContextCompiled",
+        "automation:PlanStarted",
+        "automation:PreCompact",
+        "automation:TraceScored",
+        "resume:docs/baron/continuity/CURRENT.md",
+        "resume:docs/baron/continuity/CURRENT_RECOVERY.md",
+        "resume:docs/baron/harness/CURRENT_INTENT.md",
+        "resume:docs/baron/plans/CURRENT.md",
+        "resume:docs/baron/proofs/INDEX.md",
+        "resume:docs/baron/traces/INDEX.md",
+        "review:post-task",
+        "source:repo-review",
+        "source:user-task",
+        "task-review:a374ed0e8bb49e47f024ae540c3da6b19c1266e60b7b7a872d3e07476548c81d"
+      ],
+      "observed_automation": [
+        "ContextCompiled",
+        "PlanStarted",
+        "PreCompact",
+        "TraceScored"
+      ],
+      "resume_sources": [
+        "docs/baron/continuity/CURRENT.md",
+        "docs/baron/continuity/CURRENT_RECOVERY.md",
+        "docs/baron/plans/CURRENT.md",
+        "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/proofs/INDEX.md",
+        "docs/baron/traces/INDEX.md"
+      ],
+      "contradiction": null,
+      "readiness": "candidate; explicit review required",
+      "created_at": "2026-09-11T08:58:41+07:00",
+      "updated_at": "2026-09-11T08:58:41+07:00",
+      "correlation": {
+        "task_id": "ec5328a38a3bf72e0d96962bc4df750c2bd2e4edd54e08056f1f9bd372e0b149"
+      },
+      "suppressed_until": null,
+      "replacement_for": null,
+      "decision_recorded": false,
+      "proposal_key": "spec 01 ticket foundation amendment review forward migration 0020 legacy assignment backfill real postgresql tests local backup and raw verification completed",
+      "semantic_key": "spec 01 ticket foundation amendment review forward migration 0020 legacy assignment backfill real postgresql tests local backup and raw verification completed",
+      "evidence_keys": [
+        "4b166b289c76f74faf92e854e576ac122f60c9d764aee5ff84e58cfe7293ca40"
       ]
     }
   ],

@@ -26,6 +26,7 @@ func TestSpec01MigrationDirectoryContainsSchemaMigrationsOnly(t *testing.T) {
 		"0016_audit_logs.sql",
 		"0017_indexes.sql",
 		"0019_announcement_author_index.sql",
+		"0020_ticket_assignment_and_request_fields.sql",
 	}
 
 	for _, name := range required {

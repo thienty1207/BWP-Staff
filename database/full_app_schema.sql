@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict qYCBch3onH2ZaIxH7miKg040VfVyFe5i00ywnpbzCB1T0ijJM898dXBEMqr2h0S
+\restrict SJebK4LtPftNSP2j09NhW5KLwq5pyPPeugQdtKA8al9QNzeyRKOxO8zIxD9rHcQ
 
 -- Dumped from database version 18.6
 -- Dumped by pg_dump version 18.6
@@ -494,6 +494,112 @@ ALTER SEQUENCE public.ticket_activity_id_seq OWNED BY public.ticket_activity.id;
 
 
 --
+-- Name: ticket_assigned_departments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ticket_assigned_departments (
+    id bigint NOT NULL,
+    ticket_id bigint NOT NULL,
+    department_id bigint NOT NULL,
+    assigned_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: ticket_assigned_departments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.ticket_assigned_departments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: ticket_assigned_departments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.ticket_assigned_departments_id_seq OWNED BY public.ticket_assigned_departments.id;
+
+
+--
+-- Name: ticket_assigned_users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ticket_assigned_users (
+    id bigint NOT NULL,
+    ticket_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    assigned_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: ticket_assigned_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.ticket_assigned_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: ticket_assigned_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.ticket_assigned_users_id_seq OWNED BY public.ticket_assigned_users.id;
+
+
+--
+-- Name: ticket_attachments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ticket_attachments (
+    id bigint NOT NULL,
+    ticket_id bigint NOT NULL,
+    uploaded_by bigint NOT NULL,
+    file_name character varying(255) NOT NULL,
+    storage_key text NOT NULL,
+    public_url text,
+    mime_type character varying(150) NOT NULL,
+    file_size_bytes bigint NOT NULL,
+    width integer,
+    height integer,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT ticket_attachments_file_name_not_blank CHECK ((btrim((file_name)::text) <> ''::text)),
+    CONSTRAINT ticket_attachments_file_size_check CHECK ((file_size_bytes >= 0)),
+    CONSTRAINT ticket_attachments_height_check CHECK (((height IS NULL) OR (height >= 0))),
+    CONSTRAINT ticket_attachments_mime_type_not_blank CHECK ((btrim((mime_type)::text) <> ''::text)),
+    CONSTRAINT ticket_attachments_storage_key_not_blank CHECK ((btrim(storage_key) <> ''::text)),
+    CONSTRAINT ticket_attachments_width_check CHECK (((width IS NULL) OR (width >= 0)))
+);
+
+
+--
+-- Name: ticket_attachments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.ticket_attachments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: ticket_attachments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.ticket_attachments_id_seq OWNED BY public.ticket_attachments.id;
+
+
+--
 -- Name: ticket_messages; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -541,15 +647,14 @@ CREATE TABLE public.tickets (
     status public.ticket_status DEFAULT 'pending'::public.ticket_status NOT NULL,
     accepted_by bigint,
     accepted_at timestamp with time zone,
-    assigned_to bigint,
-    assigned_at timestamp with time zone,
     closed_by bigint,
     closed_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    priority boolean DEFAULT false NOT NULL,
+    due_at timestamp with time zone,
     CONSTRAINT tickets_acceptance_pair_check CHECK (((accepted_by IS NULL) = (accepted_at IS NULL))),
     CONSTRAINT tickets_accepted_acceptance_check CHECK (((status <> 'accepted'::public.ticket_status) OR ((accepted_by IS NOT NULL) AND (accepted_at IS NOT NULL)))),
-    CONSTRAINT tickets_assignment_pair_check CHECK (((assigned_to IS NULL) = (assigned_at IS NULL))),
     CONSTRAINT tickets_closed_acceptance_check CHECK (((status <> 'closed'::public.ticket_status) OR ((accepted_by IS NOT NULL) AND (accepted_at IS NOT NULL)))),
     CONSTRAINT tickets_closed_closure_check CHECK (((status <> 'closed'::public.ticket_status) OR ((closed_by IS NOT NULL) AND (closed_at IS NOT NULL)))),
     CONSTRAINT tickets_closure_pair_check CHECK (((closed_by IS NULL) = (closed_at IS NULL))),
@@ -728,6 +833,27 @@ ALTER TABLE ONLY public.ticket_activity ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
+-- Name: ticket_assigned_departments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_assigned_departments ALTER COLUMN id SET DEFAULT nextval('public.ticket_assigned_departments_id_seq'::regclass);
+
+
+--
+-- Name: ticket_assigned_users id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_assigned_users ALTER COLUMN id SET DEFAULT nextval('public.ticket_assigned_users_id_seq'::regclass);
+
+
+--
+-- Name: ticket_attachments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_attachments ALTER COLUMN id SET DEFAULT nextval('public.ticket_attachments_id_seq'::regclass);
+
+
+--
 -- Name: ticket_messages id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -873,6 +999,30 @@ ALTER TABLE ONLY public.staff_meals
 
 ALTER TABLE ONLY public.ticket_activity
     ADD CONSTRAINT ticket_activity_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ticket_assigned_departments ticket_assigned_departments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_assigned_departments
+    ADD CONSTRAINT ticket_assigned_departments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ticket_assigned_users ticket_assigned_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_assigned_users
+    ADD CONSTRAINT ticket_assigned_users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ticket_attachments ticket_attachments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_attachments
+    ADD CONSTRAINT ticket_attachments_pkey PRIMARY KEY (id);
 
 
 --
@@ -1072,6 +1222,41 @@ CREATE INDEX idx_ticket_activity_ticket_created ON public.ticket_activity USING 
 
 
 --
+-- Name: idx_ticket_assigned_departments_department_ticket; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ticket_assigned_departments_department_ticket ON public.ticket_assigned_departments USING btree (department_id, ticket_id);
+
+
+--
+-- Name: idx_ticket_assigned_departments_ticket_department; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_ticket_assigned_departments_ticket_department ON public.ticket_assigned_departments USING btree (ticket_id, department_id);
+
+
+--
+-- Name: idx_ticket_assigned_users_ticket_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_ticket_assigned_users_ticket_user ON public.ticket_assigned_users USING btree (ticket_id, user_id);
+
+
+--
+-- Name: idx_ticket_assigned_users_user_ticket; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ticket_assigned_users_user_ticket ON public.ticket_assigned_users USING btree (user_id, ticket_id);
+
+
+--
+-- Name: idx_ticket_attachments_ticket_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ticket_attachments_ticket_created ON public.ticket_attachments USING btree (ticket_id, created_at, id);
+
+
+--
 -- Name: idx_ticket_messages_sender_created; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1083,13 +1268,6 @@ CREATE INDEX idx_ticket_messages_sender_created ON public.ticket_messages USING 
 --
 
 CREATE INDEX idx_ticket_messages_ticket_created ON public.ticket_messages USING btree (ticket_id, created_at, id);
-
-
---
--- Name: idx_tickets_assigned_status; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_tickets_assigned_status ON public.tickets USING btree (assigned_to, status);
 
 
 --
@@ -1310,6 +1488,54 @@ ALTER TABLE ONLY public.ticket_activity
 
 
 --
+-- Name: ticket_assigned_departments ticket_assigned_departments_department_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_assigned_departments
+    ADD CONSTRAINT ticket_assigned_departments_department_id_fkey FOREIGN KEY (department_id) REFERENCES public.departments(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+
+
+--
+-- Name: ticket_assigned_departments ticket_assigned_departments_ticket_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_assigned_departments
+    ADD CONSTRAINT ticket_assigned_departments_ticket_id_fkey FOREIGN KEY (ticket_id) REFERENCES public.tickets(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+
+
+--
+-- Name: ticket_assigned_users ticket_assigned_users_ticket_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_assigned_users
+    ADD CONSTRAINT ticket_assigned_users_ticket_id_fkey FOREIGN KEY (ticket_id) REFERENCES public.tickets(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+
+
+--
+-- Name: ticket_assigned_users ticket_assigned_users_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_assigned_users
+    ADD CONSTRAINT ticket_assigned_users_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+
+
+--
+-- Name: ticket_attachments ticket_attachments_ticket_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_attachments
+    ADD CONSTRAINT ticket_attachments_ticket_id_fkey FOREIGN KEY (ticket_id) REFERENCES public.tickets(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+
+
+--
+-- Name: ticket_attachments ticket_attachments_uploaded_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_attachments
+    ADD CONSTRAINT ticket_attachments_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES public.users(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+
+
+--
 -- Name: ticket_messages ticket_messages_sender_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1331,14 +1557,6 @@ ALTER TABLE ONLY public.ticket_messages
 
 ALTER TABLE ONLY public.tickets
     ADD CONSTRAINT tickets_accepted_by_fkey FOREIGN KEY (accepted_by) REFERENCES public.users(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
-
-
---
--- Name: tickets tickets_assigned_to_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.tickets
-    ADD CONSTRAINT tickets_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES public.users(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 
 --
@@ -1393,4 +1611,4 @@ ALTER TABLE ONLY public.users
 -- PostgreSQL database dump complete
 --
 
-\unrestrict qYCBch3onH2ZaIxH7miKg040VfVyFe5i00ywnpbzCB1T0ijJM898dXBEMqr2h0S
+\unrestrict SJebK4LtPftNSP2j09NhW5KLwq5pyPPeugQdtKA8al9QNzeyRKOxO8zIxD9rHcQ

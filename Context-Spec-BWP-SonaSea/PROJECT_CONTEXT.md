@@ -11,6 +11,14 @@
 > Individual SPEC files define the scope of a particular implementation phase. A SPEC may add details, but it must not silently replace the locked decisions in this file.
 >
 > If a SPEC appears to conflict with this file, stop and identify the conflict instead of inventing a new architecture.
+>
+> **Current clarification — ticket request and assignment model**
+>
+> The current product rules support a boolean Priority flag, optional Due Time,
+> image attachments when creating a New Request, and assignment to one or many
+> departments and/or one or many users at the same time. Assignment remains
+> separate from ticket status. Any older implementation or UI showing a single
+> `assigned_to` user is legacy behavior and must not override these rules.
 
 ## Current repository snapshot
 
@@ -260,10 +268,10 @@ Do not assume:
 
 ```text
 more generics = faster
-more traits = faster
-Arc<Mutex<...>> = faster
+more interfaces = faster
+more locks = faster
 more abstraction = more professional
-more crates = better architecture
+more packages = better architecture
 ```
 
 Performance should primarily come from:
@@ -387,13 +395,14 @@ Avoid unless there is a concrete requirement:
 complex generic hierarchies
 generic repositories
 generic services
-trait factories
-deep trait-object architecture
+factory-heavy architecture
+deep interface hierarchies
 reflection-heavy dependency injection
 code generation without a concrete need
 unsafe code
 deep middleware abstractions
 global mutable state
+unnecessary synchronization
 ```
 
 These constructs are not forbidden when technically necessary.
@@ -711,14 +720,14 @@ Exact implementation may evolve.
 
 Do not scatter arbitrary status-code tuples throughout business logic.
 
-Do not use `unwrap()` or `expect()` for normal request-path failures.
+Do not ignore or swallow normal request-path errors.
 
-`unwrap()` may be acceptable in:
+Fatal startup behavior may be acceptable in:
 
 ```text
 tests
 guaranteed startup invariants
-developer-only scripts
+developer-only commands
 ```
 
 when failure is intentionally fatal and obvious.
@@ -1304,28 +1313,51 @@ Ticket has been accepted.
 
 Ticket has been completed/closed.
 
-Assignment is separate:
+Assignment is **separate from ticket status**.
+
+A ticket may have:
 
 ```text
-assigned_to
-assigned_at
+no current assignment
+one assigned department
+multiple assigned departments
+one assigned user
+multiple assigned users
+assigned department(s) + assigned user(s) at the same time
 ```
 
-Therefore:
+Assignment must not create a new ticket status.
+
+Therefore all of these are valid:
 
 ```text
 Accepted + unassigned
+
+Accepted + assigned to IT
+
+Accepted + assigned to IT + Engineering
+
+Accepted + assigned to one user
+
+Accepted + assigned to multiple users
+
+Accepted + assigned to departments and users simultaneously
 ```
 
-and:
+The `tickets.department_id` field represents the destination/request family
+selected when the request is created. It is not the complete current assignment
+state.
 
-```text
-Accepted + assigned
-```
+Current assignment state must be represented relationally rather than by a
+single `tickets.assigned_to` column.
 
-are both valid.
+Any existing pre-amendment schema that still uses `tickets.assigned_to` /
+`tickets.assigned_at` is legacy foundation state. Revised SPEC-01 defines the
+forward migration to the relational multi-assignment model; do not treat the
+legacy single-assignee columns as a locked product rule.
 
-Do not create an `assigned` ticket status unless the user explicitly changes this product rule.
+Do not create an `assigned` ticket status unless the user explicitly changes
+this product rule.
 
 ---
 
@@ -1339,11 +1371,87 @@ Assign
 Close
 ```
 
-Actions must update both persistent state and relevant history/audit data where the corresponding SPEC requires it.
+Assignment product rules are locked as follows:
 
-Buttons should become disabled or visually inactive when an action is no longer valid.
+```text
+all authenticated active staff may use Assign
+
+Assign may target:
+- one department
+- multiple departments
+- one user
+- multiple users
+- departments and users in the same assignment operation
+```
+
+The UI may present department assignment as a `Groups` tab, but in the current
+product model those groups are hotel departments. Do not invent a separate
+generic groups system unless a later explicit requirement requires one.
+
+Assignment does not transition the ticket out of `accepted`.
+
+Actions must update persistent state and relevant history/audit data where the
+corresponding SPEC requires it.
+
+Buttons should become disabled or visually inactive when an action is no longer
+valid.
 
 Backend validation remains authoritative.
+
+## 37A. New Request rules
+
+The New Request flow is part of the ticket product direction.
+
+Canonical request fields are:
+
+```text
+department / family
+location
+title
+description
+image attachments
+due time
+priority
+```
+
+Rules:
+
+```text
+department:
+selected from real persisted departments
+
+location:
+selected from real persisted locations
+
+description:
+may remain optional unless a later SPEC explicitly changes it
+
+image attachments:
+supported when creating the request
+stored externally later; PostgreSQL stores metadata/references only
+
+due time:
+optional
+
+priority:
+exactly a boolean
+false = normal/non-priority
+true  = priority
+```
+
+Do not introduce priority levels such as:
+
+```text
+low
+normal
+high
+urgent
+```
+
+unless the user explicitly changes this rule.
+
+The exact upload MIME/size policy belongs to the upload implementation SPEC.
+Do not infer permanent limits only from an old UI mockup.
 
 ---
 
@@ -1447,26 +1555,25 @@ Pagination should be supported.
 
 # 45. Report
 
-Report must query real application data.
+Report remains a planned product area, but its UI and business behavior are
+**deferred** until the user's supervisor provides the intended report design and
+functional requirements.
 
-Never build charts from hard-coded numbers.
+Do not implement a report screen or invent report charts/categories merely from
+an old UI reference.
 
-Report performance is important.
+The database may retain general reporting support so future reporting can query
+real application data efficiently.
 
-Avoid:
+When Report is eventually implemented:
 
-```text
-loading all tickets into Go application memory
-then calculating every report in application memory
-```
-
-when PostgreSQL can aggregate efficiently.
-
-Prefer SQL aggregation for database-owned data.
-
-Optimize report queries using real measurements.
-
-Caching may be introduced later when justified.
+- use real PostgreSQL-backed data;
+- never build charts from hard-coded numbers;
+- prefer SQL aggregation for database-owned calculations;
+- do not load the entire ticket table into Go memory when PostgreSQL can
+  aggregate efficiently;
+- optimize using real measurements;
+- add caching only if later justified.
 
 ---
 
@@ -1656,12 +1763,15 @@ For tickets, the backend/database layer should handle query filters such as:
 
 ```text
 status
-department
+request department
+assigned department
 requester
-assignee
+assigned user
 date range
 search text
 ```
+
+when those filters are implemented.
 
 when those filters are implemented.
 
@@ -1671,7 +1781,20 @@ when those filters are implemented.
 
 Do not store large uploaded image/file binaries directly in PostgreSQL.
 
-Store:
+The product has at least these distinct attachment contexts:
+
+```text
+New Request image attachments
+Ticket chat message attachments
+Staff Meal image
+```
+
+New Request image attachments belong to the ticket/request itself. They should
+not require creating a fake chat message merely to hold an image.
+
+Ticket chat attachments belong to chat messages.
+
+Store metadata such as:
 
 ```text
 object key
@@ -1680,10 +1803,11 @@ original filename
 MIME type
 size
 dimensions where useful
-metadata
+uploaded-by/user ownership where appropriate
+created time
 ```
 
-Validate:
+Validate in the relevant upload implementation:
 
 ```text
 allowed MIME types
@@ -1692,6 +1816,9 @@ ownership/authorization
 ```
 
 Do not trust only the filename extension.
+
+The exact provider, image-size limit, and MIME allowlist are not locked by an
+old mockup unless the user explicitly confirms them.
 
 ---
 
@@ -1718,7 +1845,7 @@ Do not prematurely invent image pipelines before the upload SPEC defines the act
 
 Keep the dependency graph small.
 
-Before adding a crate/package, ask:
+Before adding a package, ask:
 
 ```text
 What problem does it solve?
@@ -2135,14 +2262,38 @@ Do not guess.
 
 # 75. Current Product UI Direction
 
-The UI reference currently establishes:
+Existing UI images are visual references, not the highest source of truth.
+Some screenshots are older than the current written product rules.
+
+When an old UI control conflicts with a current explicit rule or this document,
+follow the current rule rather than reproducing the obsolete control.
+
+## Canonical login behavior
+
+```text
+username
+password
+Log In
+```
+
+Do not implement old mockup controls for:
+
+```text
+email login
+employee-code login
+forgot password
+email reset
+SSO
+```
+
+unless the user explicitly introduces them later.
 
 ## Desktop
 
 ```text
 Left sidebar:
 - Tickets
-- Report
+- Report (planned/deferred)
 - Settings
 
 Bottom sidebar:
@@ -2182,6 +2333,47 @@ Bottom content:
 
 Ticket detail on desktop must not cover the ticket table.
 
+## New Request modal
+
+The current product direction includes a New Request modal with:
+
+```text
+department/family dropdown
+location selector
+title
+description
+image upload
+optional due time
+boolean Priority toggle
+Cancel
+Send
+```
+
+Data for departments and locations must come from the real backend/database.
+
+## Assign modal
+
+Assign supports both department and user selection.
+
+The UI may expose:
+
+```text
+Groups  -> hotel departments
+Users   -> individual users
+```
+
+Single-select and multi-select are both valid because the underlying product
+supports one or many departments/users.
+
+A request may be assigned to departments only, users only, or both.
+
+## Admin UI
+
+The currently available visual references are staff/user-facing.
+
+Admin behavior is part of the product, but the Admin UI has not yet been
+designed. Do not invent a final Admin UI from the staff screenshots.
+
 ---
 
 # 76. Current Mobile UI Direction
@@ -2205,12 +2397,13 @@ Staff Meal
 
 Announcements
 
-Report
+Report (planned/deferred)
 
 Settings
 ```
 
-The logo belongs in the menu/drawer design rather than being duplicated unnecessarily in both drawer and header.
+The logo belongs in the menu/drawer design rather than being duplicated
+unnecessarily in both drawer and header.
 
 Open tickets display:
 
@@ -2220,6 +2413,20 @@ Accepted
 ```
 
 Closed tickets live under Closed.
+
+Mobile and desktop use the same product/business rules for:
+
+```text
+boolean priority
+optional due time
+New Request image attachments
+multi-department assignment
+multi-user assignment
+department + user assignment
+```
+
+The layout may differ responsively, but the underlying behavior and persisted
+data must remain the same.
 
 ---
 
@@ -2243,9 +2450,13 @@ On mobile they should be presented as their own page/list rather than being arti
 
 # 79. Report UX Rule
 
-Report should load quickly enough to feel like part of the application.
+Report implementation is deferred until explicit UI and functional
+requirements are provided.
 
-The existing inspiration system may have very slow reports; BWP SonaSea must not reproduce that behavior.
+Do not implement the old report mockup merely because it exists in a screenshot.
+
+When Report is later activated, it should load quickly enough to feel like part
+of the application.
 
 Report speed should be solved through:
 
@@ -2474,7 +2685,10 @@ Do not create documentation directories full of empty placeholders.
 
 # 87. SPEC Workflow
 
-The repository is currently at the foundation-scaffold stage. `SPEC-01-database-foundation.md` is stored under `Context-Spec-BWP-SonaSea/Spec/`; later SPECs should add the corresponding production modules incrementally.
+The repository is currently at the foundation-scaffold stage.
+`SPEC-01-database-foundation.md` is stored under
+`Context-Spec-BWP-SonaSea/Spec/`; later SPECs should add the corresponding
+production modules incrementally.
 
 The intended implementation sequence is approximately:
 
@@ -2495,7 +2709,7 @@ SPEC-05
 Application Shell + Navigation + Responsive Foundation
 
 SPEC-06
-Ticket List
+Ticket Create + Ticket List + Search/Filter/Pagination
 
 SPEC-07
 Ticket Detail + Accept/Assign/Close
@@ -2507,24 +2721,34 @@ SPEC-09
 Checklist
 
 SPEC-10
-Staff Meal
+Notifications
 
 SPEC-11
-Announcements
+Staff Meal
 
 SPEC-12
+Announcements
+
 Report
+DEFERRED until explicit supervisor-provided UI/functionality exists
 
-SPEC-13
 Settings
+later feature SPEC
 
-SPEC-14
+Admin
+later feature SPEC after Admin UI/business requirements are defined
+
 Production Hardening / QA / Performance / Security
+final hardening phase
 ```
 
-Admin-specific work may add additional SPECs.
+The exact numbering after the implemented SPECs may evolve.
 
-The exact number of SPECs may evolve.
+Do not create a Report implementation merely to preserve an old provisional
+SPEC number.
+
+Admin-specific work may add additional SPECs after its UI and behavior are
+defined.
 
 ---
 
@@ -2815,6 +3039,19 @@ closed
 
 ASSIGNMENT:
 Separate from ticket status
+One or many departments and/or one or many users may be assigned simultaneously
+All active authenticated staff may use Assign; backend authorization remains authoritative
+
+NEW REQUEST:
+Department/family + location + title + description + image attachments
+Due time is optional
+Priority is BOOLEAN only (true/false)
+
+REPORT:
+Planned but implementation deferred until explicit supervisor-provided UI/functionality
+
+ADMIN UI:
+Not yet designed; do not infer final admin screens from staff UI references
 
 PREMATURE INFRA:
 Avoid
@@ -2846,7 +3083,7 @@ Use real PostgreSQL-backed flows.
 
 Keep Go boring and explicit.
 
-Do not add Arc/Mutex/generics/traits without a concrete reason.
+Do not add unnecessary generics, interfaces, locks, or concurrency without a concrete reason.
 
 Do not sacrifice performance through naive SQL or data flow.
 

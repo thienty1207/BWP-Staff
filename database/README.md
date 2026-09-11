@@ -27,6 +27,11 @@ Go backend checks and runs them at startup. The Go runner keeps the existing
 legacy ledger name is retained for data safety, and the runner is independent
 of the old framework. The migration directory contains schema migrations only;
 the historical fixture-only version 0018 is no longer in the active path.
+The revised ticket foundation is applied by the forward-only
+0020_ticket_assignment_and_request_fields.sql migration; version 0018 is
+never reused. It adds boolean priority, optional due time, ticket-level
+attachment metadata, and normalized department/user assignment tables while
+preserving legacy single-user assignments before removing those columns.
 Existing databases keep any old version-18 ledger row and data; startup does
 not reset or delete them. Development departments, locations, and the admin
 are inserted only by the explicitly guarded `go run ./cmd/seed_development`
@@ -37,7 +42,8 @@ operational scripts are source files and remain reviewable.
 
 The initial index set follows the known read paths: ticket queues and history
 use status/owner/department/location plus timestamp and `id` tie-breakers;
-ticket chat and activity use ticket plus timestamp; published announcements
-and unread notifications use partial indexes; session expiry and audit lookup
-have dedicated indexes. New indexes should be added only for a measured query
+ticket assignments use membership indexes; ticket-level attachments, chat and
+activity use ticket plus timestamp; published announcements and unread
+notifications use partial indexes; session expiry and audit lookup have
+dedicated indexes. New indexes should be added only for a measured query
 pattern and validated with `EXPLAIN (ANALYZE, BUFFERS)`.

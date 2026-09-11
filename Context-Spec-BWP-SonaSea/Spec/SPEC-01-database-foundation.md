@@ -1,5 +1,19 @@
 # SPEC-01 — Database Foundation
 
+> **Revision note — clarified ticket requirements**
+>
+> SPEC-01 was previously implemented, then the ticket creation and assignment
+> rules were clarified before later feature work began.
+>
+> This revision is authoritative for the database foundation. Existing
+> implementations that still use a single `tickets.assigned_to` field or lack
+> the request fields defined below must be brought into conformance using a
+> forward migration.
+>
+> Migration version `0018` remains retired. Do not reuse it. The next schema
+> migration for this amendment is version `0020`.
+>
+
 ## 1. Goal
 
 Create the complete initial PostgreSQL database foundation for **BWP SonaSea**.
@@ -51,14 +65,12 @@ Do not introduce abstractions without a concrete requirement.
 Avoid:
 
 - Generic repositories
-- Generic database traits
+- Generic database abstractions
 - Repository factories
-- Unnecessary trait objects
-- `Arc`
-- `Mutex`
-- `RwLock`
+- Unnecessary interfaces
+- Custom global locking around `pgxpool`
 - Complex generics
-- Macro-heavy custom database abstractions
+- Reflection-heavy database abstractions
 - ORM-style magic
 
 pgx and pgxpool should be used directly and transparently. SQL should remain
@@ -206,14 +218,16 @@ Important:
 
 **Assigned is not a ticket status.**
 
-A ticket can be:
+A ticket can remain:
 
 ```text
 status = accepted
-assigned_to = <user>
 ```
 
-Assignment is a separate property.
+while having zero, one, or multiple assigned departments and/or users.
+
+Assignment is a separate relational property and does not create an
+`assigned` ticket status.
 
 ---
 
@@ -264,6 +278,9 @@ auth_sessions
 locations
 
 tickets
+ticket_assigned_departments
+ticket_assigned_users
+ticket_attachments
 ticket_activity
 ticket_messages
 message_attachments
@@ -544,13 +561,13 @@ location_id         BIGINT NULL
 title               VARCHAR(255) NOT NULL
 description         TEXT NULL
 
+priority            BOOLEAN NOT NULL DEFAULT FALSE
+due_at              TIMESTAMPTZ NULL
+
 status              ticket_status NOT NULL DEFAULT 'pending'
 
 accepted_by         BIGINT NULL
 accepted_at         TIMESTAMPTZ NULL
-
-assigned_to         BIGINT NULL
-assigned_at         TIMESTAMPTZ NULL
 
 closed_by           BIGINT NULL
 closed_at           TIMESTAMPTZ NULL
@@ -566,11 +583,42 @@ requester_id  -> users.id
 department_id -> departments.id
 location_id   -> locations.id
 accepted_by   -> users.id
-assigned_to   -> users.id
 closed_by     -> users.id
 ```
 
-Ticket rules:
+`department_id` is the request destination/family selected when the ticket is
+created. It is not the complete assignment state.
+
+Ticket creation rules:
+
+```text
+department/family:
+required by the current data model and selected from persisted departments
+
+location:
+keeps the existing nullable database rule unless a later explicit requirement
+makes it mandatory
+
+title:
+required
+
+description:
+optional
+
+priority:
+boolean only
+FALSE = normal/non-priority
+TRUE  = priority
+
+due_at:
+optional
+
+ticket creation images:
+supported through ticket_attachments
+```
+
+Do not introduce a priority enum or priority levels such as `low`, `normal`,
+`high`, or `urgent`.
 
 ### Pending ticket
 
@@ -588,17 +636,44 @@ accepted_by IS NOT NULL
 accepted_at IS NOT NULL
 ```
 
-### Assigned ticket
+### Assignment
+
+Assignment is separate from ticket status.
+
+A ticket may have:
+
+```text
+zero assigned departments/users
+one assigned department
+multiple assigned departments
+one assigned user
+multiple assigned users
+departments and users at the same time
+```
+
+Current assignment state is stored in:
+
+```text
+ticket_assigned_departments
+ticket_assigned_users
+```
+
+Do not use a single `tickets.assigned_to` column as the authoritative assignment
+model after migration `0020`.
 
 Assignment does not change ticket status automatically.
 
-Example:
+An accepted ticket may remain:
 
 ```text
 status = accepted
-assigned_to = 42
-assigned_at = timestamp
 ```
+
+whether unassigned or assigned.
+
+All authenticated active staff are allowed by product rule to perform Assign.
+The backend feature SPEC must enforce that authorization; SPEC-01 only provides
+the required database model.
 
 ### Closed ticket
 
@@ -612,58 +687,214 @@ Do not physically delete tickets.
 
 ---
 
-## 10.2 Required ticket indexes
+## 10.2 `ticket_assigned_departments`
+
+Purpose:
+
+Store the current department assignments for a ticket.
+
+Columns:
+
+```text
+id              BIGSERIAL PRIMARY KEY
+ticket_id       BIGINT NOT NULL
+department_id   BIGINT NOT NULL
+assigned_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+```
+
+Foreign keys:
+
+```text
+ticket_id     -> tickets.id
+department_id -> departments.id
+```
+
+Constraints:
+
+```text
+UNIQUE(ticket_id, department_id)
+```
+
+Rules:
+
+- One ticket may have zero, one, or multiple assigned departments.
+- The same department must not be assigned to the same ticket twice.
+- Removing/replacing a current assignment later must not erase business history;
+  assignment changes belong in `ticket_activity`.
+
+Required indexes:
+
+```sql
+CREATE UNIQUE INDEX idx_ticket_assigned_departments_ticket_department
+ON ticket_assigned_departments (ticket_id, department_id);
+
+CREATE INDEX idx_ticket_assigned_departments_department_ticket
+ON ticket_assigned_departments (department_id, ticket_id);
+```
+
+---
+
+## 10.3 `ticket_assigned_users`
+
+Purpose:
+
+Store the current individual user assignments for a ticket.
+
+Columns:
+
+```text
+id              BIGSERIAL PRIMARY KEY
+ticket_id       BIGINT NOT NULL
+user_id         BIGINT NOT NULL
+assigned_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+```
+
+Foreign keys:
+
+```text
+ticket_id -> tickets.id
+user_id   -> users.id
+```
+
+Constraints:
+
+```text
+UNIQUE(ticket_id, user_id)
+```
+
+Rules:
+
+- One ticket may have zero, one, or multiple assigned users.
+- The same user must not be assigned to the same ticket twice.
+- User assignments and department assignments may exist simultaneously.
+- Assignment history is preserved through `ticket_activity`.
+
+Required indexes:
+
+```sql
+CREATE UNIQUE INDEX idx_ticket_assigned_users_ticket_user
+ON ticket_assigned_users (ticket_id, user_id);
+
+CREATE INDEX idx_ticket_assigned_users_user_ticket
+ON ticket_assigned_users (user_id, ticket_id);
+```
+
+---
+
+## 10.4 `ticket_attachments`
+
+Purpose:
+
+Store metadata for images attached when a New Request is created.
+
+The actual image binary must not be stored in PostgreSQL.
+
+Columns:
+
+```text
+id              BIGSERIAL PRIMARY KEY
+ticket_id       BIGINT NOT NULL
+uploaded_by     BIGINT NOT NULL
+file_name       VARCHAR(255) NOT NULL
+storage_key     TEXT NOT NULL
+public_url      TEXT NULL
+mime_type       VARCHAR(150) NOT NULL
+file_size_bytes BIGINT NOT NULL
+width           INTEGER NULL
+height          INTEGER NULL
+created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+```
+
+Foreign keys:
+
+```text
+ticket_id   -> tickets.id
+uploaded_by -> users.id
+```
+
+Constraints:
+
+```text
+file_size_bytes >= 0
+width >= 0
+height >= 0
+```
+
+Indexes:
+
+```sql
+CREATE INDEX idx_ticket_attachments_ticket_created
+ON ticket_attachments (ticket_id, created_at ASC, id ASC);
+```
+
+Rules:
+
+- This table is for request/ticket-level creation attachments.
+- Chat attachments remain in `message_attachments`.
+- Do not create a fake `ticket_messages` row merely to store a New Request image.
+- The exact image MIME allowlist and maximum upload size belong to the later
+  upload implementation; do not permanently derive them from an old UI mockup.
+
+---
+
+## 10.5 Required ticket indexes
 
 The following query patterns must be optimized:
 
 Open tickets ordered newest first:
 
 ```text
-status + created_at
+status + created_at + id
 ```
 
 Requester ticket history:
 
 ```text
-requester_id + created_at
+requester_id + created_at + id
 ```
 
-Assigned work:
+Request department queue:
 
 ```text
-assigned_to + status
-```
-
-Department queue:
-
-```text
-department_id + status + created_at
+department_id + status + created_at + id
 ```
 
 Location history:
 
 ```text
-location_id + created_at
+location_id + created_at + id
+```
+
+Assigned user membership:
+
+```text
+ticket_assigned_users.user_id + ticket_id
+```
+
+Assigned department membership:
+
+```text
+ticket_assigned_departments.department_id + ticket_id
 ```
 
 Recommended SQL indexes:
 
 ```sql
 CREATE INDEX idx_tickets_status_created_at
-ON tickets (status, created_at DESC);
+ON tickets (status, created_at DESC, id DESC);
 
 CREATE INDEX idx_tickets_requester_created_at
-ON tickets (requester_id, created_at DESC);
-
-CREATE INDEX idx_tickets_assigned_status
-ON tickets (assigned_to, status);
+ON tickets (requester_id, created_at DESC, id DESC);
 
 CREATE INDEX idx_tickets_department_status_created
-ON tickets (department_id, status, created_at DESC);
+ON tickets (department_id, status, created_at DESC, id DESC);
 
 CREATE INDEX idx_tickets_location_created_at
-ON tickets (location_id, created_at DESC);
+ON tickets (location_id, created_at DESC, id DESC);
 ```
+
+Do not keep the legacy `idx_tickets_assigned_status` index after
+`tickets.assigned_to` is retired.
 
 ---
 
@@ -721,10 +952,14 @@ Example metadata:
 
 ```json
 {
-  "previous_assignee_id": 10,
-  "new_assignee_id": 18
+  "assigned_user_ids": [10, 18],
+  "assigned_department_ids": [3, 5]
 }
 ```
+
+Exact activity metadata is defined by the later assignment behavior SPEC. Keep
+it supplemental; current assignment truth lives in the relational assignment
+tables.
 
 ---
 
@@ -1090,27 +1325,40 @@ Rules:
 
 No separate reporting database is required in SPEC-01.
 
-Reports should initially query PostgreSQL directly.
+Report UI and business behavior are currently **deferred** until explicit
+requirements are provided by the user's supervisor.
 
-The schema must support:
+Do not implement an old report mockup or invent categories/charts in SPEC-01.
+
+The schema should still support future reporting such as:
 
 ```text
 total tickets
 open tickets
 closed tickets
-tickets by department
-tickets by category if categories are later added
+tickets by request department
 tickets by status
 tickets by requester
-tickets by assignee
+tickets by assigned department
+tickets by assigned user
 tickets over time
 average acceptance time
 average close time
+priority ticket counts
+due/overdue analysis if later required
+```
+
+Future assignee reporting must join through:
+
+```text
+ticket_assigned_departments
+ticket_assigned_users
 ```
 
 Do not create premature materialized views.
 
-Add reporting indexes only after real queries are known and measured.
+Add additional reporting indexes only after real report queries are known and
+measured.
 
 ---
 
@@ -1321,7 +1569,7 @@ real PostgreSQL transactions, then seeds the development admin.
 
 Use sequential migration files under `backend/migrations/`.
 
-Example:
+Current schema migration history:
 
 ```text
 backend/migrations/
@@ -1342,24 +1590,57 @@ backend/migrations/
 ├── 0015_notifications.sql
 ├── 0016_audit_logs.sql
 ├── 0017_indexes.sql
-└── 0019_announcement_author_index.sql
+├── 0019_announcement_author_index.sql
+└── 0020_ticket_assignment_and_request_fields.sql
 ```
 
-Exact filenames may differ if there is a clear reason.
-
 Migration version 18 is intentionally retired because the historical file was
-fixture-only, not schema. Existing migration ledgers may still contain version
-18; do not reuse that version for a future schema migration. The next new
-migration version is 0020.
+development fixture data, not schema. Do not reuse version 18.
 
-Do not create one giant migration containing the entire database if splitting improves readability.
+### Required migration `0020`
 
-Do not modify or rewrite an already-applied schema migration solely to change
-its behavior. A historical fixture-only migration may be retired from the
-active migration directory when the project is still pre-production, but
-existing ledgers must be left intact and must not be reset. Development-only
-data belongs in the explicit guarded seed workflow, not in the migration
-runner.
+Migration `0020` must bring an existing SPEC-01 database into conformance with
+the clarified ticket rules.
+
+It must:
+
+```text
+add tickets.priority BOOLEAN NOT NULL DEFAULT FALSE
+add tickets.due_at TIMESTAMPTZ NULL
+
+create ticket_assigned_departments
+create ticket_assigned_users
+create ticket_attachments
+
+create the required indexes for those tables
+
+preserve any existing single-user assignment data before removing the legacy
+tickets.assigned_to / tickets.assigned_at columns
+
+drop the obsolete idx_tickets_assigned_status index when the legacy column is removed
+```
+
+If legacy rows contain:
+
+```text
+tickets.assigned_to
+tickets.assigned_at
+```
+
+they must be migrated into `ticket_assigned_users` without losing the assigned
+user or timestamp.
+
+Do not fabricate an assignment actor if the old schema did not store one.
+Assignment actor/history for future operations belongs in `ticket_activity`.
+
+After successful backfill, remove the legacy single-assignee columns so there
+is only one authoritative assignment model.
+
+Do not modify or rewrite already-applied schema migrations to achieve this.
+Use forward migration `0020`.
+
+Do not create one giant unrelated migration. `0020` should contain only the
+clarified ticket-request/assignment foundation changes.
 
 ---
 
@@ -1401,15 +1682,9 @@ Do not implement domain repositories yet unless needed only to validate schema a
 
 Use pgx `pgxpool.Pool`.
 
-Do not wrap the pool in:
+Do not wrap the pool in a custom global mutex or synchronization layer.
 
-```text
-Arc
-Mutex
-RwLock
-```
-
-pgxpool is already designed for concurrent use.
+`pgxpool.Pool` is already designed for concurrent use.
 
 Initial pool configuration should be simple and configurable through environment variables.
 
@@ -1481,7 +1756,8 @@ Required:
 - Proper primary keys
 - Foreign key indexes where needed
 - Ticket status/date indexes
-- Ticket assignment indexes
+- Ticket assignment membership indexes for both assigned users and assigned departments
+- Ticket creation attachment ticket/date index
 - Message ticket/date index
 - Announcement published index
 - Notification unread index
@@ -1521,20 +1797,41 @@ SPEC-01 must include database-focused validation.
 At minimum verify:
 
 1. A clean database can run all migrations successfully.
-2. Required tables exist.
+2. Required tables exist, including:
+   - `ticket_assigned_departments`
+   - `ticket_assigned_users`
+   - `ticket_attachments`
 3. Required enum values exist.
 4. Foreign keys reject invalid references.
 5. Unique usernames are enforced.
 6. Unique employee codes are enforced.
 7. Unique non-null emails are enforced.
 8. Ticket statuses accept only valid values.
-9. Core ticket indexes exist.
-10. Chat index exists.
-11. Development seed data can be inserted successfully.
-12. The development admin password is stored as an Argon2id hash.
-13. pgxpool can establish and ping a PostgreSQL connection.
+9. `tickets.priority` is boolean and defaults to `FALSE`.
+10. `tickets.due_at` accepts `NULL`.
+11. Multiple departments can be assigned to one ticket.
+12. Multiple users can be assigned to one ticket.
+13. Department and user assignments can exist simultaneously.
+14. Duplicate `(ticket_id, department_id)` assignment is rejected.
+15. Duplicate `(ticket_id, user_id)` assignment is rejected.
+16. Legacy single-user assignment data is preserved by migration `0020` when
+    testing an upgrade path where applicable.
+17. New Request attachment metadata can be stored in `ticket_attachments`.
+18. Chat attachment metadata remains stored separately in `message_attachments`.
+19. Core ticket indexes exist.
+20. Assignment membership indexes exist.
+21. Ticket creation attachment index exists.
+22. Chat index exists.
+23. Development seed data can be inserted successfully.
+24. The development admin password is stored as an Argon2id hash.
+25. pgxpool can establish and ping a PostgreSQL connection.
+26. Normal schema migrations insert no development fixture data.
 
 Tests should not depend on production data.
+
+Use a real PostgreSQL test database for PostgreSQL behavior.
+
+Do not weaken existing migration checksum, idempotency, or lock-timeout tests.
 
 ---
 
@@ -1580,9 +1877,9 @@ SPEC-01 does **not** implement:
 - SvelteKit UI
 - Login screen
 - Ticket screen
-- Report screen
+- Report screen or report business logic
 - Settings screen
-- Admin UI
+- Admin UI (not yet designed)
 - Redis
 - Docker production deployment
 - Caddy
@@ -1597,14 +1894,27 @@ These belong to later specs.
 
 SPEC-01 is complete only when all of the following are true:
 
-- PostgreSQL schema supports all currently planned BWP SonaSea features.
+- PostgreSQL schema supports all currently known BWP SonaSea foundation rules.
 - All required tables exist.
 - All required enums exist.
 - All core relationships use valid foreign keys.
 - Critical uniqueness constraints exist.
 - Required indexes exist.
 - Ticket status is limited to `pending`, `accepted`, and `closed`.
-- Assignment is modeled separately from ticket status.
+- Assignment is separate from ticket status.
+- One ticket can be assigned to multiple departments.
+- One ticket can be assigned to multiple users.
+- Department and user assignments can exist simultaneously.
+- Legacy `tickets.assigned_to` / `tickets.assigned_at` are no longer the
+  authoritative assignment model after migration `0020`.
+- Existing single-user assignment data is preserved during the migration to the
+  relational assignment model.
+- All active authenticated staff can be supported by the later backend Assign
+  authorization rule without a schema limitation.
+- `tickets.priority` is a boolean with default `FALSE`.
+- `tickets.due_at` is optional.
+- New Request image attachment metadata can be stored at ticket level.
+- Chat attachment metadata remains separately supported.
 - Ticket history can be preserved.
 - Chat messages and attachment metadata can be stored.
 - Checklist items can be stored.
@@ -1614,9 +1924,13 @@ SPEC-01 is complete only when all of the following are true:
 - Audit logs can preserve important actions.
 - User preferences can store dark/light/system theme.
 - Auth sessions can support future server-side session authentication.
-- A development admin can be provisioned by username without storing a plaintext password.
+- Report implementation remains deferred without blocking future SQL reporting.
+- A development admin can be provisioned by username without storing a
+  plaintext password.
 - pgxpool can connect to PostgreSQL.
-- All SQL migrations run from zero on a clean database.
+- All schema migrations run from zero on a clean database.
+- Existing migration history remains valid.
+- Development fixture data is not inserted by normal schema migrations.
 - `gofmt` passes.
 - `go vet ./...` passes.
 - `go test ./...` passes.
@@ -1629,7 +1943,7 @@ SPEC-01 is complete only when all of the following are true:
 
 # 36. Handoff to SPEC-02
 
-After SPEC-01 is complete, the project should be ready for:
+After this revised SPEC-01, including migration `0020`, is complete, the project should be ready for:
 
 ```text
 SPEC-02 — Backend Foundation

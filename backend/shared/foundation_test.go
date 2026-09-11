@@ -39,7 +39,7 @@ func TestSPEC01PostgreSQLFoundation(t *testing.T) {
 
 		expectedMigrationVersions := []int64{
 			1, 2, 3, 4, 5, 6, 7, 8, 9,
-			10, 11, 12, 13, 14, 15, 16, 17, 19,
+			10, 11, 12, 13, 14, 15, 16, 17, 19, 20,
 		}
 		rows, err := pool.Query(ctx, `
 SELECT version, success
@@ -88,6 +88,9 @@ ORDER BY version`)
 			"auth_sessions",
 			"locations",
 			"tickets",
+			"ticket_assigned_departments",
+			"ticket_assigned_users",
+			"ticket_attachments",
 			"ticket_activity",
 			"ticket_messages",
 			"message_attachments",
@@ -183,9 +186,13 @@ ORDER BY pg_type.typname, pg_enum.enumsortorder`, []string{
 		requiredIndexes := []string{
 			"idx_tickets_status_created_at",
 			"idx_tickets_requester_created_at",
-			"idx_tickets_assigned_status",
 			"idx_tickets_department_status_created",
 			"idx_tickets_location_created_at",
+			"idx_ticket_assigned_departments_ticket_department",
+			"idx_ticket_assigned_departments_department_ticket",
+			"idx_ticket_assigned_users_ticket_user",
+			"idx_ticket_assigned_users_user_ticket",
+			"idx_ticket_attachments_ticket_created",
 			"idx_ticket_messages_ticket_created",
 			"idx_notifications_user_unread_created",
 			"idx_announcements_published_at",
@@ -219,6 +226,18 @@ WHERE schemaname = current_schema()
 			if !found[indexName] {
 				t.Errorf("missing required index %s", indexName)
 			}
+		}
+
+		var legacyIndexCount int
+		if err := pool.QueryRow(ctx, `
+SELECT COUNT(*)
+FROM pg_indexes
+WHERE schemaname = current_schema()
+  AND indexname = 'idx_tickets_assigned_status'`).Scan(&legacyIndexCount); err != nil {
+			t.Fatalf("check retired assignment index: %v", err)
+		}
+		if legacyIndexCount != 0 {
+			t.Fatalf("retired assignment index still exists")
 		}
 	})
 
@@ -318,6 +337,163 @@ WHERE id = $1`, seededAdminID).Scan(&passwordHash); err != nil {
 	if err := pool.QueryRow(ctx, "SELECT id FROM departments WHERE code = 'IT'").Scan(&departmentID); err != nil {
 		t.Fatalf("read seeded IT department: %v", err)
 	}
+
+	t.Run("ticket request fields enforce priority and optional due time", func(t *testing.T) {
+		dueAt := time.Date(2026, 9, 11, 12, 30, 0, 0, time.UTC)
+		var ticketID int64
+		if err := pool.QueryRow(ctx, `
+INSERT INTO tickets (requester_id, department_id, title, priority, due_at)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id`, seededAdminID, departmentID, "Priority request", true, dueAt).Scan(&ticketID); err != nil {
+			t.Fatalf("insert priority ticket: %v", err)
+		}
+
+		var priority bool
+		var storedDueAt time.Time
+		if err := pool.QueryRow(ctx, `
+SELECT priority, due_at
+FROM tickets
+WHERE id = $1`, ticketID).Scan(&priority, &storedDueAt); err != nil {
+			t.Fatalf("read priority ticket: %v", err)
+		}
+		if !priority {
+			t.Fatal("priority ticket was stored as normal")
+		}
+		if !storedDueAt.Equal(dueAt) {
+			t.Fatalf("unexpected due time: got=%s want=%s", storedDueAt, dueAt)
+		}
+
+		var defaultPriority, dueAtIsNull bool
+		if err := pool.QueryRow(ctx, `
+INSERT INTO tickets (requester_id, department_id, title)
+VALUES ($1, $2, $3)
+RETURNING priority, due_at IS NULL`, seededAdminID, departmentID, "Default request").Scan(&defaultPriority, &dueAtIsNull); err != nil {
+			t.Fatalf("insert default ticket: %v", err)
+		}
+		if defaultPriority {
+			t.Fatal("ticket priority defaulted to true")
+		}
+		if !dueAtIsNull {
+			t.Fatal("ticket due time did not default to NULL")
+		}
+	})
+
+	t.Run("ticket supports multiple department and user assignments", func(t *testing.T) {
+		var secondDepartmentID int64
+		if err := pool.QueryRow(ctx, "SELECT id FROM departments WHERE code = 'HK'").Scan(&secondDepartmentID); err != nil {
+			t.Fatalf("read seeded HK department: %v", err)
+		}
+		firstUserID := insertTestUser(t, ctx, pool, "spec01-assignment-user-1", "SPEC01-ASSIGNMENT-1", nil)
+		secondUserID := insertTestUser(t, ctx, pool, "spec01-assignment-user-2", "SPEC01-ASSIGNMENT-2", nil)
+
+		var ticketID int64
+		if err := pool.QueryRow(ctx, `
+INSERT INTO tickets (requester_id, department_id, title)
+VALUES ($1, $2, $3)
+RETURNING id`, seededAdminID, departmentID, "Multi-assignment request").Scan(&ticketID); err != nil {
+			t.Fatalf("insert multi-assignment ticket: %v", err)
+		}
+
+		for _, assignedDepartmentID := range []int64{departmentID, secondDepartmentID} {
+			if _, err := pool.Exec(ctx, `
+INSERT INTO ticket_assigned_departments (ticket_id, department_id)
+VALUES ($1, $2)`, ticketID, assignedDepartmentID); err != nil {
+				t.Fatalf("insert department assignment %d: %v", assignedDepartmentID, err)
+			}
+		}
+		for _, assignedUserID := range []int64{firstUserID, secondUserID} {
+			if _, err := pool.Exec(ctx, `
+INSERT INTO ticket_assigned_users (ticket_id, user_id)
+VALUES ($1, $2)`, ticketID, assignedUserID); err != nil {
+				t.Fatalf("insert user assignment %d: %v", assignedUserID, err)
+			}
+		}
+
+		var departmentAssignments, userAssignments int
+		if err := pool.QueryRow(ctx, `
+SELECT
+    (SELECT COUNT(*) FROM ticket_assigned_departments WHERE ticket_id = $1),
+    (SELECT COUNT(*) FROM ticket_assigned_users WHERE ticket_id = $1)`, ticketID).Scan(&departmentAssignments, &userAssignments); err != nil {
+			t.Fatalf("count ticket assignments: %v", err)
+		}
+		if departmentAssignments != 2 || userAssignments != 2 {
+			t.Fatalf("unexpected assignment counts: departments=%d users=%d", departmentAssignments, userAssignments)
+		}
+
+		_, err := pool.Exec(ctx, `
+INSERT INTO ticket_assigned_departments (ticket_id, department_id)
+VALUES ($1, $2)`, ticketID, departmentID)
+		assertPostgreSQLErrorCode(t, err, "23505")
+
+		_, err = pool.Exec(ctx, `
+INSERT INTO ticket_assigned_users (ticket_id, user_id)
+VALUES ($1, $2)`, ticketID, firstUserID)
+		assertPostgreSQLErrorCode(t, err, "23505")
+
+		var status string
+		if err := pool.QueryRow(ctx, "SELECT status::text FROM tickets WHERE id = $1", ticketID).Scan(&status); err != nil {
+			t.Fatalf("read multi-assignment ticket status: %v", err)
+		}
+		if status != "pending" {
+			t.Fatalf("assignment changed ticket status: got=%s want=pending", status)
+		}
+	})
+
+	t.Run("ticket and message attachments remain separate metadata", func(t *testing.T) {
+		var ticketID int64
+		if err := pool.QueryRow(ctx, `
+INSERT INTO tickets (requester_id, department_id, title)
+VALUES ($1, $2, $3)
+RETURNING id`, seededAdminID, departmentID, "Attachment request").Scan(&ticketID); err != nil {
+			t.Fatalf("insert attachment ticket: %v", err)
+		}
+
+		var ticketAttachmentID int64
+		if err := pool.QueryRow(ctx, `
+INSERT INTO ticket_attachments (
+    ticket_id, uploaded_by, file_name, storage_key, public_url,
+    mime_type, file_size_bytes, width, height
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id`, ticketID, seededAdminID, "request.png", "tickets/request.png", "https://storage.invalid/request.png", "image/png", int64(2048), 1280, 720).Scan(&ticketAttachmentID); err != nil {
+			t.Fatalf("insert ticket attachment metadata: %v", err)
+		}
+
+		var storedFileName string
+		if err := pool.QueryRow(ctx, "SELECT file_name FROM ticket_attachments WHERE id = $1", ticketAttachmentID).Scan(&storedFileName); err != nil {
+			t.Fatalf("read ticket attachment metadata: %v", err)
+		}
+		if storedFileName != "request.png" {
+			t.Fatalf("unexpected ticket attachment file name: %s", storedFileName)
+		}
+
+		var messageID int64
+		if err := pool.QueryRow(ctx, `
+INSERT INTO ticket_messages (ticket_id, sender_id, content)
+VALUES ($1, $2, $3)
+RETURNING id`, ticketID, seededAdminID, "message attachment").Scan(&messageID); err != nil {
+			t.Fatalf("insert ticket message: %v", err)
+		}
+		if _, err := pool.Exec(ctx, `
+INSERT INTO message_attachments (
+    message_id, file_name, storage_key, public_url, mime_type,
+    file_size_bytes, width, height
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`, messageID, "chat.png", "messages/chat.png", "https://storage.invalid/chat.png", "image/png", int64(1024), 640, 480); err != nil {
+			t.Fatalf("insert message attachment metadata: %v", err)
+		}
+
+		var ticketAttachmentCount, messageAttachmentCount int
+		if err := pool.QueryRow(ctx, `
+SELECT
+    (SELECT COUNT(*) FROM ticket_attachments WHERE ticket_id = $1),
+    (SELECT COUNT(*) FROM message_attachments WHERE message_id = $2)`, ticketID, messageID).Scan(&ticketAttachmentCount, &messageAttachmentCount); err != nil {
+			t.Fatalf("count separated attachment metadata: %v", err)
+		}
+		if ticketAttachmentCount != 1 || messageAttachmentCount != 1 {
+			t.Fatalf("unexpected separated attachment counts: ticket=%d message=%d", ticketAttachmentCount, messageAttachmentCount)
+		}
+	})
 
 	t.Run("invalid foreign key is rejected", func(t *testing.T) {
 		_, err := pool.Exec(ctx, `
@@ -423,6 +599,128 @@ VALUES (1, 'changed');`)
 	}
 }
 
+func TestSPEC01MigrationBackfillsLegacyTicketAssignment(t *testing.T) {
+	pool, ctx := openSPEC01Pool(t)
+	sourceDirectory := filepath.Join("..", "migrations")
+	migrationsDirectory := t.TempDir()
+	legacyMigrationNames := []string{
+		"0001_extensions.sql",
+		"0002_enums.sql",
+		"0003_departments.sql",
+		"0004_users.sql",
+		"0005_user_preferences.sql",
+		"0006_auth_sessions.sql",
+		"0007_locations.sql",
+		"0008_tickets.sql",
+		"0009_ticket_activity.sql",
+		"0010_ticket_messages.sql",
+		"0011_message_attachments.sql",
+		"0012_checklist_items.sql",
+		"0013_announcements.sql",
+		"0014_staff_meals.sql",
+		"0015_notifications.sql",
+		"0016_audit_logs.sql",
+		"0017_indexes.sql",
+		"0019_announcement_author_index.sql",
+	}
+	for _, name := range legacyMigrationNames {
+		copyMigration(t, sourceDirectory, migrationsDirectory, name)
+	}
+
+	if err := shared.RunMigrations(ctx, pool, migrationsDirectory, 5*time.Second); err != nil {
+		t.Fatalf("run legacy migrations: %v", err)
+	}
+
+	var departmentID int64
+	if err := pool.QueryRow(ctx, `
+INSERT INTO departments (code, name, description)
+VALUES ($1, $2, $3)
+RETURNING id`, "SPEC01-UPGRADE-DEPT", "SPEC-01 Upgrade Department", "SPEC-01 upgrade test").Scan(&departmentID); err != nil {
+		t.Fatalf("insert upgrade department: %v", err)
+	}
+	passwordHash := mustTestPasswordHash(t)
+	var requesterID int64
+	if err := pool.QueryRow(ctx, `
+INSERT INTO users (username, employee_code, password_hash, full_name, department_id, role)
+VALUES ($1, $2, $3, $4, $5, 'staff'::user_role)
+RETURNING id`, "spec01-upgrade-requester", "SPEC01-UPGRADE-REQUESTER", passwordHash, "SPEC-01 Upgrade Requester", departmentID).Scan(&requesterID); err != nil {
+		t.Fatalf("insert upgrade requester: %v", err)
+	}
+	var assignedUserID int64
+	if err := pool.QueryRow(ctx, `
+INSERT INTO users (username, employee_code, password_hash, full_name, department_id, role)
+VALUES ($1, $2, $3, $4, $5, 'staff'::user_role)
+RETURNING id`, "spec01-upgrade-assignee", "SPEC01-UPGRADE-ASSIGNEE", passwordHash, "SPEC-01 Upgrade Assignee", departmentID).Scan(&assignedUserID); err != nil {
+		t.Fatalf("insert upgrade assignee: %v", err)
+	}
+
+	assignedAt := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
+	var ticketID int64
+	if err := pool.QueryRow(ctx, `
+INSERT INTO tickets (requester_id, department_id, title, assigned_to, assigned_at)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id`, requesterID, departmentID, "Legacy assignment ticket", assignedUserID, assignedAt).Scan(&ticketID); err != nil {
+		t.Fatalf("insert legacy assignment ticket: %v", err)
+	}
+
+	copyMigration(t, sourceDirectory, migrationsDirectory, "0020_ticket_assignment_and_request_fields.sql")
+	if err := shared.RunMigrations(ctx, pool, migrationsDirectory, 5*time.Second); err != nil {
+		t.Fatalf("run ticket foundation amendment: %v", err)
+	}
+
+	var migratedUserID int64
+	var migratedAssignedAt time.Time
+	if err := pool.QueryRow(ctx, `
+SELECT user_id, assigned_at
+FROM ticket_assigned_users
+WHERE ticket_id = $1`, ticketID).Scan(&migratedUserID, &migratedAssignedAt); err != nil {
+		t.Fatalf("read migrated ticket assignment: %v", err)
+	}
+	if migratedUserID != assignedUserID {
+		t.Fatalf("legacy assignment user changed: got=%d want=%d", migratedUserID, assignedUserID)
+	}
+	if !migratedAssignedAt.Equal(assignedAt) {
+		t.Fatalf("legacy assignment timestamp changed: got=%s want=%s", migratedAssignedAt, assignedAt)
+	}
+
+	var legacyColumnCount int
+	if err := pool.QueryRow(ctx, `
+SELECT COUNT(*)
+FROM information_schema.columns
+WHERE table_schema = current_schema()
+  AND table_name = 'tickets'
+  AND column_name = ANY($1)`, []string{"assigned_to", "assigned_at"}).Scan(&legacyColumnCount); err != nil {
+		t.Fatalf("check retired ticket columns: %v", err)
+	}
+	if legacyColumnCount != 0 {
+		t.Fatalf("legacy ticket assignment columns still exist: %d", legacyColumnCount)
+	}
+
+	var legacyIndexCount int
+	if err := pool.QueryRow(ctx, `
+SELECT COUNT(*)
+FROM pg_indexes
+WHERE schemaname = current_schema()
+  AND indexname = 'idx_tickets_assigned_status'`).Scan(&legacyIndexCount); err != nil {
+		t.Fatalf("check retired assignment index after upgrade: %v", err)
+	}
+	if legacyIndexCount != 0 {
+		t.Fatal("legacy assignment index still exists after upgrade")
+	}
+
+	var priority bool
+	var dueAtIsNull bool
+	if err := pool.QueryRow(ctx, `
+SELECT priority, due_at IS NULL
+FROM tickets
+WHERE id = $1`, ticketID).Scan(&priority, &dueAtIsNull); err != nil {
+		t.Fatalf("read amended ticket request fields: %v", err)
+	}
+	if priority || !dueAtIsNull {
+		t.Fatalf("unexpected amended ticket defaults: priority=%t due_at_is_null=%t", priority, dueAtIsNull)
+	}
+}
+
 func openSPEC01Pool(t *testing.T) (*pgxpool.Pool, context.Context) {
 	t.Helper()
 
@@ -518,6 +816,17 @@ func writeTestMigration(t *testing.T, directory, name, contents string) {
 	t.Helper()
 	if err := os.WriteFile(filepath.Join(directory, name), []byte(contents), 0o600); err != nil {
 		t.Fatalf("write test migration %s: %v", name, err)
+	}
+}
+
+func copyMigration(t *testing.T, sourceDirectory, destinationDirectory, name string) {
+	t.Helper()
+	contents, err := os.ReadFile(filepath.Join(sourceDirectory, name))
+	if err != nil {
+		t.Fatalf("read migration %s for upgrade test: %v", name, err)
+	}
+	if err := os.WriteFile(filepath.Join(destinationDirectory, name), contents, 0o600); err != nil {
+		t.Fatalf("copy migration %s for upgrade test: %v", name, err)
 	}
 }
 
