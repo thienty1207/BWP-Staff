@@ -16,6 +16,7 @@ func setBaseConfigEnvironment(t *testing.T) {
 	t.Setenv("FRONTEND_ORIGIN", "")
 	t.Setenv("BACKEND_BIND_ADDRESS", "")
 	t.Setenv("BACKEND_SHUTDOWN_TIMEOUT_SECONDS", "")
+	t.Setenv("AUTH_SESSION_TTL_HOURS", "")
 }
 
 func TestLoadRequiresOneDatabaseURL(t *testing.T) {
@@ -105,6 +106,9 @@ func TestLoadAppliesDevelopmentHTTPDefaults(t *testing.T) {
 	if settings.BackendShutdownTimeoutSeconds != 10 {
 		t.Fatalf("unexpected shutdown timeout: %d", settings.BackendShutdownTimeoutSeconds)
 	}
+	if settings.AuthSessionTTLHours != 12 {
+		t.Fatalf("unexpected auth session TTL: %d", settings.AuthSessionTTLHours)
+	}
 }
 
 func TestLoadAppliesHTTPOverrides(t *testing.T) {
@@ -125,6 +129,32 @@ func TestLoadAppliesHTTPOverrides(t *testing.T) {
 	}
 	if settings.BackendShutdownTimeoutSeconds != 30 {
 		t.Fatalf("unexpected shutdown timeout: %d", settings.BackendShutdownTimeoutSeconds)
+	}
+}
+
+func TestLoadAppliesAuthSessionTTLOverride(t *testing.T) {
+	setBaseConfigEnvironment(t)
+	t.Setenv("AUTH_SESSION_TTL_HOURS", "36")
+
+	settings, err := Load()
+	if err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+	if settings.AuthSessionTTLHours != 36 {
+		t.Fatalf("unexpected auth session TTL: %d", settings.AuthSessionTTLHours)
+	}
+}
+
+func TestLoadRejectsInvalidAuthSessionTTL(t *testing.T) {
+	for _, value := range []string{"0", "-1", "721"} {
+		t.Run(value, func(t *testing.T) {
+			setBaseConfigEnvironment(t)
+			t.Setenv("AUTH_SESSION_TTL_HOURS", value)
+
+			if _, err := Load(); err == nil || !strings.Contains(err.Error(), "AUTH_SESSION_TTL_HOURS") {
+				t.Fatalf("expected invalid auth session TTL error, got %v", err)
+			}
+		})
 	}
 }
 

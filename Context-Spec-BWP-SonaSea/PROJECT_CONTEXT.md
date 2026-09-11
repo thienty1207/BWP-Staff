@@ -22,8 +22,9 @@
 
 ## Current repository snapshot
 
-As of 2026-09-11, the repository contains the SPEC-01 PostgreSQL foundation and
-the SPEC-02 Go/Fiber v3 HTTP foundation. Feature packages are added only when
+As of 2026-09-11, the repository contains the SPEC-01 PostgreSQL foundation,
+the SPEC-02 Go/Fiber v3 HTTP foundation, and the SPEC-03 authentication
+backend. Feature packages are added only when
 their corresponding SPEC implements behavior; empty future folders are not
 generated.
 
@@ -47,14 +48,24 @@ BWP-SonaSea/
 │   │   └── testdb_test.go
 │   ├── config/config.go
 │   ├── config/config_test.go
+│   ├── client/auth/
+│   │   ├── handler.go
+│   │   ├── middleware.go
+│   │   ├── model.go
+│   │   ├── repository.go
+│   │   ├── service.go
+│   │   └── *_test.go
 │   ├── shared/
 │   │   ├── database.go
+│   │   ├── httperror/error.go
 │   │   ├── migrations_test.go
 │   │   ├── foundation_test.go
 │   │   ├── migration_lock_test.go
 │   │   └── security/
 │   │       ├── password.go
-│   │       └── password_test.go
+│   │       ├── password_test.go
+│   │       ├── session.go
+│   │       └── session_test.go
 │   └── admin/
 │       ├── seed.go
 │       └── fixtures.go
@@ -94,7 +105,8 @@ BWP-SonaSea/
 │   ├── PROJECT_CONTEXT.md
 │   └── Spec/
 │       ├── SPEC-01-database-foundation.md
-│       └── SPEC-02-backend-foundation.md
+│       ├── SPEC-02-backend-foundation.md
+│       └── SPEC-03-authentication-backend.md
 ├── .gitignore
 ├── AGENTS.md
 └── README.md
@@ -609,9 +621,10 @@ The point is separation of responsibility, not artificial line count.
 
 # 14. Backend Folder Structure
 
-The current backend contains the SPEC-01 database foundation and the SPEC-02
-HTTP foundation. The layout is deliberately small and follows Go package
-boundaries. Client feature packages and shared helpers are created only when a
+The current backend contains the SPEC-01 database foundation, the SPEC-02 HTTP
+foundation, and the SPEC-03 authentication backend. The layout is deliberately
+small and follows Go package boundaries. Client feature packages and shared
+helpers are created only when a
 SPEC needs real code; empty future folders and placeholder files are not
 generated.
 
@@ -635,20 +648,32 @@ backend/
 ├── config/
 │   ├── config.go
 │   └── config_test.go
+├── client/
+│   └── auth/
+│       ├── handler.go
+│       ├── middleware.go
+│       ├── model.go
+│       ├── repository.go
+│       ├── service.go
+│       └── *_test.go
 ├── shared/
 │   ├── database.go
+│   ├── httperror/error.go
 │   ├── foundation_test.go
 │   ├── migrations_test.go
 │   ├── migration_lock_test.go
 │   └── security/
 │       ├── password.go
-│       └── password_test.go
+│       ├── password_test.go
+│       ├── session.go
+│       └── session_test.go
 └── admin/
     ├── seed.go
     └── fixtures.go
 ```
 
-When later client behavior is implemented, use these high-level packages:
+When later client behavior is implemented, add only the required high-level
+packages alongside the implemented auth package:
 
 ```text
 backend/client/
@@ -662,9 +687,10 @@ backend/client/
 └── settings/
 ```
 
-The current `backend/shared/` package owns the database pool and migration
-runner because those are shared infrastructure. Add other shared helpers only
-when multiple implemented packages need a concrete small utility. The
+The current `backend/shared/` package owns the database pool, migration runner,
+security helpers, and reusable HTTP error type because those are shared
+infrastructure. Add other shared helpers only when multiple implemented
+packages need a concrete small utility. The
 existing local `backend/.env` is the only development environment file. Never
 generate or commit `.env.example` or another example env file.
 
@@ -2861,10 +2887,11 @@ Do not create documentation directories full of empty placeholders.
 
 # 87. SPEC Workflow
 
-The repository is currently at the foundation-scaffold stage.
-`SPEC-01-database-foundation.md` is stored under
-`Context-Spec-BWP-SonaSea/Spec/`; later SPECs should add the corresponding
-production modules incrementally.
+The repository is currently at the database/backend-foundation and
+authentication-backend stage. `SPEC-01-database-foundation.md`,
+`SPEC-02-backend-foundation.md`, and `SPEC-03-authentication-backend.md` are
+stored under `Context-Spec-BWP-SonaSea/Spec/`; later SPECs should add the
+corresponding production modules incrementally.
 
 The intended implementation sequence is approximately:
 

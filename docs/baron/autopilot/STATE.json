@@ -409,8 +409,8 @@
       "resume_sources": [
         "docs/baron/continuity/CURRENT.md",
         "docs/baron/continuity/CURRENT_RECOVERY.md",
-        "docs/baron/plans/CURRENT.md",
         "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/plans/CURRENT.md",
         "docs/baron/proofs/INDEX.md",
         "docs/baron/traces/INDEX.md"
       ],
@@ -428,6 +428,62 @@
       "semantic_key": "spec 02 middleware hardening verification review",
       "evidence_keys": [
         "fabf8860653704b6cab8032fddf1ba535d0e2fd49fd582c13d74c49356547a62"
+      ]
+    },
+    {
+      "id": "candidate-478c5b2377f1848a-decision",
+      "summary": "SPEC-03 authentication backend implementation review",
+      "scope": "project:a05212ad4de422369c6b0727fa93d0c51071258e35c6b8716bcb22a59eb07098",
+      "impact": "project_decision",
+      "status": "candidate",
+      "trusted": false,
+      "evidence_count": 1,
+      "provenance": [
+        "automation:ContextCompiled",
+        "automation:PlanStarted",
+        "automation:PreCompact",
+        "automation:ProofRecorded",
+        "automation:TraceScored",
+        "resume:docs/baron/continuity/CURRENT.md",
+        "resume:docs/baron/continuity/CURRENT_RECOVERY.md",
+        "resume:docs/baron/harness/CURRENT_INTENT.md",
+        "resume:docs/baron/plans/CURRENT.md",
+        "resume:docs/baron/proofs/INDEX.md",
+        "resume:docs/baron/traces/INDEX.md",
+        "review:post-task",
+        "source:repo-review",
+        "source:user-task",
+        "task-review:b09306bbad930f044feb79dc32024fab51976d49d789d4d0c7a9b24993b6a498"
+      ],
+      "observed_automation": [
+        "ContextCompiled",
+        "PlanStarted",
+        "PreCompact",
+        "ProofRecorded",
+        "TraceScored"
+      ],
+      "resume_sources": [
+        "docs/baron/continuity/CURRENT.md",
+        "docs/baron/continuity/CURRENT_RECOVERY.md",
+        "docs/baron/plans/CURRENT.md",
+        "docs/baron/harness/CURRENT_INTENT.md",
+        "docs/baron/proofs/INDEX.md",
+        "docs/baron/traces/INDEX.md"
+      ],
+      "contradiction": null,
+      "readiness": "candidate; explicit review required",
+      "created_at": "2026-09-11T14:37:16+07:00",
+      "updated_at": "2026-09-11T14:37:16+07:00",
+      "correlation": {
+        "task_id": "c1d7b2fcb803e56492c184df0cc50b8c508150c7b432856bcbd2fb196c91350c"
+      },
+      "suppressed_until": null,
+      "replacement_for": null,
+      "decision_recorded": false,
+      "proposal_key": "spec 03 authentication backend implementation review",
+      "semantic_key": "spec 03 authentication backend implementation review",
+      "evidence_keys": [
+        "d01075400ac58068646f0bfe8c1a81409c74afb2af0c0b6b509d8c5b58eda4f4"
       ]
     }
   ],

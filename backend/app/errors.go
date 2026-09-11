@@ -7,21 +7,12 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
+	"github.com/thienty1207/BWP-Staff/backend/shared/httperror"
 )
 
-// AppError is a safe, explicit error that a handler may return to its client.
-type AppError struct {
-	Code       string
-	Message    string
-	HTTPStatus int
-}
-
-func (err *AppError) Error() string {
-	if err == nil {
-		return ""
-	}
-	return err.Message
-}
+// AppError preserves the app package API while keeping the reusable HTTP
+// error type outside the app package.
+type AppError = httperror.AppError
 
 type httpErrorBody struct {
 	Code      string `json:"code"`
@@ -36,7 +27,7 @@ type httpErrorResponse struct {
 func handleError(c fiber.Ctx, err error) error {
 	requestID := requestid.FromContext(c)
 
-	var appErr *AppError
+	var appErr *httperror.AppError
 	if errors.As(err, &appErr) {
 		return writeError(c, appErr.HTTPStatus, appErr.Code, appErr.Message, requestID)
 	}
@@ -90,7 +81,7 @@ func statusForError(err error) int {
 		return http.StatusOK
 	}
 
-	var appErr *AppError
+	var appErr *httperror.AppError
 	if errors.As(err, &appErr) && appErr.HTTPStatus >= 400 && appErr.HTTPStatus <= 599 {
 		return appErr.HTTPStatus
 	}

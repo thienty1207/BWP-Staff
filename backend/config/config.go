@@ -19,6 +19,8 @@ const (
 	defaultFrontendOrigin               = "http://localhost:5173"
 	defaultShutdownTimeoutSeconds       = 10
 	maxShutdownTimeoutSeconds           = 60
+	defaultAuthSessionTTLHours          = 12
+	maxAuthSessionTTLHours              = 720
 )
 
 type Config struct {
@@ -30,6 +32,7 @@ type Config struct {
 	BackendBindAddress            string
 	FrontendOrigin                string
 	BackendShutdownTimeoutSeconds int
+	AuthSessionTTLHours           int
 	SeedDevelopmentData           bool
 	SeedAdmin                     SeedAdmin
 }
@@ -94,6 +97,14 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("BACKEND_SHUTDOWN_TIMEOUT_SECONDS must be between 1 and %d", maxShutdownTimeoutSeconds)
 	}
 
+	authSessionTTLHours, err := intValue("AUTH_SESSION_TTL_HOURS", defaultAuthSessionTTLHours)
+	if err != nil {
+		return Config{}, err
+	}
+	if authSessionTTLHours <= 0 || authSessionTTLHours > maxAuthSessionTTLHours {
+		return Config{}, fmt.Errorf("AUTH_SESSION_TTL_HOURS must be between 1 and %d", maxAuthSessionTTLHours)
+	}
+
 	seedDevelopmentData, err := boolValue("SEED_DEVELOPMENT_DATA", false)
 	if err != nil {
 		return Config{}, err
@@ -108,6 +119,7 @@ func Load() (Config, error) {
 		BackendBindAddress:            backendBindAddress,
 		FrontendOrigin:                frontendOrigin,
 		BackendShutdownTimeoutSeconds: shutdownTimeoutSeconds,
+		AuthSessionTTLHours:           authSessionTTLHours,
 		SeedDevelopmentData:           seedDevelopmentData,
 	}
 	if seedDevelopmentData && strings.EqualFold(appEnv, "development") {
