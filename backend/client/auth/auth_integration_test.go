@@ -391,6 +391,40 @@ func TestSPEC03LogoutRevokesSessionAndIsIdempotent(t *testing.T) {
 	}
 }
 
+func TestSPEC03LogoutDatabaseFailurePreservesRetryableCookie(t *testing.T) {
+	pool, ctx := openAuthTestPool(t)
+	seedAuthFixture(t, pool, ctx)
+	server := newAuthApp(pool, 2)
+
+	cookie := performLogin(t, server, activeUsername, testPassword)
+	pool.Close()
+
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/logout", nil)
+	request.AddCookie(cookie)
+	response, err := server.Test(request)
+	if err != nil {
+		t.Fatalf("logout request with unavailable repository: %v", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusInternalServerError {
+		t.Fatalf("expected safe logout status 500, got %d", response.StatusCode)
+	}
+	var body errorResponse
+	if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
+		t.Fatalf("decode logout internal error response: %v", err)
+	}
+	if body.Error.Code != "internal_server_error" || body.Error.Message != "Internal server error" {
+		t.Fatalf("unexpected logout internal error response: %+v", body.Error)
+	}
+	if body.Error.RequestID == "" || body.Error.RequestID != response.Header.Get("X-Request-ID") {
+		t.Fatalf("request ID mismatch in logout internal error: header=%q body=%q", response.Header.Get("X-Request-ID"), body.Error.RequestID)
+	}
+	if cookieNamed(response, "bwp_session") != nil {
+		t.Fatal("failed logout unexpectedly cleared the retryable session cookie")
+	}
+}
+
 func TestSPEC03InternalDatabaseFailureReturnsSafeErrorWithoutCookie(t *testing.T) {
 	pool, _ := openAuthTestPool(t)
 	pool.Close()

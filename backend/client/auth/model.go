@@ -3,10 +3,10 @@ package auth
 import "time"
 
 const (
-	sessionCookieName = "bwp_session"
-	maxUsernameBytes  = 50
-	maxPasswordBytes  = 1024
-	maxUserAgentBytes = 512
+	sessionCookieName     = "bwp_session"
+	maxUsernameCharacters = 50
+	maxPasswordBytes      = 1024
+	maxUserAgentBytes     = 512
 )
 
 type loginRequest struct {

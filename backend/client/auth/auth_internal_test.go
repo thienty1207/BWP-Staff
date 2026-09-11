@@ -68,12 +68,41 @@ func TestLoginInputValidationPreservesPasswordWhitespace(t *testing.T) {
 
 	for _, invalid := range []loginRequest{
 		{Username: "", Password: "password"},
-		{Username: strings.Repeat("u", maxUsernameBytes+1), Password: "password"},
+		{Username: strings.Repeat("u", maxUsernameCharacters+1), Password: "password"},
 		{Username: "username", Password: ""},
 		{Username: "username", Password: strings.Repeat("p", maxPasswordBytes+1)},
 	} {
 		if _, err := validateLoginRequest(invalid); err == nil {
 			t.Fatal("expected invalid login request to be rejected")
 		}
+	}
+}
+
+func TestLoginInputValidationUsesUnicodeCharacterLimit(t *testing.T) {
+	cases := []struct {
+		name     string
+		username string
+		wantErr  bool
+	}{
+		{name: "50 ASCII characters accepted", username: strings.Repeat("u", 50)},
+		{name: "51 ASCII characters rejected", username: strings.Repeat("u", 51), wantErr: true},
+		{name: "50 Unicode characters accepted", username: strings.Repeat("é", 50)},
+		{name: "51 Unicode characters rejected", username: strings.Repeat("é", 51), wantErr: true},
+	}
+
+	if len(cases[2].username) <= 50 {
+		t.Fatal("test fixture must contain more than 50 UTF-8 bytes")
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			_, err := validateLoginRequest(loginRequest{
+				Username: testCase.username,
+				Password: "password",
+			})
+			if (err != nil) != testCase.wantErr {
+				t.Fatalf("validateLoginRequest(%q) error=%v, wantErr=%t", testCase.username, err, testCase.wantErr)
+			}
+		})
 	}
 }

@@ -60,10 +60,10 @@ func (handler *handler) login(c fiber.Ctx) error {
 func (handler *handler) logout(c fiber.Ctx) error {
 	rawToken := c.Cookies(sessionCookieName)
 	err := handler.service.Logout(c.Context(), rawToken)
-	c.Cookie(expiredSessionCookie(handler.secureCookie))
 	if err != nil {
 		return err
 	}
+	c.Cookie(expiredSessionCookie(handler.secureCookie))
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
@@ -79,7 +79,7 @@ func (handler *handler) me(c fiber.Ctx) error {
 
 func validateLoginRequest(input loginRequest) (loginRequest, error) {
 	input.Username = strings.TrimSpace(input.Username)
-	if input.Username == "" || len(input.Username) > maxUsernameBytes {
+	if input.Username == "" || utf8.RuneCountInString(input.Username) > maxUsernameCharacters {
 		return loginRequest{}, errors.New("invalid username")
 	}
 	if input.Password == "" || len(input.Password) > maxPasswordBytes {
