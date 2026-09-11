@@ -592,10 +592,6 @@ h2 {
 	margin-bottom: 0;
 }
 
-.refresh-button {
-	flex: 0 0 auto;
-}
-
 .ticket-tabs {
 	display: flex;
 	gap: 0.35rem;
@@ -916,10 +912,6 @@ h2 {
 		align-items: stretch;
 		flex-direction: column;
 		margin-bottom: 1.1rem;
-	}
-
-	.refresh-button {
-		width: 100%;
 	}
 
 	.ticket-tabs {

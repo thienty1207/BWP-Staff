@@ -564,11 +564,11 @@ No button when `has_more=false`.
 
 No fake page/count numbers.
 
-## 34. Refresh
+## 34. Ticket reload behavior
 
-A manual Refresh control is allowed.
+The normal Tickets header must not contain a manual Refresh control or an equivalent reload control.
 
-It resets pagination and reloads first page of current tab.
+Retry remains available only when session verification or ticket loading fails.
 
 No aggressive polling.
 No realtime/WebSocket yet.

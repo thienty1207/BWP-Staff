@@ -157,7 +157,7 @@
 		void loadFirstPage(view);
 	}
 
-	function retryTickets() {
+	function retryTicketLoad() {
 		void loadFirstPage(activeView);
 	}
 
@@ -315,9 +315,6 @@
 					<p class="eyebrow">Staff workspace</p>
 					<h1>Tickets</h1>
 				</div>
-				<button class="secondary-button refresh-button" type="button" disabled={ticketRequestInFlight} onclick={retryTickets}>
-					{ticketRequestInFlight ? 'Loading…' : 'Refresh'}
-				</button>
 			</div>
 
 			<div class="ticket-tabs" role="tablist" aria-label="Ticket status">
@@ -354,7 +351,7 @@
 					<h2 id="ticket-error-title">Unable to load tickets</h2>
 					<p class="muted-copy">The ticket service could not be reached.</p>
 					<p class="error-message" role="alert" aria-live="assertive">{ticketErrorMessage}</p>
-					<button class="secondary-button" type="button" onclick={retryTickets}>Retry</button>
+					<button class="secondary-button" type="button" onclick={retryTicketLoad}>Retry</button>
 				</section>
 			{:else if tickets.length === 0}
 				<section class="ticket-status-panel empty-ticket-panel" role="status" aria-live="polite">
@@ -364,7 +361,7 @@
 				{#if ticketState === 'error'}
 					<div class="inline-ticket-error" role="alert" aria-live="assertive">
 						<span>{ticketErrorMessage}</span>
-						<button class="secondary-button" type="button" onclick={retryTickets}>Retry</button>
+						<button class="secondary-button" type="button" onclick={retryTicketLoad}>Retry</button>
 					</div>
 				{/if}
 
