@@ -4,7 +4,7 @@ import { expect, test } from 'bun:test';
 const frontendRoot = join(import.meta.dir, '..');
 
 test('SPEC-04.1 public branding assets are available', async () => {
-	const background = Bun.file(join(frontendRoot, 'static/images/login-background.jpg'));
+	const background = Bun.file(join(frontendRoot, 'static/images/login-background.png'));
 	const logo = Bun.file(join(frontendRoot, 'static/images/bwp-logo.png'));
 
 	expect(await background.exists()).toBe(true);
@@ -17,13 +17,25 @@ test('login page uses public asset paths instead of local filesystem paths', asy
 	const loginPage = await Bun.file(join(frontendRoot, 'src/routes/login/+page.svelte')).text();
 	const stylesheet = await Bun.file(join(frontendRoot, 'src/lib/styles/app.css')).text();
 
-	expect(loginPage).toContain('/images/bwp-logo.png');
-	expect(loginPage).toContain('BWP SonaSea Staff');
+	expect(loginPage).toContain('Sign in');
+	expect(loginPage).toContain('Access your BWP SonaSea account');
+	expect(loginPage).toContain('Remember me');
+	expect(loginPage).toContain('Show password');
+	expect(loginPage).toContain('Hide password');
+	expect(loginPage).toContain('bwp-remembered-username');
+	expect(loginPage).toContain('autocomplete="username"');
+	expect(loginPage).toContain('autocomplete="current-password"');
+	expect(loginPage).not.toContain('/images/bwp-logo.png');
+	expect(loginPage).not.toContain('ThemeToggle');
 	expect(loginPage).not.toContain('Staff Portal');
 	expect(loginPage).not.toContain('Use your admin-provisioned staff account to continue.');
-	expect(stylesheet).toContain("url('/images/login-background.jpg')");
-	expect(stylesheet).toContain('filter: blur(2px)');
-	expect(stylesheet).toContain('white-space: nowrap');
+	expect(stylesheet).toContain("url('/images/login-background.png')");
+	expect(stylesheet).toContain('backdrop-filter: blur(18px)');
+	expect(stylesheet).not.toContain('filter: blur(2px)');
+	expect(stylesheet).toContain('justify-content: flex-end');
+	expect(loginPage).not.toContain('sessionStorage');
+	expect(loginPage).not.toContain('document.cookie');
+	expect(loginPage).not.toContain('localStorage.setItem(rememberedUsernameKey, password)');
 	expect(loginPage).not.toContain('D:\\Works\\');
 	expect(stylesheet).not.toContain('D:\\Works\\');
 	expect(loginPage).not.toContain('file://');
