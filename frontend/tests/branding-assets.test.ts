@@ -18,7 +18,12 @@ test('login page uses public asset paths instead of local filesystem paths', asy
 	const stylesheet = await Bun.file(join(frontendRoot, 'src/lib/styles/app.css')).text();
 
 	expect(loginPage).toContain('/images/bwp-logo.png');
+	expect(loginPage).toContain('BWP SonaSea Staff');
+	expect(loginPage).not.toContain('Staff Portal');
+	expect(loginPage).not.toContain('Use your admin-provisioned staff account to continue.');
 	expect(stylesheet).toContain("url('/images/login-background.jpg')");
+	expect(stylesheet).toContain('filter: blur(7px)');
+	expect(stylesheet).toContain('white-space: nowrap');
 	expect(loginPage).not.toContain('D:\\Works\\');
 	expect(stylesheet).not.toContain('D:\\Works\\');
 	expect(loginPage).not.toContain('file://');

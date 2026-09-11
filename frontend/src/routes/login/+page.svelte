@@ -76,7 +76,7 @@
 
 <svelte:head>
 	<title>BWP SonaSea — Login</title>
-	<meta name="description" content="Sign in to the BWP SonaSea staff portal" />
+	<meta name="description" content="BWP SonaSea sign-in" />
 </svelte:head>
 
 <main class="page-shell login-shell">
@@ -90,7 +90,6 @@
 
 		{#if phase === 'checking'}
 			<section class="status-panel" role="status" aria-live="polite">
-				<p class="eyebrow">Staff Portal</p>
 				<h1>Checking your session</h1>
 				<p class="muted-copy">Please wait while we confirm your access.</p>
 			</section>
@@ -104,9 +103,7 @@
 			</section>
 		{:else}
 			<section class="auth-card" aria-labelledby="login-title">
-				<p class="eyebrow">Staff Portal</p>
-				<h1 id="login-title">Sign in to BWP SonaSea</h1>
-				<p class="muted-copy">Use your admin-provisioned staff account to continue.</p>
+				<h1 id="login-title" class="login-title">BWP SonaSea Staff</h1>
 
 				<form class="form-stack" onsubmit={handleSubmit} aria-busy={phase === 'submitting'}>
 					<div class="field">
