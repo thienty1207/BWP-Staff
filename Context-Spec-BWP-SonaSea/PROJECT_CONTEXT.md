@@ -1773,8 +1773,6 @@ search text
 
 when those filters are implemented.
 
-when those filters are implemented.
-
 ---
 
 # 54. File Uploads
