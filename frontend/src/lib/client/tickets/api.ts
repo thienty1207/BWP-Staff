@@ -73,11 +73,13 @@ function parseTicketListResponse(payload: unknown): TicketListResponse | null {
 	}
 
 	const page = payload.page;
+	const cursorPresent = page.next_before_created_at !== null && page.next_before_id !== null;
+	const cursorAbsent = page.next_before_created_at === null && page.next_before_id === null;
 	if (
 		typeof page.has_more !== 'boolean' ||
 		!isNullableTimestamp(page.next_before_created_at) ||
 		!isNullableSafeInteger(page.next_before_id) ||
-		(page.next_before_created_at === null) !== (page.next_before_id === null)
+		(page.has_more ? !cursorPresent : !cursorAbsent)
 	) {
 		return null;
 	}
@@ -181,7 +183,7 @@ function isNullableSafeInteger(value: unknown): value is number | null {
 }
 
 function isTimestamp(value: unknown): value is string {
-	return typeof value === 'string' && value.length > 0;
+	return typeof value === 'string' && value.length > 0 && !Number.isNaN(Date.parse(value));
 }
 
 function isNullableTimestamp(value: unknown): value is string | null {

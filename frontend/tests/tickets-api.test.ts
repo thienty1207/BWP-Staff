@@ -30,6 +30,20 @@ afterEach(() => {
 	globalThis.fetch = originalFetch;
 });
 
+function respondWithJson(payload: unknown) {
+	globalThis.fetch = async () => new Response(JSON.stringify(payload), { status: 200 });
+}
+
+async function expectRetryablePayload(payload: unknown) {
+	respondWithJson(payload);
+	try {
+		await listTickets('open');
+		throw new Error('invalid ticket page unexpectedly succeeded');
+	} catch (error) {
+		expect(error).toMatchObject({ kind: 'retryable', status: 200 });
+	}
+}
+
 test('ticket list sends the selected view through the relative authenticated endpoint', async () => {
 	let requestInput: RequestInfo | URL | undefined;
 	let requestInit: RequestInit | undefined;
@@ -79,5 +93,28 @@ test('ticket list keeps authentication and retryable failures typed', async () =
 		throw new Error('failed ticket list unexpectedly succeeded');
 	} catch (error) {
 		expect(error).toMatchObject({ kind: 'retryable', status: 500 });
+	}
+});
+
+test('ticket list accepts an exhausted page without a cursor', async () => {
+	respondWithJson({ tickets: [], page: { has_more: false, next_before_created_at: null, next_before_id: null } });
+
+	const result = await listTickets('open');
+
+	expect(result.page).toEqual({ has_more: false, next_before_created_at: null, next_before_id: null });
+});
+
+test('ticket list rejects invalid has_more and cursor combinations', async () => {
+	const invalidPages = [
+		{ has_more: true, next_before_created_at: null, next_before_id: null },
+		{ has_more: true, next_before_created_at: '2026-09-11T10:00:00Z', next_before_id: null },
+		{ has_more: true, next_before_created_at: null, next_before_id: 101 },
+		{ has_more: true, next_before_created_at: 'not-a-timestamp', next_before_id: 101 },
+		{ has_more: true, next_before_created_at: '2026-09-11T10:00:00Z', next_before_id: 0 },
+		{ has_more: false, next_before_created_at: '2026-09-11T10:00:00Z', next_before_id: 101 }
+	];
+
+	for (const invalidPage of invalidPages) {
+		await expectRetryablePayload({ tickets: [], page: invalidPage });
 	}
 });

@@ -28,6 +28,7 @@
 	let page: TicketListPage = $state(emptyPage);
 	let errorMessage = $state('');
 	let ticketErrorMessage = $state('');
+	let loadMoreErrorMessage = $state('');
 	let logoutInFlight = $state(false);
 	let ticketRequestInFlight = $state(false);
 	let drawerOpen = $state(false);
@@ -75,6 +76,7 @@
 		ticketRequestInFlight = true;
 		ticketState = 'loading';
 		ticketErrorMessage = '';
+		loadMoreErrorMessage = '';
 		tickets = [];
 		page = emptyPage;
 
@@ -115,7 +117,6 @@
 
 		const requestSequence = ++ticketRequestSequence;
 		ticketRequestInFlight = true;
-		ticketErrorMessage = '';
 
 		try {
 			const result = await listTickets(activeView, {
@@ -130,6 +131,7 @@
 			}
 			tickets = [...tickets, ...result.tickets];
 			page = result.page;
+			loadMoreErrorMessage = '';
 			ticketState = 'ready';
 		} catch (error) {
 			if (requestSequence !== ticketRequestSequence) {
@@ -139,8 +141,7 @@
 				await goto('/login', { replaceState: true });
 				return;
 			}
-			ticketState = 'error';
-			ticketErrorMessage = 'Unable to load more tickets. Please try again.';
+			loadMoreErrorMessage = 'Unable to load more tickets. Please try again.';
 		} finally {
 			if (requestSequence === ticketRequestSequence) {
 				ticketRequestInFlight = false;
@@ -159,6 +160,10 @@
 
 	function retryTicketLoad() {
 		void loadFirstPage(activeView);
+	}
+
+	function retryLoadMore() {
+		void loadMore();
 	}
 
 	async function handleLogout() {
@@ -304,7 +309,6 @@
 					<span aria-hidden="true">☰</span>
 					<span>Tickets</span>
 				</button>
-				<ThemeToggle />
 			</header>
 			{#if errorMessage}
 				<p class="error-message shell-error" role="alert" aria-live="assertive">{errorMessage}</p>
@@ -358,10 +362,12 @@
 					<p>{activeView === 'open' ? 'No open tickets.' : 'No closed tickets.'}</p>
 				</section>
 			{:else}
-				{#if ticketState === 'error'}
+				{#if loadMoreErrorMessage}
 					<div class="inline-ticket-error" role="alert" aria-live="assertive">
-						<span>{ticketErrorMessage}</span>
-						<button class="secondary-button" type="button" onclick={retryTicketLoad}>Retry</button>
+						<span>{loadMoreErrorMessage}</span>
+						<button class="secondary-button" type="button" disabled={ticketRequestInFlight} onclick={retryLoadMore}>
+							{ticketRequestInFlight ? 'Retrying…' : 'Retry'}
+						</button>
 					</div>
 				{/if}
 
@@ -424,7 +430,7 @@
 					{/each}
 				</div>
 
-				{#if page.has_more}
+				{#if page.has_more && !loadMoreErrorMessage}
 					<div class="load-more-row">
 						<button class="secondary-button" type="button" disabled={ticketRequestInFlight} onclick={() => void loadMore()}>
 							{ticketRequestInFlight ? 'Loading…' : 'Load more'}

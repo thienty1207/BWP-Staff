@@ -829,14 +829,6 @@ h2 {
 		color: var(--text);
 	}
 
-	.mobile-header .theme-toggle {
-		flex: 0 0 auto;
-	}
-
-	.sidebar-actions .theme-toggle {
-		display: none;
-	}
-
 	.tickets-page-header {
 		align-items: flex-start;
 	}
