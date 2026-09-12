@@ -3,6 +3,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import NewRequestDialog from '$lib/components/NewRequestDialog.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { getCurrentUser, logout } from '$lib/client/auth/api';
 	import { listTickets } from '$lib/client/tickets/api';
@@ -32,6 +33,7 @@
 	let logoutInFlight = $state(false);
 	let ticketRequestInFlight = $state(false);
 	let drawerOpen = $state(false);
+	let newRequestOpen = $state(false);
 	let ticketRequestSequence = 0;
 
 	onMount(() => {
@@ -164,6 +166,22 @@
 
 	function retryLoadMore() {
 		void loadMore();
+	}
+
+	function openNewRequest() {
+		if (!ticketRequestInFlight) {
+			newRequestOpen = true;
+		}
+	}
+
+	function closeNewRequest() {
+		newRequestOpen = false;
+	}
+
+	async function handleNewRequestCreated() {
+		activeView = 'open';
+		drawerOpen = false;
+		await loadFirstPage('open');
 	}
 
 	async function handleLogout() {
@@ -319,6 +337,7 @@
 					<p class="eyebrow">Staff workspace</p>
 					<h1>Tickets</h1>
 				</div>
+				<button class="primary-button new-request-button" type="button" disabled={ticketRequestInFlight} onclick={openNewRequest}>New Request</button>
 			</div>
 
 			<div class="ticket-tabs" role="tablist" aria-label="Ticket status">
@@ -439,5 +458,12 @@
 				{/if}
 			{/if}
 		</main>
+
+		<NewRequestDialog
+			open={newRequestOpen}
+			disabled={ticketRequestInFlight}
+			onClose={closeNewRequest}
+			onCreated={handleNewRequestCreated}
+		/>
 	</div>
 {/if}

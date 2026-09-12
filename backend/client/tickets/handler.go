@@ -1,6 +1,14 @@
 package tickets
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"io"
+	"strings"
+	"time"
+	"unicode/utf8"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/thienty1207/BWP-Staff/backend/client/auth"
@@ -16,6 +24,7 @@ var errTicketServiceNotConfigured = &httperror.AppError{
 func RegisterRoutes(api fiber.Router, pool *pgxpool.Pool, authService *auth.Service) {
 	handler := &handler{service: NewService(NewRepository(pool))}
 	api.Get("/tickets", authService.RequireAuth(), handler.list)
+	api.Post("/tickets", authService.RequireAuth(), handler.create)
 }
 
 type handler struct {
@@ -36,4 +45,92 @@ func (handler *handler) list(c fiber.Ctx) error {
 		return err
 	}
 	return c.Status(fiber.StatusOK).JSON(response)
+}
+
+type createTicketRequest struct {
+	DepartmentID int64      `json:"department_id"`
+	LocationID   *int64     `json:"location_id"`
+	Title        string     `json:"title"`
+	Description  *string    `json:"description"`
+	Priority     bool       `json:"priority"`
+	DueAt        *time.Time `json:"due_at"`
+}
+
+func (handler *handler) create(c fiber.Ctx) error {
+	var input createTicketRequest
+	decoder := json.NewDecoder(bytes.NewReader(c.Body()))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&input); err != nil {
+		return invalidCreateTicketRequestError()
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		return invalidCreateTicketRequestError()
+	}
+
+	validated, err := validateCreateTicketRequest(input)
+	if err != nil {
+		return invalidCreateTicketRequestError()
+	}
+	principal, ok := auth.CurrentPrincipal(c)
+	if !ok {
+		return &httperror.AppError{
+			Code:       "unauthenticated",
+			Message:    "Authentication required",
+			HTTPStatus: fiber.StatusUnauthorized,
+		}
+	}
+	ticket, err := handler.service.Create(c.Context(), IdentitySummary{ID: principal.User.ID, FullName: principal.User.FullName}, validated)
+	if errors.Is(err, ErrDepartmentUnavailable) {
+		return &httperror.AppError{Code: "department_unavailable", Message: "Department is unavailable", HTTPStatus: fiber.StatusBadRequest}
+	}
+	if errors.Is(err, ErrLocationUnavailable) {
+		return &httperror.AppError{Code: "location_unavailable", Message: "Location is unavailable", HTTPStatus: fiber.StatusBadRequest}
+	}
+	if err != nil {
+		return err
+	}
+	return c.Status(fiber.StatusCreated).JSON(struct {
+		Ticket Ticket `json:"ticket"`
+	}{Ticket: ticket})
+}
+
+func validateCreateTicketRequest(input createTicketRequest) (CreateRequest, error) {
+	if input.DepartmentID <= 0 || (input.LocationID != nil && *input.LocationID <= 0) {
+		return CreateRequest{}, errors.New("invalid ticket reference")
+	}
+
+	title := strings.TrimSpace(input.Title)
+	if title == "" || utf8.RuneCountInString(title) > 255 {
+		return CreateRequest{}, errors.New("invalid ticket title")
+	}
+
+	var description *string
+	if input.Description != nil {
+		trimmed := strings.TrimSpace(*input.Description)
+		if utf8.RuneCountInString(trimmed) > 5000 {
+			return CreateRequest{}, errors.New("invalid ticket description")
+		}
+		if trimmed != "" {
+			description = &trimmed
+		}
+	}
+
+	var dueAt *time.Time
+	if input.DueAt != nil {
+		value := input.DueAt.UTC()
+		dueAt = &value
+	}
+	return CreateRequest{
+		DepartmentID: input.DepartmentID,
+		LocationID:   input.LocationID,
+		Title:        title,
+		Description:  description,
+		Priority:     input.Priority,
+		DueAt:        dueAt,
+	}, nil
+}
+
+func invalidCreateTicketRequestError() error {
+	return &httperror.AppError{Code: "invalid_request", Message: "Invalid request", HTTPStatus: fiber.StatusBadRequest}
 }

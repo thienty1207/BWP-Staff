@@ -5,7 +5,6 @@ import "time"
 const (
 	sessionCookieName     = "bwp_session"
 	maxUsernameCharacters = 50
-	maxPasswordBytes      = 1024
 	maxUserAgentBytes     = 512
 )
 

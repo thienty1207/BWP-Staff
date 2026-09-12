@@ -2,9 +2,16 @@ package tickets
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var (
+	ErrDepartmentUnavailable = errors.New("department unavailable")
+	ErrLocationUnavailable   = errors.New("location unavailable")
 )
 
 type Repository struct {
@@ -138,6 +145,109 @@ LIMIT $4`, string(query.View), query.BeforeCreatedAt, query.BeforeID, query.Limi
 		return ListResponse{}, err
 	}
 	return response, nil
+}
+
+func (repository *Repository) Create(ctx context.Context, requester IdentitySummary, input CreateRequest) (Ticket, error) {
+	if repository == nil || repository.pool == nil {
+		return Ticket{}, fmt.Errorf("ticket repository is not configured")
+	}
+
+	transaction, err := repository.pool.Begin(ctx)
+	if err != nil {
+		return Ticket{}, fmt.Errorf("begin ticket creation: %w", err)
+	}
+	defer func() { _ = transaction.Rollback(ctx) }()
+
+	var department DepartmentSummary
+	if err := transaction.QueryRow(ctx, `
+SELECT id, code, name
+FROM departments
+WHERE id = $1 AND is_active = TRUE
+FOR SHARE`, input.DepartmentID).Scan(&department.ID, &department.Code, &department.Name); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Ticket{}, ErrDepartmentUnavailable
+		}
+		return Ticket{}, fmt.Errorf("validate ticket department: %w", err)
+	}
+
+	var location *LocationSummary
+	if input.LocationID != nil {
+		var locationCode *string
+		var locationName string
+		var locationID int64
+		if err := transaction.QueryRow(ctx, `
+SELECT id, code, name
+FROM locations
+WHERE id = $1 AND is_active = TRUE
+FOR SHARE`, *input.LocationID).Scan(&locationID, &locationCode, &locationName); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return Ticket{}, ErrLocationUnavailable
+			}
+			return Ticket{}, fmt.Errorf("validate ticket location: %w", err)
+		}
+		location = &LocationSummary{ID: locationID, Code: dereferenceString(locationCode), Name: locationName}
+	}
+
+	var locationValue any
+	if input.LocationID != nil {
+		locationValue = *input.LocationID
+	}
+	var descriptionValue any
+	if input.Description != nil {
+		descriptionValue = *input.Description
+	}
+	var dueAtValue any
+	if input.DueAt != nil {
+		dueAtValue = *input.DueAt
+	}
+
+	var ticket Ticket
+	var status string
+	if err := transaction.QueryRow(ctx, `
+INSERT INTO tickets (
+    requester_id,
+    department_id,
+    location_id,
+    title,
+    description,
+    status,
+    priority,
+    due_at,
+    accepted_by,
+    accepted_at,
+    closed_by,
+    closed_at
+)
+VALUES ($1, $2, $3, $4, $5, 'pending'::ticket_status, $6, $7, NULL, NULL, NULL, NULL)
+RETURNING id, status::text, priority, due_at, created_at, updated_at`,
+		requester.ID,
+		department.ID,
+		locationValue,
+		input.Title,
+		descriptionValue,
+		input.Priority,
+		dueAtValue,
+	).Scan(&ticket.ID, &status, &ticket.Priority, &ticket.DueAt, &ticket.CreatedAt, &ticket.UpdatedAt); err != nil {
+		return Ticket{}, fmt.Errorf("insert ticket: %w", err)
+	}
+
+	ticket.Title = input.Title
+	ticket.Status = status
+	ticket.Requester = requester
+	ticket.Department = department
+	ticket.Location = location
+	ticket.AssignedDepartments = make([]DepartmentSummary, 0)
+	ticket.AssignedUsers = make([]IdentitySummary, 0)
+	if _, err := transaction.Exec(ctx, `
+INSERT INTO ticket_activity (ticket_id, actor_user_id, action)
+VALUES ($1, $2, 'created')`, ticket.ID, requester.ID); err != nil {
+		return Ticket{}, fmt.Errorf("insert ticket creation activity: %w", err)
+	}
+
+	if err := transaction.Commit(ctx); err != nil {
+		return Ticket{}, fmt.Errorf("commit ticket creation: %w", err)
+	}
+	return ticket, nil
 }
 
 func (repository *Repository) loadDepartmentAssignments(ctx context.Context, tickets []Ticket, ticketIDs []int64) error {

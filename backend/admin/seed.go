@@ -18,6 +18,10 @@ const (
 )
 
 func SeedDevelopmentAdmin(ctx context.Context, pool *pgxpool.Pool, admin config.SeedAdmin) (SeedOutcome, error) {
+	if len(admin.Password) > security.MaxPasswordBytes {
+		return "", fmt.Errorf("development admin password exceeds %d bytes", security.MaxPasswordBytes)
+	}
+
 	transaction, err := pool.Begin(ctx)
 	if err != nil {
 		return "", fmt.Errorf("begin development seed: %w", err)

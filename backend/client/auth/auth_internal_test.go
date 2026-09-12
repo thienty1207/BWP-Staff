@@ -70,7 +70,7 @@ func TestLoginInputValidationPreservesPasswordWhitespace(t *testing.T) {
 		{Username: "", Password: "password"},
 		{Username: strings.Repeat("u", maxUsernameCharacters+1), Password: "password"},
 		{Username: "username", Password: ""},
-		{Username: "username", Password: strings.Repeat("p", maxPasswordBytes+1)},
+		{Username: "username", Password: strings.Repeat("p", security.MaxPasswordBytes+1)},
 	} {
 		if _, err := validateLoginRequest(invalid); err == nil {
 			t.Fatal("expected invalid login request to be rejected")
@@ -104,5 +104,14 @@ func TestLoginInputValidationUsesUnicodeCharacterLimit(t *testing.T) {
 				t.Fatalf("validateLoginRequest(%q) error=%v, wantErr=%t", testCase.username, err, testCase.wantErr)
 			}
 		})
+	}
+}
+
+func TestLoginInputValidationAllowsPasswordAtSharedByteLimit(t *testing.T) {
+	if _, err := validateLoginRequest(loginRequest{
+		Username: "username",
+		Password: strings.Repeat("p", security.MaxPasswordBytes),
+	}); err != nil {
+		t.Fatalf("password at shared byte limit was rejected: %v", err)
 	}
 }

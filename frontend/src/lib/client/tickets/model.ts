@@ -42,6 +42,15 @@ export type TicketListResponse = {
 	page: TicketListPage;
 };
 
+export type CreateTicketRequest = {
+	department_id: number;
+	location_id: number | null;
+	title: string;
+	description: string | null;
+	priority: boolean;
+	due_at: string | null;
+};
+
 export type TicketCursor = {
 	before_created_at: string;
 	before_id: number;

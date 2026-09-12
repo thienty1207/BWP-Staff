@@ -16,3 +16,10 @@ func (service *Service) List(ctx context.Context, query ListQuery) (ListResponse
 	}
 	return service.repository.List(ctx, query)
 }
+
+func (service *Service) Create(ctx context.Context, requester IdentitySummary, input CreateRequest) (Ticket, error) {
+	if service == nil || service.repository == nil {
+		return Ticket{}, errTicketServiceNotConfigured
+	}
+	return service.repository.Create(ctx, requester, input)
+}

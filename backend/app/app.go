@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/thienty1207/BWP-Staff/backend/client/auth"
+	"github.com/thienty1207/BWP-Staff/backend/client/lookups"
 	"github.com/thienty1207/BWP-Staff/backend/client/tickets"
 	"github.com/thienty1207/BWP-Staff/backend/config"
 )
@@ -25,6 +26,7 @@ func New(state AppState, settings config.Config) *fiber.App {
 	server.Get("/ready", readinessHandler(state.DB, settings.DatabaseAcquireTimeoutSeconds))
 	api := server.Group("/api/v1")
 	authService := auth.RegisterRoutes(api, state.DB, settings)
+	lookups.RegisterRoutes(api, state.DB, authService)
 	tickets.RegisterRoutes(api, state.DB, authService)
 
 	return server

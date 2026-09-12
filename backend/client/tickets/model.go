@@ -28,6 +28,15 @@ type ListResponse struct {
 	Page    Page     `json:"page"`
 }
 
+type CreateRequest struct {
+	DepartmentID int64
+	LocationID   *int64
+	Title        string
+	Description  *string
+	Priority     bool
+	DueAt        *time.Time
+}
+
 type Page struct {
 	HasMore             bool       `json:"has_more"`
 	NextBeforeCreatedAt *time.Time `json:"next_before_created_at"`

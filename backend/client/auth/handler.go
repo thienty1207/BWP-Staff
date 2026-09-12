@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/thienty1207/BWP-Staff/backend/config"
 	"github.com/thienty1207/BWP-Staff/backend/shared/httperror"
+	"github.com/thienty1207/BWP-Staff/backend/shared/security"
 )
 
 func RegisterRoutes(api fiber.Router, pool *pgxpool.Pool, settings config.Config) *Service {
@@ -83,7 +84,7 @@ func validateLoginRequest(input loginRequest) (loginRequest, error) {
 	if input.Username == "" || utf8.RuneCountInString(input.Username) > maxUsernameCharacters {
 		return loginRequest{}, errors.New("invalid username")
 	}
-	if input.Password == "" || len(input.Password) > maxPasswordBytes {
+	if input.Password == "" || len(input.Password) > security.MaxPasswordBytes {
 		return loginRequest{}, errors.New("invalid password")
 	}
 	return input, nil

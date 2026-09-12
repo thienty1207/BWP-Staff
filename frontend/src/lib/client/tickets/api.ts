@@ -1,5 +1,6 @@
 import {
 	TicketApiError,
+	type CreateTicketRequest,
 	type TicketCursor,
 	type TicketDepartment,
 	type TicketIdentity,
@@ -10,6 +11,8 @@ import {
 } from './model';
 
 const ticketsPath = '/api/v1/tickets';
+
+const rfc3339Pattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 export async function listTickets(
 	view: TicketView,
@@ -56,6 +59,45 @@ export async function listTickets(
 		throw retryableError(response.status);
 	}
 	return result;
+}
+
+export async function createTicket(request: CreateTicketRequest): Promise<TicketSummary> {
+	let response: Response;
+	try {
+		response = await fetch(ticketsPath, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+			body: JSON.stringify(request)
+		});
+	} catch {
+		throw retryableError();
+	}
+
+	if (response.status === 401) {
+		throw new TicketApiError('unauthenticated', 'Unauthenticated.', response.status);
+	}
+	if (response.status === 400) {
+		throw new TicketApiError('invalid_input', 'Please review the request details.', response.status);
+	}
+	if (response.status !== 201) {
+		throw retryableError(response.status);
+	}
+
+	let payload: unknown;
+	try {
+		payload = await response.json();
+	} catch {
+		throw retryableError(response.status);
+	}
+	if (!isRecord(payload)) {
+		throw retryableError(response.status);
+	}
+	const ticket = parseTicket(payload.ticket);
+	if (!ticket) {
+		throw retryableError(response.status);
+	}
+	return ticket;
 }
 
 function parseTicketListResponse(payload: unknown): TicketListResponse | null {
@@ -182,8 +224,30 @@ function isNullableSafeInteger(value: unknown): value is number | null {
 	return value === null || isPositiveSafeInteger(value);
 }
 
+export function isRFC3339Timestamp(value: unknown): value is string {
+	if (typeof value !== 'string') {
+		return false;
+	}
+	const match = rfc3339Pattern.exec(value);
+	if (!match || Number.isNaN(Date.parse(value))) {
+		return false;
+	}
+
+	const calendar = new Date(0);
+	calendar.setUTCFullYear(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+	calendar.setUTCHours(Number(match[4]), Number(match[5]), Number(match[6]), 0);
+	return (
+		calendar.getUTCFullYear() === Number(match[1]) &&
+		calendar.getUTCMonth() === Number(match[2]) - 1 &&
+		calendar.getUTCDate() === Number(match[3]) &&
+		calendar.getUTCHours() === Number(match[4]) &&
+		calendar.getUTCMinutes() === Number(match[5]) &&
+		calendar.getUTCSeconds() === Number(match[6])
+	);
+}
+
 function isTimestamp(value: unknown): value is string {
-	return typeof value === 'string' && value.length > 0 && !Number.isNaN(Date.parse(value));
+	return isRFC3339Timestamp(value);
 }
 
 function isNullableTimestamp(value: unknown): value is string | null {

@@ -12,11 +12,19 @@ import (
 )
 
 const (
-	argon2Memory      uint32 = 64 * 1024
-	argon2Iterations  uint32 = 3
-	argon2Parallelism uint8  = 4
-	argon2KeyLength   uint32 = 32
-	argon2SaltLength         = 16
+	// MaxPasswordBytes is the shared input bound for password-bearing flows.
+	MaxPasswordBytes = 1024
+
+	argon2Memory         uint32 = 64 * 1024
+	argon2Iterations     uint32 = 3
+	argon2Parallelism    uint8  = 4
+	argon2KeyLength      uint32 = 32
+	argon2SaltLength            = 16
+	argon2MaxMemory             = 64 * 1024
+	argon2MaxIterations         = 3
+	argon2MaxParallelism        = 4
+	argon2MaxKeyLength          = 32
+	argon2MaxSaltLength         = 64
 )
 
 // HashPassword returns an Argon2id PHC string suitable for password_hash.
@@ -42,6 +50,12 @@ func VerifyPassword(password, encoded string) bool {
 		if len(pair) != 2 {
 			return false
 		}
+		if pair[0] != "m" && pair[0] != "t" && pair[0] != "p" {
+			return false
+		}
+		if _, exists := parameters[pair[0]]; exists {
+			return false
+		}
 		value, err := strconv.ParseUint(pair[1], 10, 32)
 		if err != nil {
 			return false
@@ -51,7 +65,10 @@ func VerifyPassword(password, encoded string) bool {
 	memory, okMemory := parameters["m"]
 	iterations, okIterations := parameters["t"]
 	parallelism, okParallelism := parameters["p"]
-	if !okMemory || !okIterations || !okParallelism || memory == 0 || iterations == 0 || parallelism == 0 || parallelism > 255 {
+	if !okMemory || !okIterations || !okParallelism || memory == 0 || iterations == 0 || parallelism == 0 {
+		return false
+	}
+	if memory > argon2MaxMemory || iterations > argon2MaxIterations || parallelism > argon2MaxParallelism {
 		return false
 	}
 	decode := func(value string) ([]byte, error) {
@@ -62,11 +79,11 @@ func VerifyPassword(password, encoded string) bool {
 		return decoded, nil
 	}
 	salt, err := decode(parts[4])
-	if err != nil || len(salt) == 0 {
+	if err != nil || len(salt) == 0 || len(salt) > argon2MaxSaltLength {
 		return false
 	}
 	expected, err := decode(parts[5])
-	if err != nil || len(expected) == 0 {
+	if err != nil || len(expected) == 0 || len(expected) > argon2MaxKeyLength {
 		return false
 	}
 	actual := argon2.IDKey([]byte(password), salt, uint32(iterations), uint32(memory), uint8(parallelism), uint32(len(expected)))
