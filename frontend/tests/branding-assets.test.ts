@@ -3,12 +3,15 @@ import { expect, test } from 'bun:test';
 
 const frontendRoot = join(import.meta.dir, '..');
 
-test('SPEC-04.1 public branding assets are available', async () => {
+test('SPEC-05.2 login assets are available', async () => {
 	const background = Bun.file(join(frontendRoot, 'static/images/login-background.png'));
+	const loginIcon = Bun.file(join(frontendRoot, 'static/images/hotel-login-icon.svg'));
 	const logo = Bun.file(join(frontendRoot, 'static/images/bwp-logo.png'));
 
 	expect(await background.exists()).toBe(true);
 	expect(background.size).toBeGreaterThan(0);
+	expect(await loginIcon.exists()).toBe(true);
+	expect(loginIcon.size).toBeGreaterThan(0);
 	expect(await logo.exists()).toBe(true);
 	expect(logo.size).toBeGreaterThan(0);
 });
@@ -19,6 +22,7 @@ test('login page uses public asset paths instead of local filesystem paths', asy
 
 	expect(loginPage).toContain('Sign in');
 	expect(loginPage).toContain('Access your BWP SonaSea account');
+	expect(loginPage).toContain('/images/hotel-login-icon.svg');
 	expect(loginPage).toContain('Remember me');
 	expect(loginPage).toContain('Show password');
 	expect(loginPage).toContain('Hide password');
@@ -26,6 +30,7 @@ test('login page uses public asset paths instead of local filesystem paths', asy
 	expect(loginPage).toContain('autocomplete="username"');
 	expect(loginPage).toContain('autocomplete="current-password"');
 	expect(loginPage).not.toContain('/images/bwp-logo.png');
+	expect(loginPage.toLowerCase()).not.toContain('lotus');
 	expect(loginPage).not.toContain('ThemeToggle');
 	expect(loginPage).not.toContain('Staff Portal');
 	expect(loginPage).not.toContain('Use your admin-provisioned staff account to continue.');
@@ -33,6 +38,9 @@ test('login page uses public asset paths instead of local filesystem paths', asy
 	expect(stylesheet).toContain('backdrop-filter: blur(18px)');
 	expect(stylesheet).not.toContain('filter: blur(2px)');
 	expect(stylesheet).toContain('justify-content: flex-end');
+	expect(stylesheet).toContain('width: min(100%, 350px);');
+	expect(stylesheet).toMatch(/\.login-heading\s*\{[\s\S]*text-align:\s*center;/);
+	expect(stylesheet).toMatch(/\.login-field label\s*\{[\s\S]*text-align:\s*left;/);
 	expect(loginPage).not.toContain('sessionStorage');
 	expect(loginPage).not.toContain('document.cookie');
 	expect(loginPage).not.toContain('localStorage.setItem(rememberedUsernameKey, password)');

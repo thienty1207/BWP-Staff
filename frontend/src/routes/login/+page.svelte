@@ -146,6 +146,12 @@
 		{:else}
 			<section class="login-panel" aria-labelledby="login-title">
 				<div class="login-heading">
+					<img
+						class="login-header-icon"
+						src="/images/hotel-login-icon.svg"
+						alt=""
+						aria-hidden="true"
+					/>
 					<p class="login-kicker">BWP SONASEA STAFF</p>
 					<h1 id="login-title">Sign in</h1>
 					<p class="login-supporting">Access your BWP SonaSea account.</p>

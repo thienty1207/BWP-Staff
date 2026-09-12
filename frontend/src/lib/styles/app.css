@@ -107,7 +107,7 @@ button:disabled {
 
 .login-panel,
 .login-status {
-	width: min(100%, 420px);
+	width: min(100%, 350px);
 	margin: 0 0 0 auto;
 	border: 1px solid rgb(255 255 255 / 20%);
 	border-radius: 1.25rem;
@@ -117,9 +117,22 @@ button:disabled {
 }
 
 .login-panel {
-	padding: clamp(1.5rem, 3vw, 2.4rem);
+	padding: 2.5rem 1.875rem;
 	backdrop-filter: blur(18px) saturate(125%);
 	-webkit-backdrop-filter: blur(18px) saturate(125%);
+}
+
+.login-heading {
+	text-align: center;
+}
+
+.login-header-icon {
+	display: block;
+	width: 4.25rem;
+	height: 4.25rem;
+	margin: 0 auto 1.1rem;
+	object-fit: contain;
+	filter: brightness(0) invert(1);
 }
 
 .login-status {
@@ -128,7 +141,7 @@ button:disabled {
 }
 
 .login-kicker {
-	margin: 0 0 0.65rem;
+	margin: 0 0 0.85rem;
 	color: #f06a70;
 	font-size: 0.72rem;
 	font-weight: 800;
@@ -232,8 +245,8 @@ h2 {
 
 .login-form {
 	display: grid;
-	gap: 1rem;
-	margin-top: 2rem;
+	gap: 1.25rem;
+	margin-top: 2.5rem;
 }
 
 .login-field {
@@ -245,6 +258,7 @@ h2 {
 	color: #f8fafc;
 	font-size: 0.85rem;
 	font-weight: 700;
+	text-align: left;
 }
 
 .input-shell {
@@ -321,6 +335,7 @@ h2 {
 .remember-row {
 	display: flex;
 	align-items: center;
+	justify-content: flex-start;
 	margin-top: -0.1rem;
 }
 
