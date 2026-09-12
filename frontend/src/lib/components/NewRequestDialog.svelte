@@ -5,7 +5,7 @@
 	import { getDepartments, getLocations } from '$lib/client/lookups/api';
 	import { LookupApiError, type LookupDepartment, type LookupLocation } from '$lib/client/lookups/model';
 	import { createTicket } from '$lib/client/tickets/api';
-	import { TicketApiError, type CreateTicketRequest } from '$lib/client/tickets/model';
+	import { TicketApiError, type CreateTicketErrorCode, type CreateTicketRequest } from '$lib/client/tickets/model';
 
 	type Props = {
 	open: boolean;
@@ -92,7 +92,7 @@
 				return;
 			}
 			if (error instanceof TicketApiError && error.kind === 'invalid_input') {
-				submitError = 'Please review the request details and try again.';
+				submitError = createTicketErrorMessage(error.code);
 				return;
 			}
 			submitError = 'The request could not be created. Please try again.';
@@ -184,6 +184,16 @@
 		dueAt = '';
 		validationError = '';
 		submitError = '';
+	}
+
+	function createTicketErrorMessage(code?: CreateTicketErrorCode): string {
+		if (code === 'department_unavailable') {
+			return 'The selected department is no longer available. Please select another department.';
+		}
+		if (code === 'location_unavailable') {
+			return 'The selected location is no longer available. Please select another location.';
+		}
+		return 'Please review the request details and try again.';
 	}
 </script>
 

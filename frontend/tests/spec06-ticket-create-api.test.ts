@@ -1,5 +1,6 @@
 import { afterEach, expect, test } from 'bun:test';
 import { createTicket } from '../src/lib/client/tickets/api';
+import { TicketApiError } from '../src/lib/client/tickets/model';
 
 const originalFetch = globalThis.fetch;
 
@@ -73,4 +74,35 @@ test('createTicket maps 400, 401, 500 and network failures without retrying', as
 	await expect(createTicket({ department_id: 2, location_id: null, title: 'Request', description: null, priority: false, due_at: null })).rejects.toMatchObject({ kind: 'retryable' });
 	expect(badRequestCalls).toBe(1);
 	expect(networkCalls).toBe(1);
+});
+
+test('createTicket preserves known safe 400 backend error codes', async () => {
+	const request = { department_id: 2, location_id: null, title: 'Request', description: null, priority: false, due_at: null };
+	for (const code of ['department_unavailable', 'location_unavailable', 'invalid_request']) {
+		globalThis.fetch = async () => new Response(JSON.stringify({ error: { code } }), { status: 400 });
+		await expect(createTicket(request)).rejects.toMatchObject({ kind: 'invalid_input', status: 400, code });
+	}
+});
+
+test('createTicket safely falls back for malformed or unknown 400 errors', async () => {
+	const request = { department_id: 2, location_id: null, title: 'Request', description: null, priority: false, due_at: null };
+	const responses = [
+		new Response('{not-json', { status: 400 }),
+		new Response(JSON.stringify({ error: { code: 'unexpected_backend_code', message: 'do not show this' } }), { status: 400 }),
+		new Response(JSON.stringify({ error: { message: 'do not show this either' } }), { status: 400 })
+	];
+
+	for (const response of responses) {
+		globalThis.fetch = async () => response;
+		let caught: unknown;
+		try {
+			await createTicket(request);
+		} catch (error) {
+			caught = error;
+		}
+		expect(caught).toBeInstanceOf(TicketApiError);
+		expect(caught).toMatchObject({ kind: 'invalid_input', status: 400 });
+		expect((caught as TicketApiError).code).toBeUndefined();
+		expect((caught as Error).message).not.toContain('do not show this');
+	}
 });

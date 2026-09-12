@@ -1,5 +1,6 @@
 import {
 	TicketApiError,
+	type CreateTicketErrorCode,
 	type CreateTicketRequest,
 	type TicketCursor,
 	type TicketDepartment,
@@ -78,7 +79,8 @@ export async function createTicket(request: CreateTicketRequest): Promise<Ticket
 		throw new TicketApiError('unauthenticated', 'Unauthenticated.', response.status);
 	}
 	if (response.status === 400) {
-		throw new TicketApiError('invalid_input', 'Please review the request details.', response.status);
+		const code = await parseCreateTicketErrorCode(response);
+		throw new TicketApiError('invalid_input', 'Please review the request details.', response.status, code);
 	}
 	if (response.status !== 201) {
 		throw retryableError(response.status);
@@ -256,4 +258,20 @@ function isNullableTimestamp(value: unknown): value is string | null {
 
 function retryableError(status?: number): TicketApiError {
 	return new TicketApiError('retryable', 'The ticket service is temporarily unavailable.', status);
+}
+
+async function parseCreateTicketErrorCode(response: Response): Promise<CreateTicketErrorCode | undefined> {
+	try {
+		const payload: unknown = await response.json();
+		if (!isRecord(payload) || !isRecord(payload.error)) {
+			return undefined;
+		}
+		const code = payload.error.code;
+		if (code === 'department_unavailable' || code === 'location_unavailable' || code === 'invalid_request') {
+			return code;
+		}
+	} catch {
+		return undefined;
+	}
+	return undefined;
 }

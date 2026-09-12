@@ -10,6 +10,11 @@ test('New Request remains a focused component and the Tickets page exposes its a
 	expect(dialog).toContain('datetime-local');
 	expect(dialog).toContain('getDepartments');
 	expect(dialog).toContain('getLocations');
+	expect(dialog).toContain('department_unavailable');
+	expect(dialog).toContain('location_unavailable');
+	expect(dialog).toContain('The selected department is no longer available. Please select another department.');
+	expect(dialog).toContain('The selected location is no longer available. Please select another location.');
+	expect(dialog).toContain('Please review the request details and try again.');
 	expect(page).toContain('New Request');
 	expect(page).not.toContain('Refresh');
 });
