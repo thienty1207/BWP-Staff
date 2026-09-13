@@ -1241,10 +1241,6 @@ h2 {
 		width: 100%;
 	}
 
-	.ticket-card-details {
-		grid-template-columns: 1fr;
-	}
-
 	.new-request-button {
 		width: 100%;
 	}
