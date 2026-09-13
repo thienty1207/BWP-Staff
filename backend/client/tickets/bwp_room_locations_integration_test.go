@@ -173,6 +173,163 @@ WHERE description = $1`, spec067BWPRoomsDescription).Scan(&roomCount, &distinctR
 	}
 }
 
+func TestSPEC067LegacyRoomFixturesAreInactiveAndCanonicalRoomsRemainVisible(t *testing.T) {
+	pool, ctx := openTicketsTestPool(t)
+	if err := admin.SeedDevelopmentFixtures(ctx, pool); err != nil {
+		t.Fatalf("first seed development fixtures: %v", err)
+	}
+
+	readLocation := func(code string) (id int64, name, description string, active bool) {
+		t.Helper()
+		if err := pool.QueryRow(ctx, `
+SELECT id, name, description, is_active
+FROM locations
+WHERE code = $1`, code).Scan(&id, &name, &description, &active); err != nil {
+			t.Fatalf("read location %s: %v", code, err)
+		}
+		return id, name, description, active
+	}
+
+	legacyIDs := make(map[string]int64, 2)
+	for code, wantName := range map[string]string{
+		"ROOM-8020": "Room 8020",
+		"ROOM-7309": "Room 7309",
+	} {
+		id, name, description, active := readLocation(code)
+		if id <= 0 || name != wantName || description != "Development location seed data" || active {
+			t.Fatalf("legacy location %s has unexpected state: id=%d name=%q description=%q active=%t", code, id, name, description, active)
+		}
+		legacyIDs[code] = id
+	}
+
+	for code, wantName := range map[string]string{
+		"BWP-ROOM-8020": "8020",
+		"BWP-ROOM-7309": "7309",
+	} {
+		id, name, description, active := readLocation(code)
+		if id <= 0 || name != wantName || description != spec067BWPRoomsDescription || !active {
+			t.Fatalf("canonical location %s has unexpected state: id=%d name=%q description=%q active=%t", code, id, name, description, active)
+		}
+	}
+
+	if err := admin.SeedDevelopmentFixtures(ctx, pool); err != nil {
+		t.Fatalf("second seed development fixtures: %v", err)
+	}
+
+	for code, wantID := range legacyIDs {
+		id, _, _, active := readLocation(code)
+		if id != wantID || active {
+			t.Fatalf("legacy location %s changed after repeat seed: id=%d want=%d active=%t", code, id, wantID, active)
+		}
+	}
+	for code, wantName := range map[string]string{
+		"BWP-ROOM-8020": "8020",
+		"BWP-ROOM-7309": "7309",
+	} {
+		_, name, _, active := readLocation(code)
+		if name != wantName || !active {
+			t.Fatalf("canonical location %s changed after repeat seed: name=%q active=%t", code, name, active)
+		}
+	}
+
+	for code, wantName := range map[string]string{
+		"LOBBY":       "Lobby",
+		"BALLROOM":    "Ballroom",
+		"BACK-OFFICE": "Back Office",
+		"VILLA":       "Villa",
+	} {
+		_, name, _, active := readLocation(code)
+		if name != wantName || !active {
+			t.Fatalf("unrelated generic location %s changed: name=%q active=%t", code, name, active)
+		}
+	}
+
+	var bwpRooms, bwpAreas, villas int
+	if err := pool.QueryRow(ctx, `
+SELECT
+    (SELECT COUNT(*) FROM locations WHERE description = $1),
+    (SELECT COUNT(*) FROM locations WHERE description = 'Development location seed data: BWP'),
+    (SELECT COUNT(*) FROM locations WHERE description = 'Development location seed data: 96 Villas')`, spec067BWPRoomsDescription).Scan(&bwpRooms, &bwpAreas, &villas); err != nil {
+		t.Fatalf("count preserved fixtures: %v", err)
+	}
+	if bwpRooms != 564 || bwpAreas != 155 || villas != 141 {
+		t.Fatalf("preserved fixture counts = rooms:%d areas:%d villas:%d, want 564/155/141", bwpRooms, bwpAreas, villas)
+	}
+
+	departmentID := insertDepartment(t, pool, ctx, "SPEC067-LEGACY-LOOKUP", "SPEC-06.7 Legacy Lookup Department")
+	userID := insertUser(t, pool, ctx, "spec067-legacy-lookup-user", "SPEC067-LEGACY-LOOKUP-USER", "SPEC-06.7 Legacy Lookup User", departmentID)
+	token := insertSession(t, pool, ctx, userID)
+	server := newTicketsApp(pool)
+
+	for _, want := range []struct {
+		query         string
+		canonicalCode string
+		canonicalName string
+		legacyCode    string
+	}{
+		{query: "8020", canonicalCode: "BWP-ROOM-8020", canonicalName: "8020", legacyCode: "ROOM-8020"},
+		{query: "7309", canonicalCode: "BWP-ROOM-7309", canonicalName: "7309", legacyCode: "ROOM-7309"},
+	} {
+		response := requestTickets(t, server, "/api/v1/locations?q="+want.query, token)
+		if response.StatusCode != http.StatusOK {
+			response.Body.Close()
+			t.Fatalf("location lookup %s returned status %d, want 200", want.query, response.StatusCode)
+		}
+		var body struct {
+			Locations []spec06LookupLocation `json:"locations"`
+		}
+		decodeTicketResponse(t, response, &body)
+		response.Body.Close()
+
+		foundCanonical := false
+		for _, location := range body.Locations {
+			if location.Code == nil {
+				continue
+			}
+			if *location.Code == want.legacyCode || location.Name == "Room 8020" || location.Name == "Room 7309" {
+				t.Fatalf("inactive legacy location appeared in lookup %s: %+v", want.query, location)
+			}
+			if *location.Code == want.canonicalCode {
+				if location.ID <= 0 || location.Name != want.canonicalName {
+					t.Fatalf("canonical location %s has unexpected lookup result: %+v", want.canonicalCode, location)
+				}
+				foundCanonical = true
+			}
+		}
+		if !foundCanonical {
+			t.Fatalf("lookup %s did not return canonical location %s: %+v", want.query, want.canonicalCode, body.Locations)
+		}
+	}
+}
+
+func TestSPEC067LegacyRoomCleanupPreservesNonFixtureRows(t *testing.T) {
+	pool, ctx := openTicketsTestPool(t)
+	var locationID int64
+	if err := pool.QueryRow(ctx, `
+INSERT INTO locations (code, name, description, is_active)
+VALUES ('ROOM-8020', 'Real Room 8020', 'Real location data', TRUE)
+RETURNING id`).Scan(&locationID); err != nil {
+		t.Fatalf("insert non-fixture legacy code: %v", err)
+	}
+
+	if err := admin.SeedDevelopmentFixtures(ctx, pool); err != nil {
+		t.Fatalf("seed development fixtures around non-fixture legacy code: %v", err)
+	}
+
+	var actualID int64
+	var name, description string
+	var active bool
+	if err := pool.QueryRow(ctx, `
+SELECT id, name, description, is_active
+FROM locations
+WHERE code = 'ROOM-8020'`).Scan(&actualID, &name, &description, &active); err != nil {
+		t.Fatalf("read preserved non-fixture legacy code: %v", err)
+	}
+	if actualID != locationID || name != "Real Room 8020" || description != "Real location data" || !active {
+		t.Fatalf("non-fixture legacy code was changed: id=%d name=%q description=%q active=%t", actualID, name, description, active)
+	}
+}
+
 func TestSPEC067DevelopmentSeedCollisionRollsBackAllWrites(t *testing.T) {
 	pool, ctx := openTicketsTestPool(t)
 	collisionID := insertLocation(t, pool, ctx, "BWP-ROOM-2014", "Existing non-fixture room")

@@ -349,6 +349,16 @@ ON CONFLICT (code) DO NOTHING`, location.code, location.name, location.descripti
 		}
 	}
 
+	if _, err := transaction.Exec(ctx, `
+UPDATE locations
+SET is_active = FALSE,
+    updated_at = NOW()
+WHERE code = ANY($1::text[])
+  AND description = $2`, []string{"ROOM-8020", "ROOM-7309"}, "Development location seed data"); err != nil {
+		_ = transaction.Rollback(ctx)
+		return fmt.Errorf("deactivate obsolete development locations: %w", err)
+	}
+
 	for _, location := range development96VillasLocations {
 		if err := seed96VillasLocation(ctx, transaction, location); err != nil {
 			_ = transaction.Rollback(ctx)

@@ -392,15 +392,47 @@ WHERE id = $1`, unrelatedID).Scan(&unrelatedCode, &unrelatedName, &unrelatedDesc
 			t.Fatalf("unrelated department changed during development seed: code=%q name=%q description=%q active=%t", unrelatedCode, unrelatedName, unrelatedDescription, unrelatedActive)
 		}
 
-		var namedLocations int
-		if err := pool.QueryRow(ctx, `
-SELECT COUNT(*)
+		locationRows, err := pool.Query(ctx, `
+SELECT code, name, is_active
 FROM locations
-WHERE name = ANY($1)`, []string{"Lobby", "Ballroom", "Back Office", "Room 8020", "Room 7309", "Villa"}).Scan(&namedLocations); err != nil {
-			t.Fatalf("count named development locations: %v", err)
+WHERE code = ANY($1::text[])
+ORDER BY code`, []string{"LOBBY", "BALLROOM", "BACK-OFFICE", "ROOM-8020", "ROOM-7309", "VILLA"})
+		if err != nil {
+			t.Fatalf("query named development locations: %v", err)
 		}
-		if namedLocations != 6 {
-			t.Fatalf("expected all six named development locations, got %d", namedLocations)
+		defer locationRows.Close()
+
+		expectedLocations := map[string]struct {
+			name   string
+			active bool
+		}{
+			"LOBBY":       {name: "Lobby", active: true},
+			"BALLROOM":    {name: "Ballroom", active: true},
+			"BACK-OFFICE": {name: "Back Office", active: true},
+			"ROOM-8020":   {name: "Room 8020", active: false},
+			"ROOM-7309":   {name: "Room 7309", active: false},
+			"VILLA":       {name: "Villa", active: true},
+		}
+		actualLocations := make(map[string]struct {
+			name   string
+			active bool
+		}, len(expectedLocations))
+		for locationRows.Next() {
+			var code, name string
+			var active bool
+			if err := locationRows.Scan(&code, &name, &active); err != nil {
+				t.Fatalf("scan named development location: %v", err)
+			}
+			actualLocations[code] = struct {
+				name   string
+				active bool
+			}{name: name, active: active}
+		}
+		if err := locationRows.Err(); err != nil {
+			t.Fatalf("iterate named development locations: %v", err)
+		}
+		if !reflect.DeepEqual(actualLocations, expectedLocations) {
+			t.Fatalf("named development locations = %#v, want %#v", actualLocations, expectedLocations)
 		}
 	})
 
