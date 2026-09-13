@@ -252,6 +252,35 @@ WHERE schemaname = current_schema()
 	}
 
 	t.Run("development fixtures use explicit seed workflow", func(t *testing.T) {
+		const developmentDescription = "Development department seed data"
+		legacyDepartments := []struct {
+			code string
+			name string
+		}{
+			{code: "IT", name: "IT Department"},
+			{code: "FB", name: "Food & Beverage"},
+			{code: "ENG", name: "Engineering"},
+			{code: "HR", name: "Human Resources"},
+		}
+		legacyIDs := make(map[string]int64, len(legacyDepartments))
+		for _, department := range legacyDepartments {
+			var legacyID int64
+			if err := pool.QueryRow(ctx, `
+INSERT INTO departments (code, name, description)
+VALUES ($1, $2, $3)
+RETURNING id`, department.code, department.name, developmentDescription).Scan(&legacyID); err != nil {
+				t.Fatalf("insert legacy development department %s: %v", department.code, err)
+			}
+			legacyIDs[department.code] = legacyID
+		}
+		var unrelatedID int64
+		if err := pool.QueryRow(ctx, `
+INSERT INTO departments (code, name, description, is_active)
+VALUES ('SPEC01-REAL', 'Real Operations', 'Non-development department', TRUE)
+RETURNING id`).Scan(&unrelatedID); err != nil {
+			t.Fatalf("insert unrelated department: %v", err)
+		}
+
 		if err := admin.SeedDevelopmentFixtures(ctx, pool); err != nil {
 			t.Fatalf("seed development fixtures: %v", err)
 		}
@@ -266,8 +295,101 @@ WHERE schemaname = current_schema()
 		if err := pool.QueryRow(ctx, "SELECT COUNT(*) FROM locations").Scan(&locationCount); err != nil {
 			t.Fatalf("count seeded locations: %v", err)
 		}
-		if departmentCount != 6 || locationCount != 6 {
+		if departmentCount != 17 || locationCount != 6 {
 			t.Fatalf("unexpected development fixture counts: departments=%d locations=%d", departmentCount, locationCount)
+		}
+
+		expectedDepartments := map[string]string{
+			"CON":   "Concierge",
+			"DA":    "Damaged Asset",
+			"FB":    "F&B",
+			"FIN":   "Finance Request",
+			"FO":    "Front Office",
+			"HK":    "Housekeeping",
+			"HKPPM": "Housekeeping PPM",
+			"IT":    "IT",
+			"KIT":   "Kitchen",
+			"LDRY":  "Laundry",
+			"LF":    "Lost & Found",
+			"MAINT": "Maintenance",
+			"REC":   "REC",
+			"SEC":   "Security",
+		}
+		rows, err := pool.Query(ctx, `
+SELECT code, name, is_active
+FROM departments
+WHERE code = ANY($1::text[])
+ORDER BY code`, []string{
+			"CON", "DA", "FB", "FIN", "FO", "HK", "HKPPM", "IT", "KIT", "LDRY", "LF", "MAINT", "REC", "SEC",
+		})
+		if err != nil {
+			t.Fatalf("read approved departments: %v", err)
+		}
+		defer rows.Close()
+		activeDepartments := make(map[string]string, len(expectedDepartments))
+		for rows.Next() {
+			var code, name string
+			var active bool
+			if err := rows.Scan(&code, &name, &active); err != nil {
+				t.Fatalf("scan approved department: %v", err)
+			}
+			if !active {
+				continue
+			}
+			activeDepartments[code] = name
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatalf("iterate approved departments: %v", err)
+		}
+		if !reflect.DeepEqual(activeDepartments, expectedDepartments) {
+			t.Fatalf("unexpected active development departments: got=%v want=%v", activeDepartments, expectedDepartments)
+		}
+
+		for _, department := range []struct {
+			code string
+			name string
+		}{
+			{code: "ENG", name: "Engineering"},
+			{code: "HR", name: "Human Resources"},
+		} {
+			var active bool
+			if err := pool.QueryRow(ctx, "SELECT is_active FROM departments WHERE code = $1", department.code).Scan(&active); err != nil {
+				t.Fatalf("read legacy department %s: %v", department.code, err)
+			}
+			if active {
+				t.Fatalf("legacy development department %s is still active", department.code)
+			}
+		}
+
+		for _, department := range []struct {
+			code string
+			name string
+			id   int64
+		}{
+			{code: "IT", name: "IT", id: legacyIDs["IT"]},
+			{code: "FB", name: "F&B", id: legacyIDs["FB"]},
+		} {
+			var id int64
+			var name string
+			if err := pool.QueryRow(ctx, "SELECT id, name FROM departments WHERE code = $1", department.code).Scan(&id, &name); err != nil {
+				t.Fatalf("read aligned department %s: %v", department.code, err)
+			}
+			if id != department.id || name != department.name {
+				t.Fatalf("department %s was not updated in place: got id=%d name=%q want id=%d name=%q", department.code, id, name, department.id, department.name)
+			}
+		}
+
+		var unrelatedCode string
+		var unrelatedName, unrelatedDescription string
+		var unrelatedActive bool
+		if err := pool.QueryRow(ctx, `
+SELECT code, name, description, is_active
+FROM departments
+WHERE id = $1`, unrelatedID).Scan(&unrelatedCode, &unrelatedName, &unrelatedDescription, &unrelatedActive); err != nil {
+			t.Fatalf("read unrelated department: %v", err)
+		}
+		if unrelatedCode != "SPEC01-REAL" || unrelatedName != "Real Operations" || unrelatedDescription != "Non-development department" || !unrelatedActive {
+			t.Fatalf("unrelated department changed during development seed: code=%q name=%q description=%q active=%t", unrelatedCode, unrelatedName, unrelatedDescription, unrelatedActive)
 		}
 
 		var namedLocations int

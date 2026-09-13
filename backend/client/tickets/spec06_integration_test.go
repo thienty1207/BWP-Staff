@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/thienty1207/BWP-Staff/backend/admin"
 )
 
 type spec06LookupDepartment struct {
@@ -90,6 +91,62 @@ RETURNING id`).Scan(&nullableLocationID); err != nil {
 	}
 	if locationsBody.Locations[1].Code != nil {
 		t.Fatalf("nullable location code was not preserved: %+v", locationsBody.Locations[1])
+	}
+}
+
+func TestSPEC062DevelopmentSeedReturnsApprovedActiveDepartments(t *testing.T) {
+	pool, ctx := openTicketsTestPool(t)
+	if err := admin.SeedDevelopmentFixtures(ctx, pool); err != nil {
+		t.Fatalf("seed development fixtures: %v", err)
+	}
+	if err := admin.SeedDevelopmentFixtures(ctx, pool); err != nil {
+		t.Fatalf("seed development fixtures a second time: %v", err)
+	}
+
+	var departmentID int64
+	if err := pool.QueryRow(ctx, "SELECT id FROM departments WHERE code = 'IT'").Scan(&departmentID); err != nil {
+		t.Fatalf("read seeded IT department: %v", err)
+	}
+	userID := insertUser(t, pool, ctx, "spec062-lookup-user", "SPEC062-LOOKUP", "SPEC-06.2 Lookup User", departmentID)
+	token := insertSession(t, pool, ctx, userID)
+	server := newTicketsApp(pool)
+
+	response := requestTickets(t, server, "/api/v1/departments", token)
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("departments: expected 200, got %d", response.StatusCode)
+	}
+	var body struct {
+		Departments []spec06LookupDepartment `json:"departments"`
+	}
+	decodeTicketResponse(t, response, &body)
+
+	expected := []spec06LookupDepartment{
+		{Code: "CON", Name: "Concierge"},
+		{Code: "DA", Name: "Damaged Asset"},
+		{Code: "FB", Name: "F&B"},
+		{Code: "FIN", Name: "Finance Request"},
+		{Code: "FO", Name: "Front Office"},
+		{Code: "HK", Name: "Housekeeping"},
+		{Code: "HKPPM", Name: "Housekeeping PPM"},
+		{Code: "IT", Name: "IT"},
+		{Code: "KIT", Name: "Kitchen"},
+		{Code: "LDRY", Name: "Laundry"},
+		{Code: "LF", Name: "Lost & Found"},
+		{Code: "MAINT", Name: "Maintenance"},
+		{Code: "REC", Name: "REC"},
+		{Code: "SEC", Name: "Security"},
+	}
+	if len(body.Departments) != len(expected) {
+		t.Fatalf("unexpected approved department count: got=%d want=%d rows=%+v", len(body.Departments), len(expected), body.Departments)
+	}
+	for index, department := range body.Departments {
+		if department.Code != expected[index].Code || department.Name != expected[index].Name {
+			t.Fatalf("unexpected department at position %d: got=%+v want code=%q name=%q", index, department, expected[index].Code, expected[index].Name)
+		}
+		if department.ID <= 0 {
+			t.Fatalf("department %q did not contain a real database id", department.Code)
+		}
 	}
 }
 

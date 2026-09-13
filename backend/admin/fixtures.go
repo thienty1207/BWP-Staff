@@ -19,13 +19,23 @@ type developmentLocation struct {
 	description string
 }
 
+const developmentDepartmentDescription = "Development department seed data"
+
 var developmentDepartments = []developmentDepartment{
-	{code: "IT", name: "IT Department", description: "Development department seed data"},
-	{code: "HK", name: "Housekeeping", description: "Development department seed data"},
-	{code: "FO", name: "Front Office", description: "Development department seed data"},
-	{code: "ENG", name: "Engineering", description: "Development department seed data"},
-	{code: "HR", name: "Human Resources", description: "Development department seed data"},
-	{code: "FB", name: "Food & Beverage", description: "Development department seed data"},
+	{code: "CON", name: "Concierge", description: developmentDepartmentDescription},
+	{code: "DA", name: "Damaged Asset", description: developmentDepartmentDescription},
+	{code: "FB", name: "F&B", description: developmentDepartmentDescription},
+	{code: "FIN", name: "Finance Request", description: developmentDepartmentDescription},
+	{code: "FO", name: "Front Office", description: developmentDepartmentDescription},
+	{code: "HK", name: "Housekeeping", description: developmentDepartmentDescription},
+	{code: "HKPPM", name: "Housekeeping PPM", description: developmentDepartmentDescription},
+	{code: "IT", name: "IT", description: developmentDepartmentDescription},
+	{code: "KIT", name: "Kitchen", description: developmentDepartmentDescription},
+	{code: "LDRY", name: "Laundry", description: developmentDepartmentDescription},
+	{code: "LF", name: "Lost & Found", description: developmentDepartmentDescription},
+	{code: "MAINT", name: "Maintenance", description: developmentDepartmentDescription},
+	{code: "REC", name: "REC", description: developmentDepartmentDescription},
+	{code: "SEC", name: "Security", description: developmentDepartmentDescription},
 }
 
 var developmentLocations = []developmentLocation{
@@ -49,10 +59,25 @@ func SeedDevelopmentFixtures(ctx context.Context, pool *pgxpool.Pool) error {
 		if _, err := transaction.Exec(ctx, `
 INSERT INTO departments (code, name, description)
 VALUES ($1, $2, $3)
-ON CONFLICT (code) DO NOTHING`, department.code, department.name, department.description); err != nil {
+ON CONFLICT (code) DO UPDATE
+SET name = EXCLUDED.name,
+    description = EXCLUDED.description,
+    is_active = TRUE,
+    updated_at = NOW()
+WHERE departments.description = $3`, department.code, department.name, department.description); err != nil {
 			_ = transaction.Rollback(ctx)
 			return fmt.Errorf("insert development department %s: %w", department.code, err)
 		}
+	}
+
+	if _, err := transaction.Exec(ctx, `
+UPDATE departments
+SET is_active = FALSE,
+    updated_at = NOW()
+WHERE code = ANY($1::text[])
+  AND description = $2`, []string{"ENG", "HR"}, developmentDepartmentDescription); err != nil {
+		_ = transaction.Rollback(ctx)
+		return fmt.Errorf("deactivate legacy development departments: %w", err)
 	}
 
 	for _, location := range developmentLocations {
