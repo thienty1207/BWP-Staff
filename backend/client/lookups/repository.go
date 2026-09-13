@@ -53,16 +53,16 @@ func (repository *Repository) ListLocations(ctx context.Context, query LocationQ
 SELECT id, code, name
 FROM locations
 WHERE is_active = TRUE
-  AND ($1 = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
+  AND ($1 = '' OR strpos(LOWER(name), LOWER($1)) > 0)
 ORDER BY
     CASE
         WHEN $1 = '' THEN 4
         WHEN LOWER(name) = LOWER($1) THEN 0
-        WHEN LOWER(name) LIKE LOWER($1) || '%' THEN 1
+        WHEN strpos(LOWER(name), LOWER($1)) = 1 THEN 1
         WHEN EXISTS (
             SELECT 1
             FROM regexp_split_to_table(LOWER(name), '[^[:alnum:]]+') AS token
-            WHERE token <> '' AND token LIKE LOWER($1) || '%'
+            WHERE token <> '' AND strpos(token, LOWER($1)) = 1
         ) THEN 2
         ELSE 3
     END ASC,
@@ -89,7 +89,7 @@ LIMIT NULLIF($2::int, 0)`, query.Search, effectiveLocationLimit(query))
 }
 
 func effectiveLocationLimit(query LocationQuery) int {
-	if query.Search == "" && !query.HasLimit {
+	if !query.HasLimit {
 		return 0
 	}
 	return query.Limit

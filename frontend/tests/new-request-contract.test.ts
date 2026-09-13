@@ -54,3 +54,23 @@ test('Location picker is searchable, bounded, and preserves clear-to-null semant
 	expect(styles).toContain('overflow-y: auto');
 	expect(styles).toContain('max-height: min(12rem, 34svh)');
 });
+
+test('Location picker exposes the full list and blocks stale keyboard selection while loading', async () => {
+	const dialogPath = new URL('../src/lib/components/NewRequestDialog.svelte', import.meta.url);
+	const dialog = await Bun.file(dialogPath).text();
+
+	expect(dialog).toContain('getLocations()');
+	expect(dialog).toContain('getLocations({ q: query.trim() })');
+	expect(dialog).not.toContain('getLocations({ limit: locationSearchLimit })');
+	expect(dialog).not.toContain('getLocations({ q: query.trim(), limit: locationSearchLimit })');
+
+	const scheduleStart = dialog.indexOf('function scheduleLocationSearch');
+	const searchStart = dialog.indexOf('async function searchLocations');
+	const schedule = dialog.slice(scheduleStart, searchStart);
+	expect(schedule).toContain('highlightedLocationIndex = -1');
+
+	const keydownStart = dialog.indexOf('function handleLocationKeydown');
+	const cancelStart = dialog.indexOf('function handleCancel');
+	const keydown = dialog.slice(keydownStart, cancelStart);
+	expect(keydown).toContain('if (locationSearchLoading)');
+});

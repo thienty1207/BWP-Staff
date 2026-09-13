@@ -44,6 +44,17 @@ test('location lookup sends trimmed search and bounded limit', async () => {
 	expect(requestURL).toBe('/api/v1/locations?q=server&limit=10');
 });
 
+test('location lookup leaves omitted limits out of search requests', async () => {
+	let requestURL = '';
+	globalThis.fetch = async (input) => {
+		requestURL = String(input);
+		return new Response(JSON.stringify({ locations: [] }), { status: 200 });
+	};
+
+	await expect(getLocations({ q: '  oasis  ' })).resolves.toEqual([]);
+	expect(requestURL).toBe('/api/v1/locations?q=oasis');
+});
+
 test('RFC3339 ticket timestamps require an explicit timezone-shaped value', async () => {
 	const { isRFC3339Timestamp } = await import('../src/lib/client/tickets/api');
 

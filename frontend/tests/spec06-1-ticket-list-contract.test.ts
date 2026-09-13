@@ -52,5 +52,15 @@ test('ticket list splits timestamps and styles priority titles without a badge',
 	expect(page).not.toContain('class="priority-badge"');
 	expect(page).not.toContain('>Priority</span>');
 	expect(styles).toContain('.ticket-title-priority');
-	expect(styles).toContain('font-weight: 800');
+	const priorityStart = styles.indexOf('.ticket-title-priority');
+	const priorityEnd = styles.indexOf('}', priorityStart);
+	const priorityStyles = styles.slice(priorityStart, priorityEnd);
+	expect(priorityStyles).toContain('border: 1px solid var(--danger)');
+	expect(priorityStyles).toContain('display: inline-block');
+	expect(priorityStyles).toContain('width: fit-content');
+	expect(priorityStyles).toContain('max-width: 100%');
+	expect(priorityStyles).toContain('box-sizing: border-box');
+	expect(priorityStyles).toContain('overflow-wrap: anywhere');
+	expect(priorityStyles).toContain('font-weight: 800');
+	expect(priorityStyles).not.toContain('color: var(--danger)');
 });

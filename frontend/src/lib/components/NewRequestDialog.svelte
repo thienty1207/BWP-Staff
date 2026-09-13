@@ -41,7 +41,6 @@
 	let dueAt = $state('');
 	let locationSearchTimer: ReturnType<typeof setTimeout> | undefined;
 	let locationRequestSequence = 0;
-	const locationSearchLimit = 10;
 
 	$effect(() => {
 		if (open && !lookupLoadStarted) {
@@ -59,7 +58,7 @@
 		try {
 			const [nextDepartments, nextLocations] = await Promise.all([
 				getDepartments(),
-				getLocations({ limit: locationSearchLimit })
+				getLocations()
 			]);
 			departments = nextDepartments;
 			locations = nextLocations;
@@ -100,6 +99,8 @@
 		}
 		locationSearchError = '';
 		locationSearchLoading = true;
+		highlightedLocationIndex = -1;
+		locations = [];
 		const requestSequence = ++locationRequestSequence;
 		locationSearchTimer = setTimeout(() => {
 			locationSearchTimer = undefined;
@@ -109,7 +110,7 @@
 
 	async function searchLocations(query: string, requestSequence: number) {
 		try {
-			const nextLocations = await getLocations({ q: query.trim(), limit: locationSearchLimit });
+			const nextLocations = await getLocations({ q: query.trim() });
 			if (requestSequence !== locationRequestSequence) {
 				return;
 			}
@@ -138,6 +139,8 @@
 		}
 		locationSearchError = '';
 		locationSearchLoading = true;
+		highlightedLocationIndex = -1;
+		locations = [];
 		const requestSequence = ++locationRequestSequence;
 		void searchLocations(locationQuery, requestSequence);
 	}
@@ -172,6 +175,9 @@
 			return;
 		}
 		if (!locationSearchOpen || locations.length === 0) {
+			return;
+		}
+		if (locationSearchLoading) {
 			return;
 		}
 		if (event.key === 'ArrowDown') {

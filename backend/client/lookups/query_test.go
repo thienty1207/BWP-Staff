@@ -2,12 +2,12 @@ package lookups
 
 import "testing"
 
-func TestParseLocationQueryValuesUsesBoundedDefaults(t *testing.T) {
+func TestParseLocationQueryValuesLeavesOmittedLimitUnbounded(t *testing.T) {
 	query, err := parseLocationQueryValues(map[string]string{})
 	if err != nil {
 		t.Fatalf("parse default location query: %v", err)
 	}
-	if query.Search != "" || query.Limit != 10 || query.HasLimit {
+	if query.Search != "" || query.Limit != 0 || query.HasLimit {
 		t.Fatalf("unexpected default location query: %+v", query)
 	}
 }

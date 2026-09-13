@@ -2,6 +2,7 @@ package tickets_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -436,7 +437,7 @@ func TestSPEC065LocationSearchUsesAuthenticationAndPostgresRanking(t *testing.T)
 		{path: "/api/v1/locations?q=OASIS&limit=30", mustIncludeNames: []string{"BWP - Oasis bar", "BWP - Oasis Bathroom", "BWP - Oasis pool", "BWP - Oasis pool bar", "BWP - Oasis Swimming Pool", "BWP- Oasis Kitchen", "BWP - Toilet Oasis"}, wantCount: -1},
 		{path: "/api/v1/locations?q=bwp%20-%20lobby&limit=10", mustIncludeNames: []string{"BWP - Lobby"}, wantFirst: "BWP - Lobby", wantCount: 1},
 		{path: "/api/v1/locations?q=does-not-exist&limit=30", wantCount: 0},
-		{path: "/api/v1/locations?q=bwp", wantCount: 10},
+		{path: "/api/v1/locations?q=bwp", wantCount: -1},
 	}
 	for _, searchCase := range searchCases {
 		searchResponse := requestTickets(t, server, searchCase.path, token)
@@ -505,6 +506,101 @@ func TestSPEC065LocationSearchUsesAuthenticationAndPostgresRanking(t *testing.T)
 	invalidLimit.Body.Close()
 	if invalidLimit.StatusCode != http.StatusBadRequest {
 		t.Fatalf("invalid location limit: expected 400, got %d", invalidLimit.StatusCode)
+	}
+}
+
+func TestSPEC066LocationSearchNoLimitAndLiteralCharacters(t *testing.T) {
+	pool, ctx := openTicketsTestPool(t)
+	if err := admin.SeedDevelopmentFixtures(ctx, pool); err != nil {
+		t.Fatalf("seed development fixtures: %v", err)
+	}
+	for index := 1; index <= 12; index++ {
+		insertLocation(t, pool, ctx, fmt.Sprintf("SPEC066-NOLIMIT-%02d", index), fmt.Sprintf("SPEC066 no limit result %02d", index))
+	}
+	percentName := "SPEC066 literal %"
+	underscoreName := "SPEC066 literal _"
+	insertLocation(t, pool, ctx, "SPEC066-LITERAL-PERCENT", percentName)
+	insertLocation(t, pool, ctx, "SPEC066-LITERAL-UNDERSCORE", underscoreName)
+
+	var departmentID int64
+	if err := pool.QueryRow(ctx, `SELECT id FROM departments WHERE code = 'IT'`).Scan(&departmentID); err != nil {
+		t.Fatalf("read IT department: %v", err)
+	}
+	userID := insertUser(t, pool, ctx, "spec066-search-user", "SPEC066-SEARCH", "SPEC-06.6 Search User", departmentID)
+	token := insertSession(t, pool, ctx, userID)
+	server := newTicketsApp(pool)
+
+	var expectedActive int
+	if err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM locations WHERE is_active = TRUE`).Scan(&expectedActive); err != nil {
+		t.Fatalf("count active locations: %v", err)
+	}
+	noLimitResponse := requestTickets(t, server, "/api/v1/locations", token)
+	if noLimitResponse.StatusCode != http.StatusOK {
+		noLimitResponse.Body.Close()
+		t.Fatalf("no-limit location lookup: expected 200, got %d", noLimitResponse.StatusCode)
+	}
+	var noLimitBody struct {
+		Locations []spec06LookupLocation `json:"locations"`
+	}
+	decodeTicketResponse(t, noLimitResponse, &noLimitBody)
+	noLimitResponse.Body.Close()
+	if len(noLimitBody.Locations) != expectedActive || len(noLimitBody.Locations) <= 10 {
+		t.Fatalf("no-limit location lookup returned %d rows, want all %d active rows and more than 10", len(noLimitBody.Locations), expectedActive)
+	}
+	seenIDs := make(map[int64]struct{}, len(noLimitBody.Locations))
+	for _, location := range noLimitBody.Locations {
+		if location.ID <= 0 {
+			t.Fatalf("no-limit location lookup returned invalid ID: %+v", location)
+		}
+		if _, exists := seenIDs[location.ID]; exists {
+			t.Fatalf("no-limit location lookup returned duplicate ID %d", location.ID)
+		}
+		seenIDs[location.ID] = struct{}{}
+	}
+
+	searchResponse := requestTickets(t, server, "/api/v1/locations?q=SPEC066%20no%20limit", token)
+	if searchResponse.StatusCode != http.StatusOK {
+		searchResponse.Body.Close()
+		t.Fatalf("no-limit search: expected 200, got %d", searchResponse.StatusCode)
+	}
+	var searchBody struct {
+		Locations []spec06LookupLocation `json:"locations"`
+	}
+	decodeTicketResponse(t, searchResponse, &searchBody)
+	searchResponse.Body.Close()
+	if len(searchBody.Locations) != 12 {
+		t.Fatalf("no-limit search returned %d rows, want 12", len(searchBody.Locations))
+	}
+
+	for _, testCase := range []struct {
+		query    string
+		wantName string
+		encodedQ string
+	}{
+		{query: "%", wantName: percentName, encodedQ: "%25"},
+		{query: "_", wantName: underscoreName, encodedQ: "%5F"},
+	} {
+		literalResponse := requestTickets(t, server, "/api/v1/locations?q="+testCase.encodedQ, token)
+		if literalResponse.StatusCode != http.StatusOK {
+			literalResponse.Body.Close()
+			t.Fatalf("literal %q search: expected 200, got %d", testCase.query, literalResponse.StatusCode)
+		}
+		var literalBody struct {
+			Locations []spec06LookupLocation `json:"locations"`
+		}
+		decodeTicketResponse(t, literalResponse, &literalBody)
+		literalResponse.Body.Close()
+		if len(literalBody.Locations) != 1 || literalBody.Locations[0].Name != testCase.wantName {
+			t.Fatalf("literal %q search returned %+v, want only %q", testCase.query, literalBody.Locations, testCase.wantName)
+		}
+	}
+
+	for _, rawLimit := range []string{"0", "31", "many"} {
+		invalidLimit := requestTickets(t, server, "/api/v1/locations?limit="+rawLimit, token)
+		invalidLimit.Body.Close()
+		if invalidLimit.StatusCode != http.StatusBadRequest {
+			t.Fatalf("invalid location limit %q: expected 400, got %d", rawLimit, invalidLimit.StatusCode)
+		}
 	}
 }
 

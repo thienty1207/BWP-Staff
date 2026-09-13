@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	defaultLocationLimit = 10
 	maxLocationLimit     = 30
 	maxLocationQuerySize = 100
 )
@@ -27,7 +26,7 @@ func parseLocationQueryValues(values map[string]string) (LocationQuery, error) {
 		return LocationQuery{}, errInvalidLocationQuery
 	}
 
-	query := LocationQuery{Search: search, Limit: defaultLocationLimit}
+	query := LocationQuery{Search: search}
 	rawLimit, hasLimit := values["limit"]
 	if !hasLimit {
 		return query, nil

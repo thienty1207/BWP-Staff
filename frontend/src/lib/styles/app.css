@@ -834,7 +834,14 @@ h2 {
 }
 
 .ticket-title-priority {
-	color: var(--danger);
+	display: inline-block;
+	width: fit-content;
+	max-width: 100%;
+	box-sizing: border-box;
+	border: 1px solid var(--danger);
+	border-radius: 0.3rem;
+	padding: 0.1rem 0.25rem;
+	overflow-wrap: anywhere;
 	font-weight: 800;
 }
 
