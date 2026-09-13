@@ -295,7 +295,7 @@ RETURNING id`).Scan(&unrelatedID); err != nil {
 		if err := pool.QueryRow(ctx, "SELECT COUNT(*) FROM locations").Scan(&locationCount); err != nil {
 			t.Fatalf("count seeded locations: %v", err)
 		}
-		if departmentCount != 17 || locationCount != 6 {
+		if departmentCount != 17 || locationCount != 147 {
 			t.Fatalf("unexpected development fixture counts: departments=%d locations=%d", departmentCount, locationCount)
 		}
 
@@ -721,6 +721,268 @@ VALUES (1, 'changed');`)
 	if err := shared.RunMigrations(ctx, pool, migrationsDirectory, 5*time.Second); err == nil || !strings.Contains(err.Error(), "checksum mismatch") {
 		t.Fatalf("expected migration checksum mismatch, got %v", err)
 	}
+}
+
+func TestSPEC063DevelopmentSeedAdds96VillasLocations(t *testing.T) {
+	pool, ctx := openSPEC01Pool(t)
+	if err := shared.RunMigrations(ctx, pool, filepath.Join("..", "migrations"), 5*time.Second); err != nil {
+		t.Fatalf("run migrations: %v", err)
+	}
+
+	const villasDescription = "Development location seed data: 96 Villas"
+	var existingVillasID int64
+	if err := pool.QueryRow(ctx, `
+INSERT INTO locations (code, name, description, is_active)
+VALUES ('96BWV-AREA-001', 'Old 96 Villas name', $1, FALSE)
+RETURNING id`, villasDescription).Scan(&existingVillasID); err != nil {
+		t.Fatalf("insert existing 96 Villas fixture: %v", err)
+	}
+	var genericID int64
+	if err := pool.QueryRow(ctx, `
+INSERT INTO locations (code, name, description, is_active)
+VALUES ('LOBBY', 'Lobby', 'Development location seed data', FALSE)
+RETURNING id`).Scan(&genericID); err != nil {
+		t.Fatalf("insert generic development location: %v", err)
+	}
+	var realID int64
+	if err := pool.QueryRow(ctx, `
+INSERT INTO locations (code, name, description, is_active)
+VALUES ('SPEC063-REAL', 'Real Location', 'Non-development location', TRUE)
+RETURNING id`).Scan(&realID); err != nil {
+		t.Fatalf("insert unrelated location: %v", err)
+	}
+
+	if err := admin.SeedDevelopmentFixtures(ctx, pool); err != nil {
+		t.Fatalf("seed development fixtures: %v", err)
+	}
+	if err := admin.SeedDevelopmentFixtures(ctx, pool); err != nil {
+		t.Fatalf("seed development fixtures a second time: %v", err)
+	}
+
+	expected := expectedSPEC063Locations()
+	var fixtureCount int
+	if err := pool.QueryRow(ctx, "SELECT COUNT(*) FROM locations WHERE description = $1", villasDescription).Scan(&fixtureCount); err != nil {
+		t.Fatalf("count 96 Villas fixtures: %v", err)
+	}
+	if fixtureCount != len(expected) {
+		t.Fatalf("unexpected 96 Villas fixture count: got=%d want=%d", fixtureCount, len(expected))
+	}
+
+	var namedCount int
+	if err := pool.QueryRow(ctx, `
+SELECT COUNT(*)
+FROM locations
+WHERE description = $1
+  AND (code = '96V' OR code LIKE '96BWV-AREA-%')`, villasDescription).Scan(&namedCount); err != nil {
+		t.Fatalf("count named 96 Villas locations: %v", err)
+	}
+	if namedCount != 42 {
+		t.Fatalf("unexpected named 96 Villas count: got=%d want=42", namedCount)
+	}
+
+	var roomCount int
+	if err := pool.QueryRow(ctx, `
+SELECT COUNT(*)
+FROM locations
+WHERE description = $1
+  AND code LIKE '96BWV-ROOM-%'`, villasDescription).Scan(&roomCount); err != nil {
+		t.Fatalf("count 96 Villas rooms: %v", err)
+	}
+	if roomCount != 99 {
+		t.Fatalf("unexpected 96 Villas room count: got=%d want=99", roomCount)
+	}
+
+	var inactiveCount int
+	if err := pool.QueryRow(ctx, `
+SELECT COUNT(*)
+FROM locations
+WHERE description = $1
+  AND is_active = FALSE`, villasDescription).Scan(&inactiveCount); err != nil {
+		t.Fatalf("count inactive 96 Villas fixtures: %v", err)
+	}
+	if inactiveCount != 0 {
+		t.Fatalf("96 Villas fixtures contain inactive rows: %d", inactiveCount)
+	}
+
+	var invalidRoomCount int
+	if err := pool.QueryRow(ctx, `
+SELECT COUNT(*)
+FROM locations
+WHERE description = $1
+  AND code = ANY($2::text[])`, villasDescription, []string{"96BWV-ROOM-1000", "96BWV-ROOM-1100"}).Scan(&invalidRoomCount); err != nil {
+		t.Fatalf("check invalid 96 Villas room codes: %v", err)
+	}
+	if invalidRoomCount != 0 {
+		t.Fatalf("unexpected out-of-range 96 Villas rooms: %d", invalidRoomCount)
+	}
+
+	var duplicateCount int
+	if err := pool.QueryRow(ctx, `
+SELECT COUNT(*)
+FROM (
+    SELECT code
+    FROM locations
+    WHERE description = $1
+    GROUP BY code
+    HAVING COUNT(*) > 1
+) AS duplicate_codes`, villasDescription).Scan(&duplicateCount); err != nil {
+		t.Fatalf("check duplicate 96 Villas codes: %v", err)
+	}
+	if duplicateCount != 0 {
+		t.Fatalf("duplicate 96 Villas codes found: %d", duplicateCount)
+	}
+
+	rows, err := pool.Query(ctx, `
+SELECT code, name
+FROM locations
+WHERE description = $1`, villasDescription)
+	if err != nil {
+		t.Fatalf("read 96 Villas fixture rows: %v", err)
+	}
+	defer rows.Close()
+	actual := make(map[string]string, len(expected))
+	for rows.Next() {
+		var code, name string
+		if err := rows.Scan(&code, &name); err != nil {
+			t.Fatalf("scan 96 Villas fixture row: %v", err)
+		}
+		actual[code] = name
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatalf("iterate 96 Villas fixture rows: %v", err)
+	}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Fatalf("unexpected 96 Villas fixture data: got=%v want=%v", actual, expected)
+	}
+
+	var updatedID int64
+	var updatedName string
+	var updatedActive bool
+	if err := pool.QueryRow(ctx, `
+SELECT id, name, is_active
+FROM locations
+WHERE code = '96BWV-AREA-001'`).Scan(&updatedID, &updatedName, &updatedActive); err != nil {
+		t.Fatalf("read updated 96 Villas fixture: %v", err)
+	}
+	if updatedID != existingVillasID || updatedName != "96-BWV - Asian kitchen" || !updatedActive {
+		t.Fatalf("existing 96 Villas row was not updated in place: id=%d name=%q active=%t", updatedID, updatedName, updatedActive)
+	}
+
+	var genericCode, genericName, genericDescription string
+	var genericActive bool
+	if err := pool.QueryRow(ctx, `
+SELECT code, name, description, is_active
+FROM locations
+WHERE id = $1`, genericID).Scan(&genericCode, &genericName, &genericDescription, &genericActive); err != nil {
+		t.Fatalf("read generic location: %v", err)
+	}
+	if genericCode != "LOBBY" || genericName != "Lobby" || genericDescription != "Development location seed data" || genericActive {
+		t.Fatalf("generic development location changed: code=%q name=%q description=%q active=%t", genericCode, genericName, genericDescription, genericActive)
+	}
+
+	var realCode, realName, realDescription string
+	var realActive bool
+	if err := pool.QueryRow(ctx, `
+SELECT code, name, description, is_active
+FROM locations
+WHERE id = $1`, realID).Scan(&realCode, &realName, &realDescription, &realActive); err != nil {
+		t.Fatalf("read unrelated location: %v", err)
+	}
+	if realCode != "SPEC063-REAL" || realName != "Real Location" || realDescription != "Non-development location" || !realActive {
+		t.Fatalf("unrelated location changed: code=%q name=%q description=%q active=%t", realCode, realName, realDescription, realActive)
+	}
+}
+
+func TestSPEC063SeedRejectsNonFixtureLocationCodeCollision(t *testing.T) {
+	pool, ctx := openSPEC01Pool(t)
+	if err := shared.RunMigrations(ctx, pool, filepath.Join("..", "migrations"), 5*time.Second); err != nil {
+		t.Fatalf("run migrations: %v", err)
+	}
+
+	var collisionID int64
+	if err := pool.QueryRow(ctx, `
+INSERT INTO locations (code, name, description)
+VALUES ('96V', 'Production 96 Villas', 'Non-development location')
+RETURNING id`).Scan(&collisionID); err != nil {
+		t.Fatalf("insert non-fixture collision: %v", err)
+	}
+
+	err := admin.SeedDevelopmentFixtures(ctx, pool)
+	if err == nil || !strings.Contains(err.Error(), "96 Villas location code") {
+		t.Fatalf("expected clear 96 Villas collision error, got %v", err)
+	}
+
+	var code, name, description string
+	var active bool
+	if err := pool.QueryRow(ctx, `
+SELECT code, name, description, is_active
+FROM locations
+WHERE id = $1`, collisionID).Scan(&code, &name, &description, &active); err != nil {
+		t.Fatalf("read collision row: %v", err)
+	}
+	if code != "96V" || name != "Production 96 Villas" || description != "Non-development location" || !active {
+		t.Fatalf("collision row was overwritten: code=%q name=%q description=%q active=%t", code, name, description, active)
+	}
+
+	var fixtureCount int
+	if err := pool.QueryRow(ctx, "SELECT COUNT(*) FROM locations WHERE description = $1", "Development location seed data: 96 Villas").Scan(&fixtureCount); err != nil {
+		t.Fatalf("count fixtures after collision rollback: %v", err)
+	}
+	if fixtureCount != 0 {
+		t.Fatalf("collision left partial 96 Villas fixture data: %d rows", fixtureCount)
+	}
+}
+
+func expectedSPEC063Locations() map[string]string {
+	expected := map[string]string{
+		"96V":            "96 Villas",
+		"96BWV-AREA-001": "96-BWV - Asian kitchen",
+		"96BWV-AREA-002": "96-BWV - Auxiliary Swimming Pool",
+		"96BWV-AREA-003": "96-BWV - Bathroom",
+		"96BWV-AREA-004": "96-BWV - Buffet counter",
+		"96BWV-AREA-005": "96-BWV - Cold kitchen",
+		"96BWV-AREA-006": "96-BWV - Eng Fire Pump Room",
+		"96BWV-AREA-007": "96-BWV - Eng Mainpool MEP Room",
+		"96BWV-AREA-008": "96-BWV - Eng MEP Room",
+		"96BWV-AREA-009": "96-BWV - Eng Subpool MEP Room",
+		"96BWV-AREA-010": "96-BWV - Eng Water Treatment Room",
+		"96BWV-AREA-011": "96-BWV - Eng Well Water treatment Room",
+		"96BWV-AREA-012": "96-BWV - Eng workshop",
+		"96BWV-AREA-013": "96-BWV - European kitchen",
+		"96BWV-AREA-014": "96-BWV - Extra Pool",
+		"96BWV-AREA-015": "96-BWV - Female Locker",
+		"96BWV-AREA-016": "96-BWV - FO Reception",
+		"96BWV-AREA-017": "96-BWV - Generator Room",
+		"96BWV-AREA-018": "96-BWV - Gym",
+		"96BWV-AREA-019": "96-BWV - HK Store",
+		"96BWV-AREA-020": "96-BWV - Kid club",
+		"96BWV-AREA-021": "96-BWV - Kid's Club",
+		"96BWV-AREA-022": "96-BWV - Kid's Playground",
+		"96BWV-AREA-023": "96-BWV - Lobby",
+		"96BWV-AREA-024": "96-BWV - Lobby Lounge",
+		"96BWV-AREA-025": "96-BWV - Main kitchen",
+		"96BWV-AREA-026": "96-BWV - Main Pool",
+		"96BWV-AREA-027": "96-BWV - Male Locker",
+		"96BWV-AREA-028": "96-BWV - Outside",
+		"96BWV-AREA-029": "96-BWV - PA Store",
+		"96BWV-AREA-030": "96-BWV - Pastry kitchen",
+		"96BWV-AREA-031": "96-BWV - Spa",
+		"96BWV-AREA-032": "96-BWV - Toilet Gym",
+		"96BWV-AREA-033": "96-BWV - Toilet Hồ bơi phụ",
+		"96BWV-AREA-034": "96-BWV - Toilet Lobby",
+		"96BWV-AREA-035": "96-BWV - Toilet Spa",
+		"96BWV-AREA-036": "96-BWV - Toilet Tropicana",
+		"96BWV-AREA-037": "96-BWV - Tropicana Bar",
+		"96BWV-AREA-038": "96-BWV - Tropicana Kitchen",
+		"96BWV-AREA-039": "96-BWV - Tropicana Restaurant",
+		"96BWV-AREA-040": "96-BWV-Kitchen Office",
+		"96BWV-AREA-041": "96-BWV-Steward",
+	}
+	for room := 1001; room <= 1099; room++ {
+		code := fmt.Sprintf("96BWV-ROOM-%d", room)
+		expected[code] = fmt.Sprintf("%d", room)
+	}
+	return expected
 }
 
 func TestSPEC01MigrationBackfillsLegacyTicketAssignment(t *testing.T) {

@@ -150,6 +150,107 @@ func TestSPEC062DevelopmentSeedReturnsApprovedActiveDepartments(t *testing.T) {
 	}
 }
 
+func TestSPEC063LocationLookupReturnsAll96VillasRows(t *testing.T) {
+	pool, ctx := openTicketsTestPool(t)
+	if err := admin.SeedDevelopmentFixtures(ctx, pool); err != nil {
+		t.Fatalf("seed development fixtures: %v", err)
+	}
+
+	var departmentID int64
+	if err := pool.QueryRow(ctx, "SELECT id FROM departments WHERE code = 'IT'").Scan(&departmentID); err != nil {
+		t.Fatalf("read seeded IT department: %v", err)
+	}
+	userID := insertUser(t, pool, ctx, "spec063-lookup-user", "SPEC063-LOOKUP", "SPEC-06.3 Lookup User", departmentID)
+	token := insertSession(t, pool, ctx, userID)
+	server := newTicketsApp(pool)
+
+	response := requestTickets(t, server, "/api/v1/locations", token)
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("locations: expected 200, got %d", response.StatusCode)
+	}
+	var body struct {
+		Locations []spec06LookupLocation `json:"locations"`
+	}
+	decodeTicketResponse(t, response, &body)
+
+	expected := expectedSPEC063LookupLocations()
+	actual := make(map[string]spec06LookupLocation, len(expected))
+	for _, location := range body.Locations {
+		if location.Code == nil {
+			continue
+		}
+		if _, ok := expected[*location.Code]; !ok {
+			continue
+		}
+		if location.ID <= 0 {
+			t.Fatalf("96 Villas location %q did not contain a real database id", *location.Code)
+		}
+		actual[*location.Code] = location
+	}
+	if len(actual) != len(expected) {
+		t.Fatalf("unexpected 96 Villas lookup count: got=%d want=%d", len(actual), len(expected))
+	}
+	for code, name := range expected {
+		location, ok := actual[code]
+		if !ok || location.Name != name {
+			t.Fatalf("unexpected 96 Villas lookup row for %q: got=%+v want name=%q", code, location, name)
+		}
+	}
+}
+
+func expectedSPEC063LookupLocations() map[string]string {
+	expected := map[string]string{
+		"96V":            "96 Villas",
+		"96BWV-AREA-001": "96-BWV - Asian kitchen",
+		"96BWV-AREA-002": "96-BWV - Auxiliary Swimming Pool",
+		"96BWV-AREA-003": "96-BWV - Bathroom",
+		"96BWV-AREA-004": "96-BWV - Buffet counter",
+		"96BWV-AREA-005": "96-BWV - Cold kitchen",
+		"96BWV-AREA-006": "96-BWV - Eng Fire Pump Room",
+		"96BWV-AREA-007": "96-BWV - Eng Mainpool MEP Room",
+		"96BWV-AREA-008": "96-BWV - Eng MEP Room",
+		"96BWV-AREA-009": "96-BWV - Eng Subpool MEP Room",
+		"96BWV-AREA-010": "96-BWV - Eng Water Treatment Room",
+		"96BWV-AREA-011": "96-BWV - Eng Well Water treatment Room",
+		"96BWV-AREA-012": "96-BWV - Eng workshop",
+		"96BWV-AREA-013": "96-BWV - European kitchen",
+		"96BWV-AREA-014": "96-BWV - Extra Pool",
+		"96BWV-AREA-015": "96-BWV - Female Locker",
+		"96BWV-AREA-016": "96-BWV - FO Reception",
+		"96BWV-AREA-017": "96-BWV - Generator Room",
+		"96BWV-AREA-018": "96-BWV - Gym",
+		"96BWV-AREA-019": "96-BWV - HK Store",
+		"96BWV-AREA-020": "96-BWV - Kid club",
+		"96BWV-AREA-021": "96-BWV - Kid's Club",
+		"96BWV-AREA-022": "96-BWV - Kid's Playground",
+		"96BWV-AREA-023": "96-BWV - Lobby",
+		"96BWV-AREA-024": "96-BWV - Lobby Lounge",
+		"96BWV-AREA-025": "96-BWV - Main kitchen",
+		"96BWV-AREA-026": "96-BWV - Main Pool",
+		"96BWV-AREA-027": "96-BWV - Male Locker",
+		"96BWV-AREA-028": "96-BWV - Outside",
+		"96BWV-AREA-029": "96-BWV - PA Store",
+		"96BWV-AREA-030": "96-BWV - Pastry kitchen",
+		"96BWV-AREA-031": "96-BWV - Spa",
+		"96BWV-AREA-032": "96-BWV - Toilet Gym",
+		"96BWV-AREA-033": "96-BWV - Toilet Hồ bơi phụ",
+		"96BWV-AREA-034": "96-BWV - Toilet Lobby",
+		"96BWV-AREA-035": "96-BWV - Toilet Spa",
+		"96BWV-AREA-036": "96-BWV - Toilet Tropicana",
+		"96BWV-AREA-037": "96-BWV - Tropicana Bar",
+		"96BWV-AREA-038": "96-BWV - Tropicana Kitchen",
+		"96BWV-AREA-039": "96-BWV - Tropicana Restaurant",
+		"96BWV-AREA-040": "96-BWV-Kitchen Office",
+		"96BWV-AREA-041": "96-BWV-Steward",
+	}
+	for room := 1001; room <= 1099; room++ {
+		code := fmt.Sprintf("96BWV-ROOM-%d", room)
+		expected[code] = fmt.Sprintf("%d", room)
+	}
+	return expected
+}
+
 func TestSPEC06CreateTicketUsesSessionRequesterAndWritesActivityAtomically(t *testing.T) {
 	pool, ctx := openTicketsTestPool(t)
 	departmentID := insertDepartment(t, pool, ctx, "SPEC06-CREATE", "SPEC06 Create Department")
