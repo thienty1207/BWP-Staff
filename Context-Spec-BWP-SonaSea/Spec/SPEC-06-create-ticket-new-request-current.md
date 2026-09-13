@@ -19,6 +19,11 @@
 >
 > This SPEC introduces the first real ticket write flow. It also includes three small, targeted hardening fixes discovered during the post-SPEC-05 code audit.
 
+> **Supersession note:** Create-ticket backend semantics remain canonical.
+> Location selection UI is superseded by SPEC-06.4 → SPEC-06.6. Although
+> attachment metadata exists in the schema/product direction, actual New
+> Request image upload is not implemented by the current create endpoint.
+
 ---
 
 ## 1. Goal

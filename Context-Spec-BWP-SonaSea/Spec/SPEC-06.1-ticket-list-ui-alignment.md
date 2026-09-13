@@ -6,6 +6,15 @@
 >
 > Closed before this SPEC: SPEC-01, SPEC-02, SPEC-03, SPEC-04, SPEC-04.1, SPEC-05, SPEC-05.1, SPEC-05.2, SPEC-06.
 
+> **Supersession note — Priority and Due presentation:** SPEC-06.5 and
+> SPEC-06.6 supersede the old Priority-under-Due design.
+>
+> Current:
+> - Created On / Due Date use stacked date then time.
+> - Priority badge is removed.
+> - Priority Title keeps normal theme text color and receives a red
+>   content-sized border.
+
 ## 1. Goal
 
 Align the Ticket List UI with the approved product direction. The current list is functionally correct, but its information hierarchy is wrong for the intended product and the mobile cards waste too much vertical space.

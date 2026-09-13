@@ -19,6 +19,10 @@
 
 Current explicit user instruction and current SPEC override older assumptions.
 
+> **Supersession note:** Ticket-list backend read/pagination behavior remains
+> valid. Visible desktop/mobile ticket hierarchy is superseded by SPEC-06.1,
+> with date/priority presentation further superseded by SPEC-06.5/06.6.
+
 ## 2. Goal
 
 Implement:

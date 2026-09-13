@@ -24,6 +24,17 @@
 > - SPEC-06.3 ✅ CLOSED
 > - SPEC-06.4 ✅ CLOSED
 
+> **Supersession note — current behavior:** SPEC-06.6 supersedes the earlier
+> default Location limit of 10 and the red/bold Priority Title treatment.
+>
+> Current canonical behavior:
+> - omitted Location limit → no artificial cap;
+> - explicit Location limit → 1..30;
+> - literal `%` / `_` search semantics;
+> - normal Title text;
+> - red content-sized priority border;
+> - no visible Priority badge.
+
 ---
 
 ## 1. Goal

@@ -1563,6 +1563,13 @@ discovers and does not contain development-seed knowledge. The guarded
 `cmd/seed_development` workflow inserts the departments and locations through
 real PostgreSQL transactions, then seeds the development admin.
 
+> **Amendment note — later master data**
+>
+> Later master-data SPECs expanded the development location catalogue. Legacy
+> generic `ROOM-8020` and `ROOM-7309` remain stored for referential safety but
+> are inactive after SPEC-06.7 cleanup. Canonical room rows are
+> `BWP-ROOM-8020` and `BWP-ROOM-7309`.
+
 ---
 
 # 26. SQL Migration Structure

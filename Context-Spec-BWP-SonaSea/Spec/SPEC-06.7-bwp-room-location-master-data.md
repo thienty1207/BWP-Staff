@@ -24,6 +24,14 @@
 > - SPEC-06.5 ✅ CLOSED
 > - SPEC-06.6 ✅ CLOSED
 
+> **SPEC-06.7 ✅ CLOSED — post-implementation cleanup:**
+> - legacy generic `ROOM-8020` remains stored but inactive;
+> - legacy generic `ROOM-7309` remains stored but inactive;
+> - canonical `BWP-ROOM-8020` remains active;
+> - canonical `BWP-ROOM-7309` remains active;
+> - active lookup exposes canonical numeric room names only;
+> - the integration test file is `bwp_room_locations_integration_test.go`.
+
 ---
 
 ## 1. Goal

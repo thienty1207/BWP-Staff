@@ -9,6 +9,9 @@
 >
 > This SPEC implements the **login UI and browser authentication integration only**. It does not implement Tickets, Report, Settings, chat, Staff Meal, Announcements, admin UI, or later product features.
 
+> **Visual supersession note:** Authentication behavior remains valid. Current
+> login visual presentation is governed by SPEC-05.1 and SPEC-05.2.
+
 ---
 
 ## 1. Goal

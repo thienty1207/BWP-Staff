@@ -20,6 +20,10 @@
 > - SPEC-06.1 ✅ CLOSED
 > - SPEC-06.2 ✅ CLOSED
 
+> **Later cleanup note:** SPEC-06.7 cleanup supersedes preservation of generic
+> `ROOM-8020` and `ROOM-7309` as active rows. Those two legacy generic rows
+> remain stored but inactive. This does not alter the 96 Villas fixture.
+
 ---
 
 ## 1. Goal

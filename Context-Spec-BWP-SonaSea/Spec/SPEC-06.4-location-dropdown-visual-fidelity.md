@@ -21,6 +21,10 @@
 > - SPEC-06.2 ✅ CLOSED
 > - SPEC-06.3 ✅ CLOSED
 
+> **Supersession note — Location control:** SPEC-06.5 intentionally introduces
+> the searchable Location picker and supersedes the native `<select>`
+> restriction. The name-only visible label contract remains canonical.
+
 ---
 
 ## 1. Goal

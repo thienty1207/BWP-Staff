@@ -16,6 +16,9 @@
 > 5. this SPEC
 > 6. current frontend implementation
 
+> **Supersession note:** Later login polish in SPEC-05.1 / SPEC-05.2
+> supersedes earlier branding/layout details where they conflict.
+
 ---
 
 # 1. Goal
