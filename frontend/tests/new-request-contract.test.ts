@@ -18,3 +18,15 @@ test('New Request remains a focused component and the Tickets page exposes its a
 	expect(page).toContain('New Request');
 	expect(page).not.toContain('Refresh');
 });
+
+test('Location options render names only while preserving database IDs', async () => {
+	const dialogPath = new URL('../src/lib/components/NewRequestDialog.svelte', import.meta.url);
+	const dialog = await Bun.file(dialogPath).text();
+	const locationOption = dialog.match(/<option value=\{String\(location\.id\)\}>[^<]*<\/option>/)?.[0];
+
+	expect(locationOption).toBe('<option value={String(location.id)}>{location.name}</option>');
+	expect(locationOption).not.toContain('location.code');
+	expect(dialog).not.toContain('96BWV-ROOM-1024');
+	expect(dialog).not.toContain('96BWV-AREA-017');
+	expect(dialog).toContain('<option value={String(department.id)}>{department.name}</option>');
+});

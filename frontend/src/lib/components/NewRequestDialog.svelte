@@ -234,7 +234,7 @@
 						<select id="new-request-location" name="location_id" bind:value={locationID} disabled={submitting}>
 							<option value="">No location</option>
 							{#each locations as location (location.id)}
-								<option value={String(location.id)}>{location.name}{location.code ? ` (${location.code})` : ''}</option>
+								<option value={String(location.id)}>{location.name}</option>
 							{/each}
 						</select>
 					</div>
