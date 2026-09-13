@@ -229,18 +229,32 @@
 		return status[0].toUpperCase() + status.slice(1);
 	}
 
-	function formatDate(value: string | null): string {
+	type TicketTimestamp = {
+		date: string;
+		time: string;
+	};
+
+	function formatTimestamp(value: string | null): TicketTimestamp | null {
 		if (!value) {
-			return '—';
+			return null;
 		}
 		const date = new Date(value);
 		if (Number.isNaN(date.getTime())) {
-			return '—';
+			return null;
 		}
-		return new Intl.DateTimeFormat(undefined, {
-			dateStyle: 'medium',
-			timeStyle: 'short'
-		}).format(date);
+		const hours = date.getHours();
+		return {
+			date: `${String(date.getDate()).padStart(2, '0')}-${date.toLocaleString('en-US', { month: 'short' })}-${date.getFullYear()}`,
+			time: `${String(hours % 12 || 12).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`
+		};
+	}
+
+	function timestampDate(value: string | null): string {
+		return formatTimestamp(value)?.date ?? '—';
+	}
+
+	function timestampTime(value: string | null): string | null {
+		return formatTimestamp(value)?.time ?? null;
 	}
 </script>
 
@@ -410,15 +424,22 @@
 								<tr>
 									<td>{identityLabel(ticket.requester)}</td>
 									<td>{ticket.location?.name ?? '—'}</td>
-									<td class="ticket-title-cell"><strong>{ticket.title}</strong></td>
+									<td class="ticket-title-cell"><strong class:ticket-title-priority={ticket.priority}>{ticket.title}</strong></td>
 									<td><span class="ticket-description">{descriptionLabel(ticket.description)}</span></td>
 									<td><span class:closed={ticket.status === 'closed'} class="status-badge">{statusLabel(ticket.status)}</span></td>
 									<td>{ticket.accepted_by ? identityLabel(ticket.accepted_by) : '—'}</td>
-									<td>{formatDate(ticket.created_at)}</td>
+									<td>
+										<time class="ticket-timestamp" datetime={ticket.created_at}>
+											<span class="ticket-timestamp-date">{timestampDate(ticket.created_at)}</span>
+											{#if timestampTime(ticket.created_at)}<span class="ticket-timestamp-time">{timestampTime(ticket.created_at)}</span>{/if}
+										</time>
+									</td>
 									<td>
 										<div class="ticket-due-cell">
-											<span>{formatDate(ticket.due_at)}</span>
-											{#if ticket.priority}<span class="priority-badge">Priority</span>{/if}
+											<time class="ticket-timestamp" datetime={ticket.due_at ?? undefined}>
+												<span class="ticket-timestamp-date">{timestampDate(ticket.due_at)}</span>
+												{#if timestampTime(ticket.due_at)}<span class="ticket-timestamp-time">{timestampTime(ticket.due_at)}</span>{/if}
+											</time>
 										</div>
 									</td>
 								</tr>
@@ -433,7 +454,7 @@
 							<div class="ticket-card-heading">
 								<div class="ticket-card-title">
 									<span class="ticket-card-icon" aria-hidden="true">◈</span>
-									<h2>{ticket.title}</h2>
+									<h2 class:ticket-title-priority={ticket.priority}>{ticket.title}</h2>
 								</div>
 								<span class:closed={ticket.status === 'closed'} class="status-badge">{statusLabel(ticket.status)}</span>
 							</div>
@@ -441,10 +462,15 @@
 								<div><span>Location</span><strong>{ticket.location?.name ?? '—'}</strong></div>
 								{#if ticket.accepted_by}<div><span>Owner</span><strong>{identityLabel(ticket.accepted_by)}</strong></div>{/if}
 								<div><span>Requester</span><strong>{identityLabel(ticket.requester)}</strong></div>
-								<div><span>Created</span><strong>{formatDate(ticket.created_at)}</strong></div>
+								<div>
+									<span>Created</span>
+									<strong class="ticket-timestamp">
+										<span class="ticket-timestamp-date">{timestampDate(ticket.created_at)}</span>
+										{#if timestampTime(ticket.created_at)}<span class="ticket-timestamp-time">{timestampTime(ticket.created_at)}</span>{/if}
+									</strong>
+								</div>
 							</div>
 							{#if ticket.description?.trim()}<p class="ticket-card-description">{ticket.description.trim()}</p>{/if}
-							{#if ticket.priority}<span class="priority-badge">Priority</span>{/if}
 						</article>
 					{/each}
 				</div>

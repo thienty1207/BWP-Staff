@@ -19,14 +19,38 @@ test('New Request remains a focused component and the Tickets page exposes its a
 	expect(page).not.toContain('Refresh');
 });
 
-test('Location options render names only while preserving database IDs', async () => {
+test('Location results render names only while preserving database IDs', async () => {
 	const dialogPath = new URL('../src/lib/components/NewRequestDialog.svelte', import.meta.url);
 	const dialog = await Bun.file(dialogPath).text();
-	const locationOption = dialog.match(/<option value=\{String\(location\.id\)\}>[^<]*<\/option>/)?.[0];
 
-	expect(locationOption).toBe('<option value={String(location.id)}>{location.name}</option>');
-	expect(locationOption).not.toContain('location.code');
+	expect(dialog).toContain('{location.name}');
+	expect(dialog).toContain('locationID = String(location.id)');
 	expect(dialog).not.toContain('96BWV-ROOM-1024');
 	expect(dialog).not.toContain('96BWV-AREA-017');
 	expect(dialog).toContain('<option value={String(department.id)}>{department.name}</option>');
+});
+
+test('Location picker is searchable, bounded, and preserves clear-to-null semantics', async () => {
+	const dialogPath = new URL('../src/lib/components/NewRequestDialog.svelte', import.meta.url);
+	const stylesPath = new URL('../src/lib/styles/app.css', import.meta.url);
+	const dialog = await Bun.file(dialogPath).text();
+	const styles = await Bun.file(stylesPath).text();
+
+	expect(dialog).toContain('role="combobox"');
+	expect(dialog).toContain('role="listbox"');
+	expect(dialog).toContain('Searching…');
+	expect(dialog).toContain('No locations found.');
+	expect(dialog).toContain('Unable to load locations. Retry.');
+	expect(dialog).toContain('setTimeout');
+	expect(dialog).toContain('}, 180);');
+	expect(dialog).toContain('locationRequestSequence');
+	expect(dialog).toContain('requestSequence !== locationRequestSequence');
+	expect(dialog).toContain('locationID = \'\'');
+	expect(dialog).toContain('No location');
+	expect(dialog).not.toContain('location.code');
+	expect(dialog).not.toContain('BWP-AREA-');
+	expect(dialog).not.toContain('96BWV-');
+	expect(styles).toContain('new-request-location-results');
+	expect(styles).toContain('overflow-y: auto');
+	expect(styles).toContain('max-height: min(12rem, 34svh)');
 });

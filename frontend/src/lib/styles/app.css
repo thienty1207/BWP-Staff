@@ -833,6 +833,23 @@ h2 {
 	line-height: 1.35;
 }
 
+.ticket-title-priority {
+	color: var(--danger);
+	font-weight: 800;
+}
+
+.ticket-timestamp {
+	display: inline-grid;
+	gap: 0.12rem;
+	line-height: 1.25;
+}
+
+.ticket-timestamp-date,
+.ticket-timestamp-time {
+	display: block;
+	white-space: nowrap;
+}
+
 .ticket-description {
 	display: -webkit-box;
 	max-width: 19rem;
@@ -850,7 +867,6 @@ h2 {
 	text-align: center;
 }
 
-.priority-badge,
 .status-badge {
 	display: inline-flex;
 	align-items: center;
@@ -859,12 +875,6 @@ h2 {
 	font-size: 0.72rem;
 	font-weight: 800;
 	white-space: nowrap;
-}
-
-.priority-badge {
-	padding: 0.2rem 0.5rem;
-	background: color-mix(in srgb, var(--danger) 13%, var(--surface));
-	color: var(--danger);
 }
 
 .status-badge {
@@ -1000,6 +1010,69 @@ h2 {
 .new-request-field textarea:focus {
 	border-color: var(--accent);
 	box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.new-request-location-picker {
+	position: relative;
+	min-width: 0;
+}
+
+.new-request-location-results {
+	position: absolute;
+	top: calc(100% + 0.35rem);
+	left: 0;
+	z-index: 5;
+	display: grid;
+	width: 100%;
+	max-height: min(16rem, 40svh);
+	overflow-y: auto;
+	padding: 0.35rem;
+	border: 1px solid var(--border);
+	border-radius: 0.7rem;
+	background: var(--surface);
+	box-shadow: 0 16px 36px rgb(0 0 0 / 22%);
+}
+
+.new-request-location-option {
+	min-width: 0;
+	padding: 0.7rem 0.75rem;
+	border: 0;
+	border-radius: 0.45rem;
+	background: transparent;
+	color: var(--text);
+	font: inherit;
+	text-align: left;
+	white-space: normal;
+}
+
+.new-request-location-option:hover,
+.new-request-location-option:focus-visible,
+.new-request-location-option.highlighted {
+	background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+	color: var(--text);
+}
+
+.new-request-location-state {
+	margin: 0;
+	padding: 0.75rem;
+	color: var(--text-muted);
+	font-size: 0.82rem;
+}
+
+.new-request-location-error {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.6rem;
+	padding: 0.45rem;
+	color: var(--danger);
+	font-size: 0.82rem;
+}
+
+.new-request-location-error .secondary-button {
+	flex: 0 0 auto;
+	min-height: 2.25rem;
+	padding: 0.45rem 0.65rem;
 }
 
 .new-request-help,
@@ -1198,10 +1271,6 @@ h2 {
 		line-height: 1.4;
 	}
 
-	.ticket-card > .priority-badge {
-		margin-top: 0.65rem;
-	}
-
 }
 
 @media (max-width: 560px) {
@@ -1255,6 +1324,10 @@ h2 {
 		max-height: calc(100svh - 1rem);
 		border-radius: 1rem 1rem 0.75rem 0.75rem;
 		padding: 1rem;
+	}
+
+	.new-request-location-results {
+		max-height: min(12rem, 34svh);
 	}
 
 	.new-request-options {

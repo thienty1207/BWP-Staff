@@ -17,9 +17,9 @@ func (service *Service) ListDepartments(ctx context.Context) ([]Department, erro
 	return service.repository.ListDepartments(ctx)
 }
 
-func (service *Service) ListLocations(ctx context.Context) ([]Location, error) {
+func (service *Service) ListLocations(ctx context.Context, query LocationQuery) ([]Location, error) {
 	if service == nil || service.repository == nil {
 		return nil, errLookupServiceNotConfigured
 	}
-	return service.repository.ListLocations(ctx)
+	return service.repository.ListLocations(ctx, query)
 }

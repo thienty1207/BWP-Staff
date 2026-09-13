@@ -3,6 +3,11 @@ import { LookupApiError, type LookupDepartment, type LookupLocation } from './mo
 const departmentsPath = '/api/v1/departments';
 const locationsPath = '/api/v1/locations';
 
+export type LocationLookupOptions = {
+	q?: string;
+	limit?: number;
+};
+
 export async function getDepartments(): Promise<LookupDepartment[]> {
 	const payload = await getLookupPayload(departmentsPath);
 	if (!isRecord(payload) || !Array.isArray(payload.departments)) {
@@ -16,8 +21,17 @@ export async function getDepartments(): Promise<LookupDepartment[]> {
 	return departments as LookupDepartment[];
 }
 
-export async function getLocations(): Promise<LookupLocation[]> {
-	const payload = await getLookupPayload(locationsPath);
+export async function getLocations(options: LocationLookupOptions = {}): Promise<LookupLocation[]> {
+	const query = new URLSearchParams();
+	const search = options.q?.trim();
+	if (search) {
+		query.set('q', search);
+	}
+	if (options.limit !== undefined) {
+		query.set('limit', String(options.limit));
+	}
+	const path = query.toString() ? `${locationsPath}?${query.toString()}` : locationsPath;
+	const payload = await getLookupPayload(path);
 	if (!isRecord(payload) || !Array.isArray(payload.locations)) {
 		throw retryableError(200);
 	}

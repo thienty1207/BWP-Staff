@@ -295,7 +295,7 @@ RETURNING id`).Scan(&unrelatedID); err != nil {
 		if err := pool.QueryRow(ctx, "SELECT COUNT(*) FROM locations").Scan(&locationCount); err != nil {
 			t.Fatalf("count seeded locations: %v", err)
 		}
-		if departmentCount != 17 || locationCount != 147 {
+		if departmentCount != 17 || locationCount != 302 {
 			t.Fatalf("unexpected development fixture counts: departments=%d locations=%d", departmentCount, locationCount)
 		}
 

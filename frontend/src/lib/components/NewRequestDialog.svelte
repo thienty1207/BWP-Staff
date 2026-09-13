@@ -1,6 +1,7 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { getDepartments, getLocations } from '$lib/client/lookups/api';
 	import { LookupApiError, type LookupDepartment, type LookupLocation } from '$lib/client/lookups/model';
@@ -27,10 +28,20 @@
 
 	let departmentID = $state('');
 	let locationID = $state('');
+	let locationQuery = $state('');
+	let locationSearchOpen = $state(false);
+	let locationSearchLoading = $state(false);
+	let locationSearchError = $state('');
+	let highlightedLocationIndex = $state(-1);
+	let selectedLocationLabel = $state('');
+	let locationSearchValue = $state('');
 	let title = $state('');
 	let description = $state('');
 	let priority = $state(false);
 	let dueAt = $state('');
+	let locationSearchTimer: ReturnType<typeof setTimeout> | undefined;
+	let locationRequestSequence = 0;
+	const locationSearchLimit = 10;
 
 	$effect(() => {
 		if (open && !lookupLoadStarted) {
@@ -46,7 +57,10 @@
 		lookupLoading = true;
 		lookupError = '';
 		try {
-			const [nextDepartments, nextLocations] = await Promise.all([getDepartments(), getLocations()]);
+			const [nextDepartments, nextLocations] = await Promise.all([
+				getDepartments(),
+				getLocations({ limit: locationSearchLimit })
+			]);
 			departments = nextDepartments;
 			locations = nextLocations;
 		} catch (error) {
@@ -57,6 +71,120 @@
 			lookupError = 'Unable to load departments and locations. Please try again.';
 		} finally {
 			lookupLoading = false;
+		}
+	}
+
+	function openLocationPicker() {
+		if (!submitting) {
+			locationSearchOpen = true;
+			if (!locationID && locationQuery.trim() === '' && locationSearchValue !== '') {
+				scheduleLocationSearch('');
+			}
+		}
+	}
+
+	function handleLocationInput(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		locationQuery = input.value;
+		if (locationID && locationQuery !== selectedLocationLabel) {
+			locationID = '';
+			selectedLocationLabel = '';
+		}
+		locationSearchOpen = true;
+		scheduleLocationSearch(locationQuery);
+	}
+
+	function scheduleLocationSearch(query: string) {
+		if (locationSearchTimer) {
+			clearTimeout(locationSearchTimer);
+		}
+		locationSearchError = '';
+		locationSearchLoading = true;
+		const requestSequence = ++locationRequestSequence;
+		locationSearchTimer = setTimeout(() => {
+			locationSearchTimer = undefined;
+			void searchLocations(query, requestSequence);
+		}, 180);
+	}
+
+	async function searchLocations(query: string, requestSequence: number) {
+		try {
+			const nextLocations = await getLocations({ q: query.trim(), limit: locationSearchLimit });
+			if (requestSequence !== locationRequestSequence) {
+				return;
+			}
+			locations = nextLocations;
+			locationSearchValue = query.trim();
+			highlightedLocationIndex = -1;
+		} catch (error) {
+			if (requestSequence !== locationRequestSequence) {
+				return;
+			}
+			if (error instanceof LookupApiError && error.kind === 'unauthenticated') {
+				await goto('/login', { replaceState: true });
+				return;
+			}
+			locationSearchError = 'Unable to load locations. Retry.';
+		} finally {
+			if (requestSequence === locationRequestSequence) {
+				locationSearchLoading = false;
+			}
+		}
+	}
+
+	function retryLocationSearch() {
+		if (locationSearchLoading) {
+			return;
+		}
+		locationSearchError = '';
+		locationSearchLoading = true;
+		const requestSequence = ++locationRequestSequence;
+		void searchLocations(locationQuery, requestSequence);
+	}
+
+	function selectLocation(location: LookupLocation) {
+		locationID = String(location.id);
+		locationQuery = location.name;
+		selectedLocationLabel = location.name;
+		locationSearchOpen = false;
+		locationSearchError = '';
+		highlightedLocationIndex = -1;
+	}
+
+	function clearLocation() {
+		if (locationSearchTimer) {
+			clearTimeout(locationSearchTimer);
+			locationSearchTimer = undefined;
+		}
+		locationRequestSequence += 1;
+		locationID = '';
+		locationQuery = '';
+		selectedLocationLabel = '';
+		locationSearchOpen = false;
+		locationSearchError = '';
+		locationSearchLoading = false;
+		highlightedLocationIndex = -1;
+	}
+
+	function handleLocationKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			locationSearchOpen = false;
+			return;
+		}
+		if (!locationSearchOpen || locations.length === 0) {
+			return;
+		}
+		if (event.key === 'ArrowDown') {
+			event.preventDefault();
+			highlightedLocationIndex = Math.min(highlightedLocationIndex + 1, locations.length - 1);
+		}
+		if (event.key === 'ArrowUp') {
+			event.preventDefault();
+			highlightedLocationIndex = Math.max(highlightedLocationIndex - 1, 0);
+		}
+		if (event.key === 'Enter' && highlightedLocationIndex >= 0) {
+			event.preventDefault();
+			selectLocation(locations[highlightedLocationIndex]);
 		}
 	}
 
@@ -176,8 +304,8 @@
 	}
 
 	function resetForm() {
+		clearLocation();
 		departmentID = '';
-		locationID = '';
 		title = '';
 		description = '';
 		priority = false;
@@ -185,6 +313,12 @@
 		validationError = '';
 		submitError = '';
 	}
+
+	onDestroy(() => {
+		if (locationSearchTimer) {
+			clearTimeout(locationSearchTimer);
+		}
+	});
 
 	function createTicketErrorMessage(code?: CreateTicketErrorCode): string {
 		if (code === 'department_unavailable') {
@@ -231,12 +365,52 @@
 
 					<div class="new-request-field">
 						<label for="new-request-location">Location</label>
-						<select id="new-request-location" name="location_id" bind:value={locationID} disabled={submitting}>
-							<option value="">No location</option>
-							{#each locations as location (location.id)}
-								<option value={String(location.id)}>{location.name}</option>
-							{/each}
-						</select>
+						<div class="new-request-location-picker">
+							<input
+								id="new-request-location"
+								type="search"
+								name="location_search"
+								role="combobox"
+								aria-autocomplete="list"
+								aria-controls="new-request-location-results"
+								aria-expanded={locationSearchOpen}
+								placeholder="Search locations"
+								autocomplete="off"
+								bind:value={locationQuery}
+								onfocus={openLocationPicker}
+								oninput={handleLocationInput}
+								onkeydown={handleLocationKeydown}
+								disabled={submitting}
+							/>
+							{#if locationSearchOpen}
+								<div id="new-request-location-results" class="new-request-location-results" role="listbox" aria-label="Locations">
+									<button class="new-request-location-option" type="button" role="option" aria-selected={locationID === ''} onclick={clearLocation}>No location</button>
+									{#if locationSearchLoading}
+										<p class="new-request-location-state" role="status">Searching…</p>
+									{:else if locationSearchError}
+										<div class="new-request-location-error" role="alert">
+											<span>{locationSearchError}</span>
+											<button class="secondary-button" type="button" onclick={retryLocationSearch}>Retry</button>
+										</div>
+									{:else if locations.length === 0}
+										<p class="new-request-location-state">No locations found.</p>
+									{:else}
+										{#each locations as location, index (location.id)}
+											<button
+												class:highlighted={index === highlightedLocationIndex}
+												class="new-request-location-option"
+												type="button"
+												role="option"
+												aria-selected={locationID === String(location.id)}
+												onclick={() => selectLocation(location)}
+											>
+												{location.name}
+											</button>
+										{/each}
+									{/if}
+								</div>
+							{/if}
+						</div>
 					</div>
 
 					<div class="new-request-field">

@@ -24,10 +24,8 @@ test('ticket list renders real descriptions and accepted_by owner labels', async
 	expect(page).toContain('ticket-description');
 	expect(styles).toContain('-webkit-line-clamp: 2');
 
-	const dueCellIndex = page.indexOf('ticket-due-cell');
-	const priorityIndex = page.indexOf('ticket.priority', dueCellIndex);
-	expect(dueCellIndex).toBeGreaterThan(-1);
-	expect(priorityIndex).toBeGreaterThan(dueCellIndex);
+	expect(page).toContain('ticket-due-cell');
+	expect(page).toContain('ticket.priority');
 });
 
 test('mobile ticket list uses a compact summary without legacy stacked fields', async () => {
@@ -40,4 +38,19 @@ test('mobile ticket list uses a compact summary without legacy stacked fields', 
 	expect(page).not.toContain('<dt>Assignment</dt>');
 	expect(page).not.toContain('Ticket Detail');
 	expect(page).not.toContain('href="/tickets');
+});
+
+test('ticket list splits timestamps and styles priority titles without a badge', async () => {
+	const page = await Bun.file(pagePath).text();
+	const styles = await Bun.file(stylesPath).text();
+
+	expect(page).toContain('ticket-timestamp');
+	expect(page).toContain('ticket-timestamp-date');
+	expect(page).toContain('ticket-timestamp-time');
+	expect(page).toContain('—');
+	expect(page).toContain('class:ticket-title-priority={ticket.priority}');
+	expect(page).not.toContain('class="priority-badge"');
+	expect(page).not.toContain('>Priority</span>');
+	expect(styles).toContain('.ticket-title-priority');
+	expect(styles).toContain('font-weight: 800');
 });

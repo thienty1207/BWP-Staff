@@ -44,7 +44,7 @@ ORDER BY name ASC, id ASC`)
 	return departments, nil
 }
 
-func (repository *Repository) ListLocations(ctx context.Context) ([]Location, error) {
+func (repository *Repository) ListLocations(ctx context.Context, query LocationQuery) ([]Location, error) {
 	if repository == nil || repository.pool == nil {
 		return nil, fmt.Errorf("lookup repository is not configured")
 	}
@@ -53,7 +53,22 @@ func (repository *Repository) ListLocations(ctx context.Context) ([]Location, er
 SELECT id, code, name
 FROM locations
 WHERE is_active = TRUE
-ORDER BY name ASC, id ASC`)
+  AND ($1 = '' OR LOWER(name) LIKE '%' || LOWER($1) || '%')
+ORDER BY
+    CASE
+        WHEN $1 = '' THEN 4
+        WHEN LOWER(name) = LOWER($1) THEN 0
+        WHEN LOWER(name) LIKE LOWER($1) || '%' THEN 1
+        WHEN EXISTS (
+            SELECT 1
+            FROM regexp_split_to_table(LOWER(name), '[^[:alnum:]]+') AS token
+            WHERE token <> '' AND token LIKE LOWER($1) || '%'
+        ) THEN 2
+        ELSE 3
+    END ASC,
+    name ASC,
+    id ASC
+LIMIT NULLIF($2::int, 0)`, query.Search, effectiveLocationLimit(query))
 	if err != nil {
 		return nil, fmt.Errorf("query locations: %w", err)
 	}
@@ -71,4 +86,11 @@ ORDER BY name ASC, id ASC`)
 		return nil, fmt.Errorf("iterate locations: %w", err)
 	}
 	return locations, nil
+}
+
+func effectiveLocationLimit(query LocationQuery) int {
+	if query.Search == "" && !query.HasLimit {
+		return 0
+	}
+	return query.Limit
 }

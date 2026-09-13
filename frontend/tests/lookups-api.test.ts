@@ -33,6 +33,17 @@ test('lookup APIs distinguish unauthenticated and retryable/malformed responses'
 	await expect(getLocations()).rejects.toMatchObject({ kind: 'retryable', status: 200 });
 });
 
+test('location lookup sends trimmed search and bounded limit', async () => {
+	let requestURL = '';
+	globalThis.fetch = async (input) => {
+		requestURL = String(input);
+		return new Response(JSON.stringify({ locations: [{ id: 15, code: null, name: 'Server Room' }] }), { status: 200 });
+	};
+
+	await expect(getLocations({ q: '  server  ', limit: 10 })).resolves.toEqual([{ id: 15, code: null, name: 'Server Room' }]);
+	expect(requestURL).toBe('/api/v1/locations?q=server&limit=10');
+});
+
 test('RFC3339 ticket timestamps require an explicit timezone-shaped value', async () => {
 	const { isRFC3339Timestamp } = await import('../src/lib/client/tickets/api');
 

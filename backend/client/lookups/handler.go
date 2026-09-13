@@ -32,7 +32,15 @@ func (handler *handler) departments(c fiber.Ctx) error {
 }
 
 func (handler *handler) locations(c fiber.Ctx) error {
-	locations, err := handler.service.ListLocations(c.Context())
+	query, err := parseLocationQueryValues(c.Queries())
+	if err != nil {
+		return &httperror.AppError{
+			Code:       "invalid_request",
+			Message:    "Invalid request",
+			HTTPStatus: fiber.StatusBadRequest,
+		}
+	}
+	locations, err := handler.service.ListLocations(c.Context(), query)
 	if err != nil {
 		return err
 	}
