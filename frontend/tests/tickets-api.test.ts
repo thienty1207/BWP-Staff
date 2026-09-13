@@ -8,12 +8,13 @@ const page = {
 		{
 			id: 101,
 			title: 'Air conditioner request',
+			description: null,
 			status: 'pending',
 			priority: true,
 			due_at: null,
 			created_at: '2026-09-11T10:00:00Z',
 			updated_at: '2026-09-11T10:00:00Z',
-			requester: { id: 10, full_name: 'Requester' },
+			requester: { id: 10, full_name: 'Requester', department_code: 'IT' },
 			department: { id: 1, code: 'IT', name: 'IT Department' },
 			location: null,
 			accepted_by: null,
@@ -59,6 +60,23 @@ test('ticket list sends the selected view through the relative authenticated end
 	expect(String(requestInput)).toBe('/api/v1/tickets?view=open&limit=50');
 	expect(requestInit?.method).toBe('GET');
 	expect(requestInit?.credentials).toBe('include');
+});
+
+test('ticket list preserves description and requester/owner department codes', async () => {
+	const acceptedTicket = {
+		...page.tickets[0],
+		status: 'accepted',
+		description: 'The real ticket description.',
+		requester: { id: 10, full_name: 'Requester', department_code: 'REC' },
+		accepted_by: { id: 20, full_name: 'Owner', department_code: 'IT' }
+	};
+	respondWithJson({ tickets: [acceptedTicket], page: { has_more: false, next_before_created_at: null, next_before_id: null } });
+
+	const result = await listTickets('open');
+
+	expect(result.tickets[0].description).toBe('The real ticket description.');
+	expect(result.tickets[0].requester.department_code).toBe('REC');
+	expect(result.tickets[0].accepted_by?.department_code).toBe('IT');
 });
 
 test('ticket list sends both cursor fields for keyset pagination', async () => {

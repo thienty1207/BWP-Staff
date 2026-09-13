@@ -38,6 +38,7 @@ type ticketPage struct {
 type ticketResponse struct {
 	ID                  int64               `json:"id"`
 	Title               string              `json:"title"`
+	Description         *string             `json:"description"`
 	Status              string              `json:"status"`
 	Priority            bool                `json:"priority"`
 	DueAt               *time.Time          `json:"due_at"`
@@ -54,8 +55,9 @@ type ticketResponse struct {
 }
 
 type identitySummary struct {
-	ID       int64  `json:"id"`
-	FullName string `json:"full_name"`
+	ID             int64  `json:"id"`
+	FullName       string `json:"full_name"`
+	DepartmentCode string `json:"department_code"`
 }
 
 type departmentSummary struct {
@@ -77,6 +79,7 @@ type ticketFixture struct {
 	AssignedDepartmentID int64
 	SecondAssignedDeptID int64
 	PrimaryLocationID    int64
+	AcceptedUserID       int64
 	AssignedUserID       int64
 	SecondAssignedUserID int64
 	FirstOpenTicketID    int64
@@ -115,19 +118,19 @@ func TestSPEC05TicketsListRequiresAuthAndReturnsRealRelationalData(t *testing.T)
 		if newest.ID != fixture.SecondOpenTicketID || newest.Title != "Accepted open request" || newest.Status != "accepted" {
 			t.Fatalf("unexpected newest open ticket: %+v", newest)
 		}
-		if !newest.Priority || newest.DueAt == nil {
-			t.Fatalf("priority/due_at were not returned: %+v", newest)
+		if newest.Description == nil || *newest.Description != "Accepted ticket description" || !newest.Priority || newest.DueAt == nil {
+			t.Fatalf("description/priority/due_at were not returned: %+v", newest)
 		}
 		if newest.Location == nil || newest.Location.ID != fixture.PrimaryLocationID || newest.Location.Code != "LOBBY" {
 			t.Fatalf("unexpected joined location: %+v", newest.Location)
 		}
-		if newest.Requester.ID != fixture.PrimaryUserID || newest.Requester.FullName != "SPEC-05 Requester" {
+		if newest.Requester.ID != fixture.PrimaryUserID || newest.Requester.FullName != "SPEC-05 Requester" || newest.Requester.DepartmentCode != "SPEC05" {
 			t.Fatalf("unexpected requester identity: %+v", newest.Requester)
 		}
 		if newest.Department.ID != fixture.PrimaryDepartmentID || newest.Department.Code != "SPEC05" {
 			t.Fatalf("unexpected original department: %+v", newest.Department)
 		}
-		if newest.AcceptedBy == nil || newest.AcceptedBy.ID != fixture.AssignedUserID || newest.AcceptedAt == nil {
+		if newest.AcceptedBy == nil || newest.AcceptedBy.ID != fixture.AcceptedUserID || newest.AcceptedBy.DepartmentCode != "SPEC05-HK" || newest.AcceptedAt == nil {
 			t.Fatalf("unexpected accepted identity/time: %+v", newest)
 		}
 		if len(newest.AssignedDepartments) != 2 || newest.AssignedDepartments[0].ID != fixture.AssignedDepartmentID || newest.AssignedDepartments[1].ID != fixture.SecondAssignedDeptID {
@@ -136,19 +139,22 @@ func TestSPEC05TicketsListRequiresAuthAndReturnsRealRelationalData(t *testing.T)
 		if len(newest.AssignedUsers) != 2 || newest.AssignedUsers[0].ID != fixture.AssignedUserID || newest.AssignedUsers[1].ID != fixture.SecondAssignedUserID {
 			t.Fatalf("unexpected user assignments: %+v", newest.AssignedUsers)
 		}
+		if newest.AssignedUsers[0].ID == newest.AcceptedBy.ID {
+			t.Fatal("assignment incorrectly redefined owner")
+		}
 
 		oldest := body.Tickets[1]
-		if oldest.ID != fixture.FirstOpenTicketID || oldest.Status != "pending" || oldest.Priority || oldest.DueAt != nil {
+		if oldest.ID != fixture.FirstOpenTicketID || oldest.Status != "pending" || oldest.Description != nil || oldest.Priority || oldest.DueAt != nil {
 			t.Fatalf("unexpected oldest open ticket: %+v", oldest)
 		}
-		if oldest.Location != nil || oldest.AcceptedBy != nil || oldest.AcceptedAt != nil || oldest.ClosedAt != nil {
+		if oldest.Location != nil || oldest.AcceptedBy != nil || oldest.AcceptedAt != nil || oldest.ClosedAt != nil || oldest.Requester.DepartmentCode != "SPEC05" {
 			t.Fatalf("nullable ticket fields were not preserved: %+v", oldest)
 		}
 		encoded, err := json.Marshal(body)
 		if err != nil {
 			t.Fatalf("marshal compact ticket response: %v", err)
 		}
-		for _, forbidden := range []string{"description", "password_hash", "session_token_hash", "messages", "attachments"} {
+		for _, forbidden := range []string{"password_hash", "session_token_hash", "messages", "attachments"} {
 			if strings.Contains(string(encoded), forbidden) {
 				t.Fatalf("ticket list response exposed heavy or secret field %q", forbidden)
 			}
@@ -168,6 +174,9 @@ func TestSPEC05TicketsListRequiresAuthAndReturnsRealRelationalData(t *testing.T)
 		}
 		if body.Tickets[0].ClosedAt == nil {
 			t.Fatal("closed ticket did not return closed_at")
+		}
+		if body.Tickets[0].AcceptedBy == nil || body.Tickets[0].AcceptedBy.ID != fixture.AcceptedUserID || body.Tickets[0].AcceptedBy.DepartmentCode != "SPEC05-HK" {
+			t.Fatalf("closed owner was not taken from accepted_by: %+v", body.Tickets[0].AcceptedBy)
 		}
 	})
 
@@ -263,6 +272,7 @@ func seedTicketsFixture(t *testing.T, pool *pgxpool.Pool, ctx context.Context) t
 	fixture.SecondAssignedDeptID = insertDepartment(t, pool, ctx, "SPEC05-FO", "SPEC-05 Front Office")
 	fixture.PrimaryLocationID = insertLocation(t, pool, ctx, "LOBBY", "SPEC-05 Lobby")
 	fixture.PrimaryUserID = insertUser(t, pool, ctx, "spec05-requester", "SPEC05-REQUESTER", "SPEC-05 Requester", fixture.PrimaryDepartmentID)
+	fixture.AcceptedUserID = insertUser(t, pool, ctx, "spec05-owner", "SPEC05-OWNER", "SPEC-05 Owner", fixture.AssignedDepartmentID)
 	fixture.AssignedUserID = insertUser(t, pool, ctx, "spec05-assignee-1", "SPEC05-ASSIGNEE-1", "SPEC-05 Assignee One", fixture.AssignedDepartmentID)
 	fixture.SecondAssignedUserID = insertUser(t, pool, ctx, "spec05-assignee-2", "SPEC05-ASSIGNEE-2", "SPEC-05 Assignee Two", fixture.AssignedDepartmentID)
 
@@ -283,11 +293,11 @@ RETURNING id`, fixture.PrimaryUserID, fixture.PrimaryDepartmentID, fixture.OpenC
 	dueAt := fixture.OpenCreatedAt.Add(2 * time.Hour)
 	if err = pool.QueryRow(ctx, `
 INSERT INTO tickets (
-    requester_id, department_id, location_id, title, status, accepted_by,
+    requester_id, department_id, location_id, title, description, status, accepted_by,
     accepted_at, priority, due_at, created_at, updated_at
 )
-VALUES ($1, $2, $3, 'Accepted open request', 'accepted'::ticket_status, $4, $5, TRUE, $6, $7, $7)
-RETURNING id`, fixture.PrimaryUserID, fixture.PrimaryDepartmentID, fixture.PrimaryLocationID, fixture.AssignedUserID, acceptedAt, dueAt, fixture.OpenCreatedAt).Scan(&fixture.SecondOpenTicketID); err != nil {
+VALUES ($1, $2, $3, 'Accepted open request', 'Accepted ticket description', 'accepted'::ticket_status, $4, $5, TRUE, $6, $7, $7)
+RETURNING id`, fixture.PrimaryUserID, fixture.PrimaryDepartmentID, fixture.PrimaryLocationID, fixture.AcceptedUserID, acceptedAt, dueAt, fixture.OpenCreatedAt).Scan(&fixture.SecondOpenTicketID); err != nil {
 		t.Fatalf("insert accepted ticket: %v", err)
 	}
 
@@ -298,7 +308,7 @@ INSERT INTO tickets (
     closed_by, closed_at, priority, created_at, updated_at
 )
 VALUES ($1, $2, 'Closed request', 'closed'::ticket_status, $3, $4, $1, $5, FALSE, $6, $6)
-RETURNING id`, fixture.PrimaryUserID, fixture.PrimaryDepartmentID, fixture.AssignedUserID, closedAt.Add(-20*time.Minute), closedAt, fixture.ClosedCreatedAt).Scan(&fixture.ClosedTicketID); err != nil {
+RETURNING id`, fixture.PrimaryUserID, fixture.PrimaryDepartmentID, fixture.AcceptedUserID, closedAt.Add(-20*time.Minute), closedAt, fixture.ClosedCreatedAt).Scan(&fixture.ClosedTicketID); err != nil {
 		t.Fatalf("insert closed ticket: %v", err)
 	}
 

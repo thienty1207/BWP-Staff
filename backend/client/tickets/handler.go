@@ -80,7 +80,11 @@ func (handler *handler) create(c fiber.Ctx) error {
 			HTTPStatus: fiber.StatusUnauthorized,
 		}
 	}
-	ticket, err := handler.service.Create(c.Context(), IdentitySummary{ID: principal.User.ID, FullName: principal.User.FullName}, validated)
+	ticket, err := handler.service.Create(c.Context(), IdentitySummary{
+		ID:             principal.User.ID,
+		FullName:       principal.User.FullName,
+		DepartmentCode: principal.User.Department.Code,
+	}, validated)
 	if errors.Is(err, ErrDepartmentUnavailable) {
 		return &httperror.AppError{Code: "department_unavailable", Message: "Department is unavailable", HTTPStatus: fiber.StatusBadRequest}
 	}

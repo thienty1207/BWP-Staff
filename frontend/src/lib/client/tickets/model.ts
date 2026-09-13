@@ -3,6 +3,7 @@ export type TicketView = 'open' | 'closed';
 export type TicketIdentity = {
 	id: number;
 	full_name: string;
+	department_code: string;
 };
 
 export type TicketDepartment = {
@@ -16,6 +17,7 @@ export type TicketLocation = TicketDepartment;
 export type TicketSummary = {
 	id: number;
 	title: string;
+	description: string | null;
 	status: 'pending' | 'accepted' | 'closed';
 	priority: boolean;
 	due_at: string | null;

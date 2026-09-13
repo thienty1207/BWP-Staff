@@ -120,7 +120,10 @@ func TestSPEC06CreateTicketUsesSessionRequesterAndWritesActivityAtomically(t *te
 	if body.Ticket.ID <= 0 || body.Ticket.Title != "Lobby TV is not displaying content" || body.Ticket.Status != "pending" || !body.Ticket.Priority || body.Ticket.DueAt == nil {
 		t.Fatalf("unexpected created ticket summary: %+v", body.Ticket)
 	}
-	if body.Ticket.Requester.ID != userID || body.Ticket.Requester.FullName != "SPEC-06 Create User" {
+	if body.Ticket.Description == nil || *body.Ticket.Description != "Optional details" {
+		t.Fatalf("created description was not returned: %+v", body.Ticket.Description)
+	}
+	if body.Ticket.Requester.ID != userID || body.Ticket.Requester.FullName != "SPEC-06 Create User" || body.Ticket.Requester.DepartmentCode != "SPEC06-CREATE" {
 		t.Fatalf("requester was not taken from the authenticated principal: %+v", body.Ticket.Requester)
 	}
 	if body.Ticket.Department.ID != departmentID || body.Ticket.Location == nil || body.Ticket.Location.ID != locationID {
@@ -165,7 +168,7 @@ WHERE ticket_id = $1`, body.Ticket.ID).Scan(&activityActor, &activityAction); er
 	if err != nil {
 		t.Fatalf("marshal created response: %v", err)
 	}
-	for _, forbidden := range []string{"password", "token", "session", "description"} {
+	for _, forbidden := range []string{"password", "token", "session"} {
 		if strings.Contains(strings.ToLower(string(encoded)), forbidden) {
 			t.Fatalf("created response exposed forbidden field %q", forbidden)
 		}

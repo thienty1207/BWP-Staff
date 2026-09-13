@@ -46,6 +46,7 @@ type Page struct {
 type Ticket struct {
 	ID                  int64               `json:"id"`
 	Title               string              `json:"title"`
+	Description         *string             `json:"description"`
 	Status              string              `json:"status"`
 	Priority            bool                `json:"priority"`
 	DueAt               *time.Time          `json:"due_at"`
@@ -62,8 +63,9 @@ type Ticket struct {
 }
 
 type IdentitySummary struct {
-	ID       int64  `json:"id"`
-	FullName string `json:"full_name"`
+	ID             int64  `json:"id"`
+	FullName       string `json:"full_name"`
+	DepartmentCode string `json:"department_code"`
 }
 
 type DepartmentSummary struct {

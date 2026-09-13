@@ -149,6 +149,7 @@ function parseTicket(value: unknown): TicketSummary | null {
 	if (
 		!isPositiveSafeInteger(value.id) ||
 		typeof value.title !== 'string' ||
+		(value.description !== null && typeof value.description !== 'string') ||
 		(value.status !== 'pending' && value.status !== 'accepted' && value.status !== 'closed') ||
 		typeof value.priority !== 'boolean' ||
 		!isNullableTimestamp(value.due_at) ||
@@ -171,6 +172,7 @@ function parseTicket(value: unknown): TicketSummary | null {
 	return {
 		id: value.id,
 		title: value.title,
+		description: value.description,
 		status: value.status,
 		priority: value.priority,
 		due_at: value.due_at,
@@ -188,10 +190,15 @@ function parseTicket(value: unknown): TicketSummary | null {
 }
 
 function parseIdentity(value: unknown): TicketIdentity | null {
-	if (!isRecord(value) || !isPositiveSafeInteger(value.id) || typeof value.full_name !== 'string') {
+	if (
+		!isRecord(value) ||
+		!isPositiveSafeInteger(value.id) ||
+		typeof value.full_name !== 'string' ||
+		typeof value.department_code !== 'string'
+	) {
 		return null;
 	}
-	return { id: value.id, full_name: value.full_name };
+	return { id: value.id, full_name: value.full_name, department_code: value.department_code };
 }
 
 function parseNullableIdentity(value: unknown): TicketIdentity | null {

@@ -31,6 +31,7 @@ func (repository *Repository) List(ctx context.Context, query ListQuery) (ListRe
 SELECT
     t.id,
     t.title,
+    t.description,
     t.status::text,
     t.priority,
     t.due_at,
@@ -38,6 +39,7 @@ SELECT
     t.updated_at,
     requester.id,
     requester.full_name,
+    requester_department.code,
     destination.id,
     destination.code,
     destination.name,
@@ -46,13 +48,16 @@ SELECT
     location.name,
     accepted_user.id,
     accepted_user.full_name,
+    accepted_department.code,
     t.accepted_at,
     t.closed_at
 FROM tickets AS t
 JOIN users AS requester ON requester.id = t.requester_id
+JOIN departments AS requester_department ON requester_department.id = requester.department_id
 JOIN departments AS destination ON destination.id = t.department_id
 LEFT JOIN locations AS location ON location.id = t.location_id
 LEFT JOIN users AS accepted_user ON accepted_user.id = t.accepted_by
+LEFT JOIN departments AS accepted_department ON accepted_department.id = accepted_user.department_id
 WHERE (
     ($1 = 'open' AND t.status IN ('pending'::ticket_status, 'accepted'::ticket_status))
     OR ($1 = 'closed' AND t.status = 'closed'::ticket_status)
@@ -71,17 +76,19 @@ LIMIT $4`, string(query.View), query.BeforeCreatedAt, query.BeforeID, query.Limi
 	tickets := make([]Ticket, 0, query.Limit)
 	for rows.Next() {
 		var (
-			ticket       Ticket
-			status       string
-			locationID   *int64
-			locationCode *string
-			locationName *string
-			acceptedID   *int64
-			acceptedName *string
+			ticket                 Ticket
+			status                 string
+			acceptedDepartmentCode *string
+			locationID             *int64
+			locationCode           *string
+			locationName           *string
+			acceptedID             *int64
+			acceptedName           *string
 		)
 		if err := rows.Scan(
 			&ticket.ID,
 			&ticket.Title,
+			&ticket.Description,
 			&status,
 			&ticket.Priority,
 			&ticket.DueAt,
@@ -89,6 +96,7 @@ LIMIT $4`, string(query.View), query.BeforeCreatedAt, query.BeforeID, query.Limi
 			&ticket.UpdatedAt,
 			&ticket.Requester.ID,
 			&ticket.Requester.FullName,
+			&ticket.Requester.DepartmentCode,
 			&ticket.Department.ID,
 			&ticket.Department.Code,
 			&ticket.Department.Name,
@@ -97,6 +105,7 @@ LIMIT $4`, string(query.View), query.BeforeCreatedAt, query.BeforeID, query.Limi
 			&locationName,
 			&acceptedID,
 			&acceptedName,
+			&acceptedDepartmentCode,
 			&ticket.AcceptedAt,
 			&ticket.ClosedAt,
 		); err != nil {
@@ -107,7 +116,7 @@ LIMIT $4`, string(query.View), query.BeforeCreatedAt, query.BeforeID, query.Limi
 			ticket.Location = &LocationSummary{ID: *locationID, Code: dereferenceString(locationCode), Name: dereferenceString(locationName)}
 		}
 		if acceptedID != nil {
-			ticket.AcceptedBy = &IdentitySummary{ID: *acceptedID, FullName: dereferenceString(acceptedName)}
+			ticket.AcceptedBy = &IdentitySummary{ID: *acceptedID, FullName: dereferenceString(acceptedName), DepartmentCode: dereferenceString(acceptedDepartmentCode)}
 		}
 		ticket.AssignedDepartments = make([]DepartmentSummary, 0)
 		ticket.AssignedUsers = make([]IdentitySummary, 0)
@@ -232,6 +241,7 @@ RETURNING id, status::text, priority, due_at, created_at, updated_at`,
 	}
 
 	ticket.Title = input.Title
+	ticket.Description = input.Description
 	ticket.Status = status
 	ticket.Requester = requester
 	ticket.Department = department
@@ -292,9 +302,11 @@ func (repository *Repository) loadUserAssignments(ctx context.Context, tickets [
 SELECT
     assignment.ticket_id,
     assigned_user.id,
-    assigned_user.full_name
+    assigned_user.full_name,
+    assigned_department.code
 FROM ticket_assigned_users AS assignment
 JOIN users AS assigned_user ON assigned_user.id = assignment.user_id
+JOIN departments AS assigned_department ON assigned_department.id = assigned_user.department_id
 WHERE assignment.ticket_id = ANY($1::bigint[])
 ORDER BY assignment.ticket_id ASC, assignment.id ASC`, ticketIDs)
 	if err != nil {
@@ -309,7 +321,7 @@ ORDER BY assignment.ticket_id ASC, assignment.id ASC`, ticketIDs)
 	for rows.Next() {
 		var ticketID int64
 		var user IdentitySummary
-		if err := rows.Scan(&ticketID, &user.ID, &user.FullName); err != nil {
+		if err := rows.Scan(&ticketID, &user.ID, &user.FullName, &user.DepartmentCode); err != nil {
 			return fmt.Errorf("scan ticket user assignment: %w", err)
 		}
 		index, ok := byTicketID[ticketID]

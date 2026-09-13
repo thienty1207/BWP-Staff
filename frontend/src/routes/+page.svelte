@@ -7,7 +7,7 @@
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { getCurrentUser, logout } from '$lib/client/auth/api';
 	import { listTickets } from '$lib/client/tickets/api';
-	import { TicketApiError, type TicketListPage, type TicketSummary, type TicketView } from '$lib/client/tickets/model';
+	import { TicketApiError, type TicketIdentity, type TicketListPage, type TicketSummary, type TicketView } from '$lib/client/tickets/model';
 	import type { AuthenticatedUser } from '$lib/client/auth/model';
 	import { AuthApiError } from '$lib/client/auth/model';
 
@@ -217,11 +217,12 @@
 			.join('');
 	}
 
-	function assignmentLabel(ticket: TicketSummary): string {
-		const departments = ticket.assigned_departments.map((department) => department.name);
-		const users = ticket.assigned_users.map((assignedUser) => assignedUser.full_name);
-		const assignments = [...departments, ...users];
-		return assignments.length > 0 ? assignments.join(', ') : 'Unassigned';
+	function identityLabel(identity: TicketIdentity): string {
+		return identity.department_code ? `${identity.full_name} (${identity.department_code})` : identity.full_name;
+	}
+
+	function descriptionLabel(description: string | null): string {
+		return description?.trim() || '—';
 	}
 
 	function statusLabel(status: TicketSummary['status']): string {
@@ -394,34 +395,32 @@
 					<table>
 						<thead>
 							<tr>
-								<th scope="col">ID</th>
-								<th scope="col">Request</th>
-								<th scope="col">Department</th>
-								<th scope="col">Location</th>
 								<th scope="col">Requester</th>
-								<th scope="col">Assignment</th>
+								<th scope="col">Location</th>
+								<th scope="col">Title</th>
+								<th scope="col">Description</th>
 								<th scope="col">Status</th>
-								<th scope="col">Created</th>
-								<th scope="col">Due</th>
+								<th scope="col">Owner</th>
+								<th scope="col">Created On</th>
+								<th scope="col">Due Date</th>
 							</tr>
 						</thead>
 						<tbody>
 							{#each tickets as ticket (ticket.id)}
 								<tr>
-									<td class="ticket-id">#{ticket.id}</td>
+									<td>{identityLabel(ticket.requester)}</td>
+									<td>{ticket.location?.name ?? '—'}</td>
+									<td class="ticket-title-cell"><strong>{ticket.title}</strong></td>
+									<td><span class="ticket-description">{descriptionLabel(ticket.description)}</span></td>
+									<td><span class:closed={ticket.status === 'closed'} class="status-badge">{statusLabel(ticket.status)}</span></td>
+									<td>{ticket.accepted_by ? identityLabel(ticket.accepted_by) : '—'}</td>
+									<td>{formatDate(ticket.created_at)}</td>
 									<td>
-										<div class="request-cell">
-											<strong>{ticket.title}</strong>
+										<div class="ticket-due-cell">
+											<span>{formatDate(ticket.due_at)}</span>
 											{#if ticket.priority}<span class="priority-badge">Priority</span>{/if}
 										</div>
 									</td>
-									<td>{ticket.department.name}</td>
-									<td>{ticket.location?.name ?? '—'}</td>
-									<td>{ticket.requester.full_name}</td>
-									<td>{assignmentLabel(ticket)}</td>
-									<td><span class:closed={ticket.status === 'closed'} class="status-badge">{statusLabel(ticket.status)}</span></td>
-									<td>{formatDate(ticket.created_at)}</td>
-									<td>{formatDate(ticket.due_at)}</td>
 								</tr>
 							{/each}
 						</tbody>
@@ -432,19 +431,20 @@
 					{#each tickets as ticket (ticket.id)}
 						<article class="ticket-card">
 							<div class="ticket-card-heading">
-								<span class="ticket-id">#{ticket.id}</span>
+								<div class="ticket-card-title">
+									<span class="ticket-card-icon" aria-hidden="true">◈</span>
+									<h2>{ticket.title}</h2>
+								</div>
 								<span class:closed={ticket.status === 'closed'} class="status-badge">{statusLabel(ticket.status)}</span>
 							</div>
-							<h2>{ticket.title}</h2>
+							<div class="ticket-card-meta">
+								<div><span>Location</span><strong>{ticket.location?.name ?? '—'}</strong></div>
+								{#if ticket.accepted_by}<div><span>Owner</span><strong>{identityLabel(ticket.accepted_by)}</strong></div>{/if}
+								<div><span>Requester</span><strong>{identityLabel(ticket.requester)}</strong></div>
+								<div><span>Created</span><strong>{formatDate(ticket.created_at)}</strong></div>
+							</div>
+							{#if ticket.description?.trim()}<p class="ticket-card-description">{ticket.description.trim()}</p>{/if}
 							{#if ticket.priority}<span class="priority-badge">Priority</span>{/if}
-							<dl class="ticket-card-details">
-								<div><dt>Department</dt><dd>{ticket.department.name}</dd></div>
-								<div><dt>Location</dt><dd>{ticket.location?.name ?? '—'}</dd></div>
-								<div><dt>Requester</dt><dd>{ticket.requester.full_name}</dd></div>
-								<div><dt>Assignment</dt><dd>{assignmentLabel(ticket)}</dd></div>
-								<div><dt>Created</dt><dd>{formatDate(ticket.created_at)}</dd></div>
-								<div><dt>Due</dt><dd>{formatDate(ticket.due_at)}</dd></div>
-							</dl>
 						</article>
 					{/each}
 				</div>
