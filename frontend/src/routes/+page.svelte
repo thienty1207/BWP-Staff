@@ -4,11 +4,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import NewRequestDialog from '$lib/components/NewRequestDialog.svelte';
-	import TicketDetail from '$lib/components/TicketDetail.svelte';
+	import TicketChat from '$lib/components/TicketChat.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { getCurrentUser, logout } from '$lib/client/auth/api';
 	import { getTicket, listTickets } from '$lib/client/tickets/api';
-	import { TicketDetailStateMachine, type TicketDetailRequest, type TicketDetailState } from '$lib/client/tickets/detail-state';
+	import { TicketChatStateMachine, type TicketChatRequest, type TicketChatState } from '$lib/client/ticket-chat-state';
 	import { TicketApiError, type TicketIdentity, type TicketListPage, type TicketSummary, type TicketView } from '$lib/client/tickets/model';
 	import type { AuthenticatedUser } from '$lib/client/auth/model';
 	import { AuthApiError } from '$lib/client/auth/model';
@@ -37,8 +37,8 @@
 	let drawerOpen = $state(false);
 	let newRequestOpen = $state(false);
 	let ticketRequestSequence = 0;
-	const ticketDetailMachine = new TicketDetailStateMachine();
-	let detailState: TicketDetailState = $state(ticketDetailMachine.state);
+	const ticketChatMachine = new TicketChatStateMachine();
+	let chatState: TicketChatState = $state(ticketChatMachine.state);
 
 	onMount(() => {
 		void verifySession();
@@ -56,7 +56,7 @@
 		ticketState = 'loading';
 		tickets = [];
 		page = emptyPage;
-		closeTicketDetail();
+		closeTicketChat();
 
 		try {
 			user = await getCurrentUser();
@@ -160,7 +160,7 @@
 		if (view === activeView || ticketRequestInFlight) {
 			return;
 		}
-		closeTicketDetail();
+		closeTicketChat();
 		activeView = view;
 		drawerOpen = false;
 		void loadFirstPage(view);
@@ -176,7 +176,7 @@
 
 	function openNewRequest() {
 		if (!ticketRequestInFlight) {
-			closeTicketDetail();
+			closeTicketChat();
 			newRequestOpen = true;
 		}
 	}
@@ -186,7 +186,7 @@
 	}
 
 	async function handleNewRequestCreated() {
-		closeTicketDetail();
+		closeTicketChat();
 		activeView = 'open';
 		drawerOpen = false;
 		await loadFirstPage('open');
@@ -199,7 +199,7 @@
 
 		logoutInFlight = true;
 		errorMessage = '';
-		closeTicketDetail();
+		closeTicketChat();
 
 		try {
 			await logout();
@@ -215,54 +215,54 @@
 		drawerOpen = false;
 	}
 
-	function syncTicketDetailState() {
-		detailState = ticketDetailMachine.state;
+	function syncTicketChatState() {
+		chatState = ticketChatMachine.state;
 	}
 
-	function openTicketDetail(ticketID: number) {
-		const request = ticketDetailMachine.begin(ticketID);
-		syncTicketDetailState();
-		void loadTicketDetail(request);
+	function openTicketChat(ticketID: number) {
+		const request = ticketChatMachine.begin(ticketID);
+		syncTicketChatState();
+		void loadTicketChat(request);
 	}
 
-	async function loadTicketDetail(request: TicketDetailRequest) {
+	async function loadTicketChat(request: TicketChatRequest) {
 		try {
 			const ticket = await getTicket(request.ticketID);
-			if (ticketDetailMachine.succeed(request, ticket)) {
-				syncTicketDetailState();
+			if (ticketChatMachine.succeed(request, ticket)) {
+				syncTicketChatState();
 			}
 		} catch (error) {
-			if (!ticketDetailMachine.isCurrent(request)) {
+			if (!ticketChatMachine.isCurrent(request)) {
 				return;
 			}
 			if (error instanceof TicketApiError && error.kind === 'unauthenticated') {
-				ticketDetailMachine.close();
-				syncTicketDetailState();
+				ticketChatMachine.close();
+				syncTicketChatState();
 				await goto('/login', { replaceState: true });
 				return;
 			}
 			if (error instanceof TicketApiError && error.kind === 'not_found') {
-				ticketDetailMachine.fail(request, 'not_found', 'Ticket not found.');
-				syncTicketDetailState();
+				ticketChatMachine.fail(request, 'not_found', 'Ticket not found.');
+				syncTicketChatState();
 				return;
 			}
-			ticketDetailMachine.fail(request, 'error', 'Unable to load ticket. Please try again.');
-			syncTicketDetailState();
+			ticketChatMachine.fail(request, 'error', 'Unable to load ticket. Please try again.');
+			syncTicketChatState();
 		}
 	}
 
-	function closeTicketDetail() {
-		ticketDetailMachine.close();
-		syncTicketDetailState();
+	function closeTicketChat() {
+		ticketChatMachine.close();
+		syncTicketChatState();
 	}
 
-	function retryTicketDetail() {
-		if (detailState.selectedTicketID === null || detailState.status === 'loading') {
+	function retryTicketChat() {
+		if (chatState.selectedTicketID === null || chatState.status === 'loading') {
 			return;
 		}
-		const request = ticketDetailMachine.begin(detailState.selectedTicketID);
-		syncTicketDetailState();
-		void loadTicketDetail(request);
+		const request = ticketChatMachine.begin(chatState.selectedTicketID);
+		syncTicketChatState();
+		void loadTicketChat(request);
 	}
 
 	function initials(fullName: string): string {
@@ -389,7 +389,7 @@
 			</div>
 		</aside>
 
-		<main class="app-main">
+		<main class:chat-view={chatState.status !== 'closed'} class="app-main">
 			<header class="mobile-header">
 				<button
 					class="menu-button"
@@ -455,7 +455,7 @@
 				<p>{activeView === 'open' ? 'No open tickets.' : 'No closed tickets.'}</p>
 			</section>
 		{:else}
-			<div class:detail-open={detailState.status !== 'closed'} class="tickets-workspace">
+			<div class:chat-open={chatState.status !== 'closed'} class="tickets-workspace">
 				<section class="ticket-list-region" aria-label="Ticket list">
 					{#if loadMoreErrorMessage}
 						<div class="inline-ticket-error" role="alert" aria-live="assertive">
@@ -486,7 +486,7 @@
 										<td>{identityLabel(ticket.requester)}</td>
 										<td>{ticket.location?.name ?? '—'}</td>
 										<td class="ticket-title-cell">
-											<button class="ticket-title-button" type="button" onclick={() => openTicketDetail(ticket.id)}>
+											<button class="ticket-title-button" type="button" onclick={() => openTicketChat(ticket.id)}>
 												<span class:ticket-title-priority={ticket.priority}>{ticket.title}</span>
 											</button>
 										</td>
@@ -520,7 +520,7 @@
 									<div class="ticket-card-title">
 										<span class="ticket-card-icon" aria-hidden="true">◈</span>
 										<h2>
-											<button class="ticket-title-button" type="button" onclick={() => openTicketDetail(ticket.id)}>
+											<button class="ticket-title-button" type="button" onclick={() => openTicketChat(ticket.id)}>
 												<span class:ticket-title-priority={ticket.priority}>{ticket.title}</span>
 											</button>
 										</h2>
@@ -553,13 +553,13 @@
 					{/if}
 				</section>
 
-				{#if detailState.status !== 'closed'}
-					<TicketDetail
-						state={detailState}
+				{#if chatState.status !== 'closed'}
+					<TicketChat
+						state={chatState}
 						formatTimestamp={formatTimestamp}
-						onClose={closeTicketDetail}
-						onBack={closeTicketDetail}
-						onRetry={retryTicketDetail}
+						onClose={closeTicketChat}
+						onBack={closeTicketChat}
+						onRetry={retryTicketChat}
 					/>
 				{/if}
 			</div>

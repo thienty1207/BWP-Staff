@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from 'bun:test';
 import { getTicket } from '../src/lib/client/tickets/api';
-import { TicketDetailStateMachine } from '../src/lib/client/tickets/detail-state';
+import { TicketChatStateMachine } from '../src/lib/client/ticket-chat-state';
 import type { TicketSummary } from '../src/lib/client/tickets/model';
 
 const originalFetch = globalThis.fetch;
@@ -81,8 +81,8 @@ test('getTicket maps network failures to retryable', async () => {
 	await expect(getTicket(101)).rejects.toMatchObject({ kind: 'retryable' });
 });
 
-test('detail selection clears stale content and latest selection wins', () => {
-	const machine = new TicketDetailStateMachine();
+test('chat selection clears stale content and latest selection wins', () => {
+	const machine = new TicketChatStateMachine();
 	const ticketA = { ...ticket, id: 1, title: 'Ticket A' };
 	const ticketB = { ...ticket, id: 2, title: 'Ticket B' };
 
@@ -97,8 +97,8 @@ test('detail selection clears stale content and latest selection wins', () => {
 	expect(machine.state).toMatchObject({ status: 'ready', selectedTicketID: 2, ticket: ticketB });
 });
 
-test('detail close invalidates in-flight responses without reopening the view', () => {
-	const machine = new TicketDetailStateMachine();
+test('chat close invalidates in-flight responses without reopening the view', () => {
+	const machine = new TicketChatStateMachine();
 	const request = machine.begin(ticket.id);
 
 	machine.close();
@@ -107,66 +107,96 @@ test('detail close invalidates in-flight responses without reopening the view', 
 	expect(machine.state).toEqual({ status: 'closed', selectedTicketID: null, ticket: null, errorMessage: '' });
 });
 
-test('Tickets page keeps detail interactions separate from list controls and exposes accessible detail states', async () => {
+test('Tickets page keeps chat interactions separate from list controls and exposes accessible chat states', async () => {
 	const page = await Bun.file(new URL('../src/routes/+page.svelte', import.meta.url)).text();
-	const detail = await Bun.file(new URL('../src/lib/components/TicketDetail.svelte', import.meta.url)).text();
+	const chat = await Bun.file(new URL('../src/lib/components/TicketChat.svelte', import.meta.url)).text();
 	const styles = await Bun.file(new URL('../src/lib/styles/app.css', import.meta.url)).text();
 
 	expect(page).toContain('getTicket');
-	expect(page).toContain('TicketDetailStateMachine');
+	expect(page).toContain('TicketChatStateMachine');
 	expect(page).toContain('ticketRequestInFlight');
-	expect(page).toContain('detailState');
+	expect(page).toContain('chatState');
 	expect(page).toContain('openNewRequest');
 	expect(page).toContain('switchView');
 	expect(page).toContain('loadMore');
-	expect(detail).toContain('Back to Tickets');
-	expect(detail).toContain('role="status"');
-	expect(detail).toContain('role="alert"');
-	expect(detail).toContain('Description');
-	expect(detail).toContain('Assigned Departments');
-	expect(detail).toContain('Assigned Users');
-	expect(detail).toContain("description?.trim() || '—'");
-	expect(detail).toContain("values.length === 0");
-	expect(detail).toContain('ticket-title-priority');
-	expect(detail).not.toContain('{@html');
+	expect(page).toContain('TicketChat');
+	expect(page).not.toContain('TicketDetail');
+	expect(chat).toContain('Back to Tickets');
+	expect(chat).toContain('aria-labelledby="ticket-chat-heading"');
+	expect(chat).toContain('role="status"');
+	expect(chat).toContain('role="alert"');
+	expect(chat).toContain('Chat');
+	expect(chat).toContain('Chats');
+	expect(chat).toContain('Checklist');
+	expect(chat).toContain('aria-selected="true"');
+	expect(chat).toContain('aria-disabled="true"');
+	expect(chat).toContain('has created a new request');
+	expect(chat).toContain('Accepted by');
+	expect(chat).toContain('Type a message');
+	expect(chat).toContain('disabled');
+	expect(chat).not.toContain('Ticket Detail');
+	expect(chat).not.toContain('Request information');
+	expect(chat).not.toContain('Assigned Departments');
+	expect(chat).not.toContain('Assigned Users');
+	expect(chat).not.toContain('Due');
+	expect(chat).not.toContain('Updated');
+	expect(chat).not.toContain('Closed');
+	expect(chat).not.toContain('{@html');
+	expect(chat).not.toContain('fetch(');
+	expect(chat).not.toContain('onsubmit');
+	expect(chat).not.toContain('POST');
 	expect(styles).toContain('.tickets-workspace');
-	expect(styles).toContain('grid-template-columns: minmax(0, 1fr) clamp(20rem, 28vw, 26rem)');
-	expect(styles).toContain('.ticket-detail');
-	expect(styles).toContain('.ticket-detail-back');
+	expect(styles).toContain('.tickets-workspace.chat-open');
+	expect(styles).toContain('grid-template-columns: minmax(0, 1fr) clamp(19rem, 22vw, 22rem)');
+	expect(styles).toContain('.ticket-chat');
+	expect(styles).toContain('.ticket-chat-back');
+	expect(styles).toContain('.ticket-chat-conversation');
+	expect(styles).toContain('overflow-y: auto');
 	expect(styles).toContain('border: 1px solid var(--danger)');
-	expect(styles).toContain('white-space: pre-wrap');
-	expect(styles).toContain('overflow-wrap: anywhere');
 
 	const switchViewStart = page.indexOf('function switchView');
 	const switchViewEnd = page.indexOf('\n\t}\n', switchViewStart);
-	expect(page.slice(switchViewStart, switchViewEnd)).toContain('closeTicketDetail();');
+	expect(page.slice(switchViewStart, switchViewEnd)).toContain('closeTicketChat();');
 
 	const openNewRequestStart = page.indexOf('function openNewRequest');
 	const openNewRequestEnd = page.indexOf('\n\t}\n', openNewRequestStart);
-	expect(page.slice(openNewRequestStart, openNewRequestEnd)).toContain('closeTicketDetail();');
+	expect(page.slice(openNewRequestStart, openNewRequestEnd)).toContain('closeTicketChat();');
 
-	const retryDetailStart = page.indexOf('function retryTicketDetail');
-	const retryDetailEnd = page.indexOf('\n\t}\n', retryDetailStart);
-	const retryDetailBody = page.slice(retryDetailStart, retryDetailEnd);
-	expect(retryDetailBody).toContain('loadTicketDetail(request)');
-	expect(retryDetailBody).not.toContain('loadFirstPage');
-	expect(page).toContain('onBack={closeTicketDetail}');
+	const retryChatStart = page.indexOf('function retryTicketChat');
+	const retryChatEnd = page.indexOf('\n\t}\n', retryChatStart);
+	const retryChatBody = page.slice(retryChatStart, retryChatEnd);
+	expect(retryChatBody).toContain('loadTicketChat(request)');
+	expect(retryChatBody).not.toContain('loadFirstPage');
+	expect(page).toContain('onBack={closeTicketChat}');
 });
 
-test('Ticket Detail renders its title exactly once as the request heading', async () => {
-	const detail = await Bun.file(new URL('../src/lib/components/TicketDetail.svelte', import.meta.url)).text();
+test('Ticket Chat keeps the summary compact and uses real persisted activity only', async () => {
+	const chat = await Bun.file(new URL('../src/lib/components/TicketChat.svelte', import.meta.url)).text();
 
-	expect(detail.match(/\{state\.ticket\.title\}/g) ?? []).toHaveLength(1);
-	expect(detail).toContain('<h3 id="ticket-request-heading"');
-	expect(detail).toContain('class:ticket-title-priority={state.ticket.priority}');
-	expect(detail).not.toContain('<span class="ticket-detail-label">Title</span>');
+	expect(chat).toContain('<h3 class="ticket-chat-title"');
+	expect(chat).toContain('class:ticket-title-priority={state.ticket.priority}');
+	expect(chat).toContain('location?.name || \'—\'');
+	expect(chat).not.toContain('location.code');
+	expect(chat).toContain('state.ticket.accepted_by && state.ticket.accepted_at');
+	expect(chat).not.toContain('assigned_departments');
+	expect(chat).not.toContain('assigned_users');
+	expect(chat).not.toContain('closed_at');
+	expect(chat).not.toContain('updated_at');
+	expect(chat).not.toContain('due_at');
 });
 
-test('Ticket Detail shows only the location name to staff', async () => {
-	const detail = await Bun.file(new URL('../src/lib/components/TicketDetail.svelte', import.meta.url)).text();
+test('Ticket Chat does not expose operational mutations in the shell', async () => {
+	const chat = await Bun.file(new URL('../src/lib/components/TicketChat.svelte', import.meta.url)).text();
 
-	expect(detail).toContain("return location?.name || '—';");
-	expect(detail).not.toContain('location.code');
+	expect(chat).toContain('aria-label="Attach file"');
+	expect(chat).toContain('aria-label="Voice message"');
+	expect(chat).toContain('aria-label="More message options"');
+	expect(chat).toContain('>Accept</button>');
+	expect(chat).toContain('>Assign</button>');
+	expect(chat).toContain('>Close</button>');
+	expect(chat).not.toContain('onclick={onAccept}');
+	expect(chat).not.toContain('onclick={onAssign}');
+	expect(chat).not.toContain('onclick={onCloseTicket}');
 });
 
 test('New Request keeps create-ticket error codes narrowly scoped', async () => {

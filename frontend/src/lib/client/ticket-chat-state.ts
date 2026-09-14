@@ -1,20 +1,20 @@
-import type { TicketSummary } from './model';
+import type { TicketSummary } from './tickets/model';
 
-export type TicketDetailStatus = 'closed' | 'loading' | 'ready' | 'error' | 'not_found';
+export type TicketChatStatus = 'closed' | 'loading' | 'ready' | 'error' | 'not_found';
 
-export type TicketDetailState = {
-	status: TicketDetailStatus;
+export type TicketChatState = {
+	status: TicketChatStatus;
 	selectedTicketID: number | null;
 	ticket: TicketSummary | null;
 	errorMessage: string;
 };
 
-export type TicketDetailRequest = {
+export type TicketChatRequest = {
 	ticketID: number;
 	sequence: number;
 };
 
-function closedState(): TicketDetailState {
+function closedState(): TicketChatState {
 	return {
 		status: 'closed',
 		selectedTicketID: null,
@@ -23,15 +23,15 @@ function closedState(): TicketDetailState {
 	};
 }
 
-export class TicketDetailStateMachine {
+export class TicketChatStateMachine {
 	private sequence = 0;
-	private currentState: TicketDetailState = closedState();
+	private currentState: TicketChatState = closedState();
 
-	get state(): TicketDetailState {
+	get state(): TicketChatState {
 		return this.currentState;
 	}
 
-	begin(ticketID: number): TicketDetailRequest {
+	begin(ticketID: number): TicketChatRequest {
 		const request = { ticketID, sequence: ++this.sequence };
 		this.currentState = {
 			status: 'loading',
@@ -47,7 +47,7 @@ export class TicketDetailStateMachine {
 		this.currentState = closedState();
 	}
 
-	succeed(request: TicketDetailRequest, ticket: TicketSummary): boolean {
+	succeed(request: TicketChatRequest, ticket: TicketSummary): boolean {
 		if (!this.isCurrent(request)) {
 			return false;
 		}
@@ -60,7 +60,7 @@ export class TicketDetailStateMachine {
 		return true;
 	}
 
-	fail(request: TicketDetailRequest, status: 'error' | 'not_found', errorMessage: string): boolean {
+	fail(request: TicketChatRequest, status: 'error' | 'not_found', errorMessage: string): boolean {
 		if (!this.isCurrent(request)) {
 			return false;
 		}
@@ -73,7 +73,7 @@ export class TicketDetailStateMachine {
 		return true;
 	}
 
-	isCurrent(request: TicketDetailRequest): boolean {
+	isCurrent(request: TicketChatRequest): boolean {
 		return (
 			request.sequence === this.sequence &&
 			this.currentState.status === 'loading' &&
