@@ -12,6 +12,7 @@ import (
 var (
 	ErrDepartmentUnavailable = errors.New("department unavailable")
 	ErrLocationUnavailable   = errors.New("location unavailable")
+	ErrTicketNotFound        = errors.New("ticket not found")
 )
 
 type Repository struct {
@@ -154,6 +155,102 @@ LIMIT $4`, string(query.View), query.BeforeCreatedAt, query.BeforeID, query.Limi
 		return ListResponse{}, err
 	}
 	return response, nil
+}
+
+func (repository *Repository) FindByID(ctx context.Context, id int64) (Ticket, error) {
+	if repository == nil || repository.pool == nil {
+		return Ticket{}, fmt.Errorf("ticket repository is not configured")
+	}
+
+	var (
+		ticket                 Ticket
+		status                 string
+		acceptedDepartmentCode *string
+		locationID             *int64
+		locationCode           *string
+		locationName           *string
+		acceptedID             *int64
+		acceptedName           *string
+	)
+	if err := repository.pool.QueryRow(ctx, `
+SELECT
+    t.id,
+    t.title,
+    t.description,
+    t.status::text,
+    t.priority,
+    t.due_at,
+    t.created_at,
+    t.updated_at,
+    requester.id,
+    requester.full_name,
+    requester_department.code,
+    destination.id,
+    destination.code,
+    destination.name,
+    location.id,
+    location.code,
+    location.name,
+    accepted_user.id,
+    accepted_user.full_name,
+    accepted_department.code,
+    t.accepted_at,
+    t.closed_at
+FROM tickets AS t
+JOIN users AS requester ON requester.id = t.requester_id
+JOIN departments AS requester_department ON requester_department.id = requester.department_id
+JOIN departments AS destination ON destination.id = t.department_id
+LEFT JOIN locations AS location ON location.id = t.location_id
+LEFT JOIN users AS accepted_user ON accepted_user.id = t.accepted_by
+LEFT JOIN departments AS accepted_department ON accepted_department.id = accepted_user.department_id
+WHERE t.id = $1`, id).Scan(
+		&ticket.ID,
+		&ticket.Title,
+		&ticket.Description,
+		&status,
+		&ticket.Priority,
+		&ticket.DueAt,
+		&ticket.CreatedAt,
+		&ticket.UpdatedAt,
+		&ticket.Requester.ID,
+		&ticket.Requester.FullName,
+		&ticket.Requester.DepartmentCode,
+		&ticket.Department.ID,
+		&ticket.Department.Code,
+		&ticket.Department.Name,
+		&locationID,
+		&locationCode,
+		&locationName,
+		&acceptedID,
+		&acceptedName,
+		&acceptedDepartmentCode,
+		&ticket.AcceptedAt,
+		&ticket.ClosedAt,
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Ticket{}, ErrTicketNotFound
+		}
+		return Ticket{}, fmt.Errorf("query ticket by id: %w", err)
+	}
+
+	ticket.Status = status
+	if locationID != nil {
+		ticket.Location = &LocationSummary{ID: *locationID, Code: dereferenceString(locationCode), Name: dereferenceString(locationName)}
+	}
+	if acceptedID != nil {
+		ticket.AcceptedBy = &IdentitySummary{ID: *acceptedID, FullName: dereferenceString(acceptedName), DepartmentCode: dereferenceString(acceptedDepartmentCode)}
+	}
+	ticket.AssignedDepartments = make([]DepartmentSummary, 0)
+	ticket.AssignedUsers = make([]IdentitySummary, 0)
+	tickets := []Ticket{ticket}
+	ticketIDs := []int64{id}
+	if err := repository.loadDepartmentAssignments(ctx, tickets, ticketIDs); err != nil {
+		return Ticket{}, err
+	}
+	if err := repository.loadUserAssignments(ctx, tickets, ticketIDs); err != nil {
+		return Ticket{}, err
+	}
+	return tickets[0], nil
 }
 
 func (repository *Repository) Create(ctx context.Context, requester IdentitySummary, input CreateRequest) (Ticket, error) {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -24,6 +25,7 @@ var errTicketServiceNotConfigured = &httperror.AppError{
 func RegisterRoutes(api fiber.Router, pool *pgxpool.Pool, authService *auth.Service) {
 	handler := &handler{service: NewService(NewRepository(pool))}
 	api.Get("/tickets", authService.RequireAuth(), handler.list)
+	api.Get("/tickets/:id", authService.RequireAuth(), handler.detail)
 	api.Post("/tickets", authService.RequireAuth(), handler.create)
 }
 
@@ -45,6 +47,32 @@ func (handler *handler) list(c fiber.Ctx) error {
 		return err
 	}
 	return c.Status(fiber.StatusOK).JSON(response)
+}
+
+func (handler *handler) detail(c fiber.Ctx) error {
+	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil || id <= 0 {
+		return invalidTicketDetailIDError()
+	}
+
+	ticket, err := handler.service.FindByID(c.Context(), id)
+	if errors.Is(err, ErrTicketNotFound) {
+		return &httperror.AppError{
+			Code:       "ticket_not_found",
+			Message:    "Ticket not found",
+			HTTPStatus: fiber.StatusNotFound,
+		}
+	}
+	if err != nil {
+		return err
+	}
+	return c.Status(fiber.StatusOK).JSON(struct {
+		Ticket Ticket `json:"ticket"`
+	}{Ticket: ticket})
+}
+
+func invalidTicketDetailIDError() error {
+	return &httperror.AppError{Code: "invalid_request", Message: "Invalid request", HTTPStatus: fiber.StatusBadRequest}
 }
 
 type createTicketRequest struct {

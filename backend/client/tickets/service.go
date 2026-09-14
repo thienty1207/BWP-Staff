@@ -17,6 +17,13 @@ func (service *Service) List(ctx context.Context, query ListQuery) (ListResponse
 	return service.repository.List(ctx, query)
 }
 
+func (service *Service) FindByID(ctx context.Context, id int64) (Ticket, error) {
+	if service == nil || service.repository == nil {
+		return Ticket{}, errTicketServiceNotConfigured
+	}
+	return service.repository.FindByID(ctx, id)
+}
+
 func (service *Service) Create(ctx context.Context, requester IdentitySummary, input CreateRequest) (Ticket, error) {
 	if service == nil || service.repository == nil {
 		return Ticket{}, errTicketServiceNotConfigured

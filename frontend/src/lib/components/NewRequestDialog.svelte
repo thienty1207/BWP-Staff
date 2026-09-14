@@ -6,7 +6,7 @@
 	import { getDepartments, getLocations } from '$lib/client/lookups/api';
 	import { LookupApiError, type LookupDepartment, type LookupLocation } from '$lib/client/lookups/model';
 	import { createTicket } from '$lib/client/tickets/api';
-	import { TicketApiError, type CreateTicketErrorCode, type CreateTicketRequest } from '$lib/client/tickets/model';
+	import { TicketApiError, type TicketApiErrorCode, type CreateTicketRequest } from '$lib/client/tickets/model';
 
 	type Props = {
 	open: boolean;
@@ -326,7 +326,7 @@
 		}
 	});
 
-	function createTicketErrorMessage(code?: CreateTicketErrorCode): string {
+	function createTicketErrorMessage(code?: TicketApiErrorCode): string {
 		if (code === 'department_unavailable') {
 			return 'The selected department is no longer available. Please select another department.';
 		}

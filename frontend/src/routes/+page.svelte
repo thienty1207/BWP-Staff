@@ -4,9 +4,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import NewRequestDialog from '$lib/components/NewRequestDialog.svelte';
+	import TicketDetail from '$lib/components/TicketDetail.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { getCurrentUser, logout } from '$lib/client/auth/api';
-	import { listTickets } from '$lib/client/tickets/api';
+	import { getTicket, listTickets } from '$lib/client/tickets/api';
+	import { TicketDetailStateMachine, type TicketDetailRequest, type TicketDetailState } from '$lib/client/tickets/detail-state';
 	import { TicketApiError, type TicketIdentity, type TicketListPage, type TicketSummary, type TicketView } from '$lib/client/tickets/model';
 	import type { AuthenticatedUser } from '$lib/client/auth/model';
 	import { AuthApiError } from '$lib/client/auth/model';
@@ -35,6 +37,8 @@
 	let drawerOpen = $state(false);
 	let newRequestOpen = $state(false);
 	let ticketRequestSequence = 0;
+	const ticketDetailMachine = new TicketDetailStateMachine();
+	let detailState: TicketDetailState = $state(ticketDetailMachine.state);
 
 	onMount(() => {
 		void verifySession();
@@ -52,6 +56,7 @@
 		ticketState = 'loading';
 		tickets = [];
 		page = emptyPage;
+		closeTicketDetail();
 
 		try {
 			user = await getCurrentUser();
@@ -155,6 +160,7 @@
 		if (view === activeView || ticketRequestInFlight) {
 			return;
 		}
+		closeTicketDetail();
 		activeView = view;
 		drawerOpen = false;
 		void loadFirstPage(view);
@@ -170,6 +176,7 @@
 
 	function openNewRequest() {
 		if (!ticketRequestInFlight) {
+			closeTicketDetail();
 			newRequestOpen = true;
 		}
 	}
@@ -179,6 +186,7 @@
 	}
 
 	async function handleNewRequestCreated() {
+		closeTicketDetail();
 		activeView = 'open';
 		drawerOpen = false;
 		await loadFirstPage('open');
@@ -191,6 +199,7 @@
 
 		logoutInFlight = true;
 		errorMessage = '';
+		closeTicketDetail();
 
 		try {
 			await logout();
@@ -204,6 +213,56 @@
 
 	function closeDrawer() {
 		drawerOpen = false;
+	}
+
+	function syncTicketDetailState() {
+		detailState = ticketDetailMachine.state;
+	}
+
+	function openTicketDetail(ticketID: number) {
+		const request = ticketDetailMachine.begin(ticketID);
+		syncTicketDetailState();
+		void loadTicketDetail(request);
+	}
+
+	async function loadTicketDetail(request: TicketDetailRequest) {
+		try {
+			const ticket = await getTicket(request.ticketID);
+			if (ticketDetailMachine.succeed(request, ticket)) {
+				syncTicketDetailState();
+			}
+		} catch (error) {
+			if (!ticketDetailMachine.isCurrent(request)) {
+				return;
+			}
+			if (error instanceof TicketApiError && error.kind === 'unauthenticated') {
+				ticketDetailMachine.close();
+				syncTicketDetailState();
+				await goto('/login', { replaceState: true });
+				return;
+			}
+			if (error instanceof TicketApiError && error.kind === 'not_found') {
+				ticketDetailMachine.fail(request, 'not_found', 'Ticket not found.');
+				syncTicketDetailState();
+				return;
+			}
+			ticketDetailMachine.fail(request, 'error', 'Unable to load ticket. Please try again.');
+			syncTicketDetailState();
+		}
+	}
+
+	function closeTicketDetail() {
+		ticketDetailMachine.close();
+		syncTicketDetailState();
+	}
+
+	function retryTicketDetail() {
+		if (detailState.selectedTicketID === null || detailState.status === 'loading') {
+			return;
+		}
+		const request = ticketDetailMachine.begin(detailState.selectedTicketID);
+		syncTicketDetailState();
+		void loadTicketDetail(request);
 	}
 
 	function initials(fullName: string): string {
@@ -391,98 +450,120 @@
 					<p class="error-message" role="alert" aria-live="assertive">{ticketErrorMessage}</p>
 					<button class="secondary-button" type="button" onclick={retryTicketLoad}>Retry</button>
 				</section>
-			{:else if tickets.length === 0}
-				<section class="ticket-status-panel empty-ticket-panel" role="status" aria-live="polite">
-					<p>{activeView === 'open' ? 'No open tickets.' : 'No closed tickets.'}</p>
-				</section>
-			{:else}
-				{#if loadMoreErrorMessage}
-					<div class="inline-ticket-error" role="alert" aria-live="assertive">
-						<span>{loadMoreErrorMessage}</span>
-						<button class="secondary-button" type="button" disabled={ticketRequestInFlight} onclick={retryLoadMore}>
-							{ticketRequestInFlight ? 'Retrying…' : 'Retry'}
-						</button>
-					</div>
-				{/if}
+		{:else if tickets.length === 0}
+			<section class="ticket-status-panel empty-ticket-panel" role="status" aria-live="polite">
+				<p>{activeView === 'open' ? 'No open tickets.' : 'No closed tickets.'}</p>
+			</section>
+		{:else}
+			<div class:detail-open={detailState.status !== 'closed'} class="tickets-workspace">
+				<section class="ticket-list-region" aria-label="Ticket list">
+					{#if loadMoreErrorMessage}
+						<div class="inline-ticket-error" role="alert" aria-live="assertive">
+							<span>{loadMoreErrorMessage}</span>
+							<button class="secondary-button" type="button" disabled={ticketRequestInFlight} onclick={retryLoadMore}>
+								{ticketRequestInFlight ? 'Retrying…' : 'Retry'}
+							</button>
+						</div>
+					{/if}
 
-				<div class="desktop-ticket-table">
-					<table>
-						<thead>
-							<tr>
-								<th scope="col">Requester</th>
-								<th scope="col">Location</th>
-								<th scope="col">Title</th>
-								<th scope="col">Description</th>
-								<th scope="col">Status</th>
-								<th scope="col">Owner</th>
-								<th scope="col">Created On</th>
-								<th scope="col">Due Date</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each tickets as ticket (ticket.id)}
+					<div class="desktop-ticket-table">
+						<table>
+							<thead>
 								<tr>
-									<td>{identityLabel(ticket.requester)}</td>
-									<td>{ticket.location?.name ?? '—'}</td>
-									<td class="ticket-title-cell"><strong class:ticket-title-priority={ticket.priority}>{ticket.title}</strong></td>
-									<td><span class="ticket-description">{descriptionLabel(ticket.description)}</span></td>
-									<td><span class:closed={ticket.status === 'closed'} class="status-badge">{statusLabel(ticket.status)}</span></td>
-									<td>{ticket.accepted_by ? identityLabel(ticket.accepted_by) : '—'}</td>
-									<td>
-										<time class="ticket-timestamp" datetime={ticket.created_at}>
+									<th scope="col">Requester</th>
+									<th scope="col">Location</th>
+									<th scope="col">Title</th>
+									<th scope="col">Description</th>
+									<th scope="col">Status</th>
+									<th scope="col">Owner</th>
+									<th scope="col">Created On</th>
+									<th scope="col">Due Date</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each tickets as ticket (ticket.id)}
+									<tr>
+										<td>{identityLabel(ticket.requester)}</td>
+										<td>{ticket.location?.name ?? '—'}</td>
+										<td class="ticket-title-cell">
+											<button class="ticket-title-button" type="button" onclick={() => openTicketDetail(ticket.id)}>
+												<span class:ticket-title-priority={ticket.priority}>{ticket.title}</span>
+											</button>
+										</td>
+										<td><span class="ticket-description">{descriptionLabel(ticket.description)}</span></td>
+										<td><span class:closed={ticket.status === 'closed'} class="status-badge">{statusLabel(ticket.status)}</span></td>
+										<td>{ticket.accepted_by ? identityLabel(ticket.accepted_by) : '—'}</td>
+										<td>
+											<time class="ticket-timestamp" datetime={ticket.created_at}>
+												<span class="ticket-timestamp-date">{timestampDate(ticket.created_at)}</span>
+												{#if timestampTime(ticket.created_at)}<span class="ticket-timestamp-time">{timestampTime(ticket.created_at)}</span>{/if}
+											</time>
+										</td>
+										<td>
+											<div class="ticket-due-cell">
+												<time class="ticket-timestamp" datetime={ticket.due_at ?? undefined}>
+													<span class="ticket-timestamp-date">{timestampDate(ticket.due_at)}</span>
+													{#if timestampTime(ticket.due_at)}<span class="ticket-timestamp-time">{timestampTime(ticket.due_at)}</span>{/if}
+												</time>
+											</div>
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+
+					<div class="mobile-ticket-cards">
+						{#each tickets as ticket (ticket.id)}
+							<article class="ticket-card">
+								<div class="ticket-card-heading">
+									<div class="ticket-card-title">
+										<span class="ticket-card-icon" aria-hidden="true">◈</span>
+										<h2>
+											<button class="ticket-title-button" type="button" onclick={() => openTicketDetail(ticket.id)}>
+												<span class:ticket-title-priority={ticket.priority}>{ticket.title}</span>
+											</button>
+										</h2>
+									</div>
+									<span class:closed={ticket.status === 'closed'} class="status-badge">{statusLabel(ticket.status)}</span>
+								</div>
+								<div class="ticket-card-meta">
+									<div><span>Location</span><strong>{ticket.location?.name ?? '—'}</strong></div>
+									{#if ticket.accepted_by}<div><span>Owner</span><strong>{identityLabel(ticket.accepted_by)}</strong></div>{/if}
+									<div><span>Requester</span><strong>{identityLabel(ticket.requester)}</strong></div>
+									<div>
+										<span>Created</span>
+										<strong class="ticket-timestamp">
 											<span class="ticket-timestamp-date">{timestampDate(ticket.created_at)}</span>
 											{#if timestampTime(ticket.created_at)}<span class="ticket-timestamp-time">{timestampTime(ticket.created_at)}</span>{/if}
-										</time>
-									</td>
-									<td>
-										<div class="ticket-due-cell">
-											<time class="ticket-timestamp" datetime={ticket.due_at ?? undefined}>
-												<span class="ticket-timestamp-date">{timestampDate(ticket.due_at)}</span>
-												{#if timestampTime(ticket.due_at)}<span class="ticket-timestamp-time">{timestampTime(ticket.due_at)}</span>{/if}
-											</time>
-										</div>
-									</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
-
-				<div class="mobile-ticket-cards">
-					{#each tickets as ticket (ticket.id)}
-						<article class="ticket-card">
-							<div class="ticket-card-heading">
-								<div class="ticket-card-title">
-									<span class="ticket-card-icon" aria-hidden="true">◈</span>
-									<h2 class:ticket-title-priority={ticket.priority}>{ticket.title}</h2>
+										</strong>
+									</div>
 								</div>
-								<span class:closed={ticket.status === 'closed'} class="status-badge">{statusLabel(ticket.status)}</span>
-							</div>
-							<div class="ticket-card-meta">
-								<div><span>Location</span><strong>{ticket.location?.name ?? '—'}</strong></div>
-								{#if ticket.accepted_by}<div><span>Owner</span><strong>{identityLabel(ticket.accepted_by)}</strong></div>{/if}
-								<div><span>Requester</span><strong>{identityLabel(ticket.requester)}</strong></div>
-								<div>
-									<span>Created</span>
-									<strong class="ticket-timestamp">
-										<span class="ticket-timestamp-date">{timestampDate(ticket.created_at)}</span>
-										{#if timestampTime(ticket.created_at)}<span class="ticket-timestamp-time">{timestampTime(ticket.created_at)}</span>{/if}
-									</strong>
-								</div>
-							</div>
-							{#if ticket.description?.trim()}<p class="ticket-card-description">{ticket.description.trim()}</p>{/if}
-						</article>
-					{/each}
-				</div>
-
-				{#if page.has_more && !loadMoreErrorMessage}
-					<div class="load-more-row">
-						<button class="secondary-button" type="button" disabled={ticketRequestInFlight} onclick={() => void loadMore()}>
-							{ticketRequestInFlight ? 'Loading…' : 'Load more'}
-						</button>
+								{#if ticket.description?.trim()}<p class="ticket-card-description">{ticket.description.trim()}</p>{/if}
+							</article>
+						{/each}
 					</div>
+
+					{#if page.has_more && !loadMoreErrorMessage}
+						<div class="load-more-row">
+							<button class="secondary-button" type="button" disabled={ticketRequestInFlight} onclick={() => void loadMore()}>
+								{ticketRequestInFlight ? 'Loading…' : 'Load more'}
+							</button>
+						</div>
+					{/if}
+				</section>
+
+				{#if detailState.status !== 'closed'}
+					<TicketDetail
+						state={detailState}
+						formatTimestamp={formatTimestamp}
+						onClose={closeTicketDetail}
+						onBack={closeTicketDetail}
+						onRetry={retryTicketDetail}
+					/>
 				{/if}
-			{/if}
+			</div>
+		{/if}
 		</main>
 
 		<NewRequestDialog

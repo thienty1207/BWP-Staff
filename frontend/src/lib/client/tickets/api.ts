@@ -2,6 +2,7 @@ import {
 	TicketApiError,
 	type CreateTicketErrorCode,
 	type CreateTicketRequest,
+	type TicketDetailErrorCode,
 	type TicketCursor,
 	type TicketDepartment,
 	type TicketIdentity,
@@ -60,6 +61,50 @@ export async function listTickets(
 		throw retryableError(response.status);
 	}
 	return result;
+}
+
+export async function getTicket(id: number): Promise<TicketSummary> {
+	let response: Response;
+	try {
+		response = await fetch(`${ticketsPath}/${id}`, {
+			method: 'GET',
+			credentials: 'include'
+		});
+	} catch {
+		throw retryableError();
+	}
+
+	if (response.status === 401) {
+		throw new TicketApiError('unauthenticated', 'Unauthenticated.', response.status);
+	}
+	if (response.status === 400) {
+		throw new TicketApiError('invalid_input', 'Invalid ticket detail request.', response.status);
+	}
+	if (response.status === 404) {
+		const code = await parseTicketDetailErrorCode(response);
+		if (code === 'ticket_not_found') {
+			throw new TicketApiError('not_found', 'Ticket not found.', response.status, code);
+		}
+		throw retryableError(response.status);
+	}
+	if (response.status !== 200) {
+		throw retryableError(response.status);
+	}
+
+	let payload: unknown;
+	try {
+		payload = await response.json();
+	} catch {
+		throw retryableError(response.status);
+	}
+	if (!isRecord(payload)) {
+		throw retryableError(response.status);
+	}
+	const ticket = parseTicket(payload.ticket);
+	if (!ticket) {
+		throw retryableError(response.status);
+	}
+	return ticket;
 }
 
 export async function createTicket(request: CreateTicketRequest): Promise<TicketSummary> {
@@ -281,4 +326,16 @@ async function parseCreateTicketErrorCode(response: Response): Promise<CreateTic
 		return undefined;
 	}
 	return undefined;
+}
+
+async function parseTicketDetailErrorCode(response: Response): Promise<TicketDetailErrorCode | undefined> {
+	try {
+		const payload: unknown = await response.json();
+		if (!isRecord(payload) || !isRecord(payload.error)) {
+			return undefined;
+		}
+		return payload.error.code === 'ticket_not_found' ? payload.error.code : undefined;
+	} catch {
+		return undefined;
+	}
 }

@@ -58,16 +58,20 @@ export type TicketCursor = {
 	before_id: number;
 };
 
-export type TicketApiErrorKind = 'invalid_input' | 'unauthenticated' | 'retryable';
+export type TicketApiErrorKind = 'invalid_input' | 'unauthenticated' | 'not_found' | 'retryable';
 
 export type CreateTicketErrorCode = 'department_unavailable' | 'location_unavailable' | 'invalid_request';
+
+export type TicketDetailErrorCode = 'ticket_not_found';
+
+export type TicketApiErrorCode = CreateTicketErrorCode | TicketDetailErrorCode;
 
 export class TicketApiError extends Error {
 	readonly kind: TicketApiErrorKind;
 	readonly status?: number;
-	readonly code?: CreateTicketErrorCode;
+	readonly code?: TicketApiErrorCode;
 
-	constructor(kind: TicketApiErrorKind, message: string, status?: number, code?: CreateTicketErrorCode) {
+	constructor(kind: TicketApiErrorKind, message: string, status?: number, code?: TicketApiErrorCode) {
 		super(message);
 		this.name = 'TicketApiError';
 		this.kind = kind;
