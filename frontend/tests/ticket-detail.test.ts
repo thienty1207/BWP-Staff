@@ -152,3 +152,27 @@ test('Tickets page keeps detail interactions separate from list controls and exp
 	expect(retryDetailBody).not.toContain('loadFirstPage');
 	expect(page).toContain('onBack={closeTicketDetail}');
 });
+
+test('Ticket Detail renders its title exactly once as the request heading', async () => {
+	const detail = await Bun.file(new URL('../src/lib/components/TicketDetail.svelte', import.meta.url)).text();
+
+	expect(detail.match(/\{state\.ticket\.title\}/g) ?? []).toHaveLength(1);
+	expect(detail).toContain('<h3 id="ticket-request-heading"');
+	expect(detail).toContain('class:ticket-title-priority={state.ticket.priority}');
+	expect(detail).not.toContain('<span class="ticket-detail-label">Title</span>');
+});
+
+test('Ticket Detail shows only the location name to staff', async () => {
+	const detail = await Bun.file(new URL('../src/lib/components/TicketDetail.svelte', import.meta.url)).text();
+
+	expect(detail).toContain("return location?.name || '—';");
+	expect(detail).not.toContain('location.code');
+});
+
+test('New Request keeps create-ticket error codes narrowly scoped', async () => {
+	const newRequest = await Bun.file(new URL('../src/lib/components/NewRequestDialog.svelte', import.meta.url)).text();
+
+	expect(newRequest).toContain('type CreateTicketErrorCode');
+	expect(newRequest).toContain('function createTicketErrorMessage(code?: CreateTicketErrorCode)');
+	expect(newRequest).not.toContain('TicketApiErrorCode');
+});

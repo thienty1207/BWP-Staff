@@ -35,10 +35,7 @@
 	}
 
 	function locationLabel(location: TicketSummary['location']): string {
-		if (!location) {
-			return '—';
-		}
-		return location.code ? `${location.name} (${location.code})` : location.name;
+		return location?.name || '—';
 	}
 
 	function assignmentLabel(values: Array<{ name?: string; full_name?: string }>): string {
@@ -90,13 +87,9 @@
 				<div class="ticket-detail-section-heading">
 					<div>
 						<p class="eyebrow">Request</p>
-						<h3 id="ticket-request-heading">{state.ticket.title}</h3>
+						<h3 id="ticket-request-heading" class:ticket-title-priority={state.ticket.priority} class="ticket-detail-title">{state.ticket.title}</h3>
 					</div>
 					<span class:closed={state.ticket.status === 'closed'} class="status-badge">{statusLabel(state.ticket.status)}</span>
-				</div>
-				<div class="ticket-detail-title-row">
-					<span class="ticket-detail-label">Title</span>
-					<h4 class:ticket-title-priority={state.ticket.priority} class="ticket-detail-title">{state.ticket.title}</h4>
 				</div>
 				<div class="ticket-detail-field">
 					<span class="ticket-detail-label">Description</span>
