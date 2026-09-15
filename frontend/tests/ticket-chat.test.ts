@@ -221,6 +221,47 @@ test('Chat presentation uses compact Sara-aligned semantics and scoped disabled 
 	expect(styles).toContain('button:disabled {\n\tcursor: wait;');
 });
 
+test('Chat summary and created activity follow the compact Sara conversation hierarchy', async () => {
+	const chat = await Bun.file(new URL('../src/lib/components/TicketChat.svelte', import.meta.url)).text();
+	const styles = await Bun.file(new URL('../src/lib/styles/app.css', import.meta.url)).text();
+
+	const summaryStart = chat.indexOf('<div class="ticket-chat-summary">');
+	const summaryEnd = chat.indexOf('{:else if state.status === \'loading\'}', summaryStart);
+	const summaryMarkup = chat.slice(summaryStart, summaryEnd);
+
+	expect(summaryMarkup).toContain('ticket-chat-summary-line');
+	expect(summaryMarkup).toContain('identityLabel(state.ticket.requester)');
+	expect(summaryMarkup).toContain('locationLabel(state.ticket.location)');
+	expect(summaryMarkup).toContain('timestampDate(state.ticket.created_at)');
+	expect(summaryMarkup).not.toContain('ticket-chat-summary-label');
+	expect(summaryMarkup).not.toContain('ticket-chat-summary-created-label');
+	expect(summaryMarkup).not.toMatch(/>Requester</);
+	expect(summaryMarkup).not.toMatch(/>Location</);
+	expect(summaryMarkup).not.toMatch(/>Created</);
+
+	const createdStart = chat.indexOf('<article class="ticket-chat-event ticket-chat-event-created">');
+	const createdEnd = chat.indexOf('{#if state.ticket.accepted_by', createdStart);
+	const createdMarkup = chat.slice(createdStart, createdEnd);
+
+	expect(createdMarkup).toContain('ticket-chat-event-body');
+	expect(createdMarkup).toContain('Location: {locationLabel(state.ticket.location)}');
+	expect(createdMarkup).toContain('Title: {state.ticket.title}');
+	expect(createdMarkup).toContain('{#if state.ticket.description?.trim()}');
+	expect(createdMarkup).toContain('<p>{state.ticket.description.trim()}</p>');
+	expect(createdMarkup.indexOf('Title: {state.ticket.title}')).toBeLessThan(
+		createdMarkup.indexOf('<p>{state.ticket.description.trim()}</p>')
+	);
+	expect(createdMarkup).not.toContain('ticket-chat-event-details');
+	expect(createdMarkup).not.toContain('<dl');
+	expect(createdMarkup).not.toContain('<dt>');
+	expect(createdMarkup).not.toContain('<dd>');
+
+	expect(styles).toContain('.ticket-chat-event-created');
+	expect(styles).toContain('.ticket-chat-event-body');
+	expect(styles).toContain('.ticket-chat-event-accepted');
+	expect(styles).not.toContain('.ticket-chat-event-details');
+});
+
 test('canonical SPEC makes whole-ticket pointer activation mandatory', async () => {
 	const spec = await Bun.file(
 		new URL('../../Context-Spec-BWP-SonaSea/Spec/SPEC-07-ticket-chat-shell-conversation-foundation.md', import.meta.url)
@@ -230,6 +271,8 @@ test('canonical SPEC makes whole-ticket pointer activation mandatory', async () 
 	expect(spec).toContain('whole row/card pointer target');
 	expect(spec).toContain('one user activation = one GET request');
 	expect(spec).toContain('selected ticket has visible but subtle selection feedback');
+	expect(spec).toContain('do not render visible Requester, Owner, Location, or Created field labels in the summary');
+	expect(spec).toContain('Do not use a two-column LOCATION/TITLE metadata layout');
 	expect(spec).not.toContain('row/card pointer click also opens Chat');
 });
 

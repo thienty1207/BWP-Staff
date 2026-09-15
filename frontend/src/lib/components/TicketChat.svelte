@@ -42,10 +42,6 @@
 		return formatTimestamp(value)?.time ?? null;
 	}
 
-	function activityTimestamp(value: string | null): string {
-		const timestamp = formatTimestamp(value);
-		return timestamp ? `${timestamp.date} ${timestamp.time}` : '—';
-	}
 </script>
 
 <section class="ticket-chat" aria-labelledby="ticket-chat-heading">
@@ -77,15 +73,12 @@
 
 			<div class="ticket-chat-summary-meta">
 				<div class="ticket-chat-summary-line">
-					<span class="ticket-chat-summary-label">Requester</span>
 					<strong class="ticket-chat-summary-value">{identityLabel(state.ticket.requester)}</strong>
 					{#if state.ticket.accepted_by}<span class="ticket-chat-summary-owner">by {identityLabel(state.ticket.accepted_by)}</span>{/if}
 				</div>
 				<div class="ticket-chat-summary-line">
-					<span class="ticket-chat-summary-label">Location</span>
 					<strong class="ticket-chat-summary-value">{locationLabel(state.ticket.location)}</strong>
 					<time class="ticket-chat-summary-created" datetime={state.ticket.created_at}>
-						<span class="ticket-chat-summary-created-label">Created</span>
 						<span>{timestampDate(state.ticket.created_at)}</span>
 						{#if timestampTime(state.ticket.created_at)}<span>{timestampTime(state.ticket.created_at)}</span>{/if}
 					</time>
@@ -121,12 +114,16 @@
 						<strong>{identityLabel(state.ticket.requester)}</strong>
 						<p>has created a new request</p>
 					</div>
-					<time datetime={state.ticket.created_at}>{activityTimestamp(state.ticket.created_at)}</time>
+					<time datetime={state.ticket.created_at}>
+						<span>{timestampDate(state.ticket.created_at)}</span>
+						{#if timestampTime(state.ticket.created_at)}<span>{timestampTime(state.ticket.created_at)}</span>{/if}
+					</time>
 				</div>
-				<dl class="ticket-chat-event-details">
-					<div><dt>Location</dt><dd>{locationLabel(state.ticket.location)}</dd></div>
-					<div><dt>Title</dt><dd>{state.ticket.title}</dd></div>
-				</dl>
+				<div class="ticket-chat-event-body">
+					<p>Location: {locationLabel(state.ticket.location)}</p>
+					<p>Title: {state.ticket.title}</p>
+					{#if state.ticket.description?.trim()}<p>{state.ticket.description.trim()}</p>{/if}
+				</div>
 			</article>
 
 			{#if state.ticket.accepted_by && state.ticket.accepted_at}
@@ -134,7 +131,10 @@
 					<div class="ticket-chat-event-heading">
 						<span class="ticket-chat-event-icon" aria-hidden="true">✓</span>
 						<strong>Accepted by {identityLabel(state.ticket.accepted_by)}</strong>
-						<time datetime={state.ticket.accepted_at}>{activityTimestamp(state.ticket.accepted_at)}</time>
+						<time datetime={state.ticket.accepted_at}>
+							<span>{timestampDate(state.ticket.accepted_at)}</span>
+							{#if timestampTime(state.ticket.accepted_at)}<span>{timestampTime(state.ticket.accepted_at)}</span>{/if}
+						</time>
 					</div>
 				</article>
 			{/if}

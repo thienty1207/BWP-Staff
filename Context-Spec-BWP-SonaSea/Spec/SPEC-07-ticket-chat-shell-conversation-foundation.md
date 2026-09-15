@@ -446,6 +446,18 @@ Owner = accepted_by
 pending with no Owner must not invent one
 ```
 
+Sara-fidelity constraint:
+
+```text
+render the summary as three compact content rows:
+title + status
+requester + optional by Owner
+location + created date/time
+
+do not render visible Requester, Owner, Location, or Created field labels in the summary
+pending without accepted_by omits the owner text
+```
+
 Do not show large sections for:
 
 ```text
@@ -569,6 +581,17 @@ Title: <ticket title>
 ```
 
 This is a **presentation of persisted ticket creation data**, not a fake chat record.
+
+The created activity must remain conversation-like rather than becoming a metadata grid:
+
+```text
+Location: <location name or —>
+Title: <ticket title>
+<non-blank description, when present>
+```
+
+Do not use a two-column LOCATION/TITLE metadata layout, visible field-label cells, or
+unnecessary internal metadata dividers inside this activity.
 
 Do not write a new database row just to display this item.
 

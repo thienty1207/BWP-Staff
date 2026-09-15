@@ -987,10 +987,10 @@ h2 {
 
 .ticket-chat-header {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	justify-content: space-between;
-	gap: 0.75rem;
-	padding: 0.85rem 1rem;
+	gap: 0.6rem;
+	padding: 0.65rem 0.9rem;
 	border-bottom: 1px solid var(--border);
 }
 
@@ -1002,16 +1002,16 @@ h2 {
 	display: flex;
 	align-items: center;
 	flex: 0 0 auto;
-	gap: 0.45rem;
+	gap: 0.35rem;
 }
 
 .ticket-chat-close {
 	display: inline-grid;
-	width: 2.25rem;
-	min-height: 2.25rem;
+	width: 2rem;
+	min-height: 2rem;
 	padding: 0;
 	place-items: center;
-	font-size: 1.25rem;
+	font-size: 1.1rem;
 	line-height: 1;
 }
 
@@ -1021,7 +1021,7 @@ h2 {
 
 .ticket-chat-summary {
 	min-width: 0;
-	padding: 0.85rem 1rem;
+	padding: 0.7rem 0.9rem;
 	border-bottom: 1px solid var(--border);
 }
 
@@ -1036,7 +1036,7 @@ h2 {
 	display: flex;
 	align-items: flex-start;
 	min-width: 0;
-	gap: 0.45rem;
+	gap: 0.4rem;
 }
 
 .ticket-chat-icon,
@@ -1052,67 +1052,31 @@ h2 {
 	max-width: 100%;
 	margin: 0;
 	color: var(--text);
-	font-size: 0.98rem;
-	line-height: 1.35;
-	overflow-wrap: anywhere;
-}
-
-.ticket-chat-event-details {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 0.55rem 0.75rem;
-	margin: 0.75rem 0 0;
-}
-
-.ticket-chat-event-details > div {
-	min-width: 0;
-}
-
-.ticket-chat-event-details dt {
-	margin-bottom: 0.15rem;
-	color: var(--text-muted);
-	font-size: 0.66rem;
-	font-weight: 800;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
-}
-
-.ticket-chat-event-details dd {
-	margin: 0;
-	color: var(--text);
-	font-size: 0.78rem;
-	line-height: 1.35;
+	font-size: 0.92rem;
+	line-height: 1.3;
 	overflow-wrap: anywhere;
 }
 
 .ticket-chat-summary-meta {
 	display: grid;
-	gap: 0.4rem;
-	margin-top: 0.7rem;
+	gap: 0.25rem;
+	margin-top: 0.45rem;
 }
 
 .ticket-chat-summary-line {
 	display: grid;
-	grid-template-columns: auto minmax(0, 1fr) auto;
+	grid-template-columns: minmax(0, 1fr) auto;
 	align-items: baseline;
-	gap: 0.45rem;
+	gap: 0.5rem;
 	min-width: 0;
-}
-
-.ticket-chat-summary-label,
-.ticket-chat-summary-created-label {
-	color: var(--text-muted);
-	font-size: 0.66rem;
-	font-weight: 800;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
 }
 
 .ticket-chat-summary-value {
 	min-width: 0;
 	color: var(--text);
-	font-size: 0.78rem;
-	line-height: 1.35;
+	font-size: 0.74rem;
+	font-weight: 650;
+	line-height: 1.3;
 	overflow-wrap: anywhere;
 }
 
@@ -1120,17 +1084,16 @@ h2 {
 .ticket-chat-summary-created {
 	min-width: 0;
 	color: var(--text-muted);
-	font-size: 0.72rem;
-	line-height: 1.35;
+	font-size: 0.68rem;
+	line-height: 1.3;
 	text-align: right;
 	overflow-wrap: anywhere;
 }
 
 .ticket-chat-summary-created {
-	display: inline-flex;
-	align-items: baseline;
+	display: grid;
 	justify-content: flex-end;
-	gap: 0.25rem;
+	gap: 0.05rem;
 	white-space: nowrap;
 }
 
@@ -1146,14 +1109,14 @@ h2 {
 
 .ticket-chat-tabs {
 	display: flex;
-	gap: 0.35rem;
-	padding: 0 1rem;
+	gap: 0.25rem;
+	padding: 0 0.9rem;
 	border-bottom: 1px solid var(--border);
 }
 
 .ticket-chat-tab {
-	min-height: 2.45rem;
-	padding: 0.5rem 0.65rem;
+	min-height: 2.2rem;
+	padding: 0.4rem 0.55rem;
 	border: 0;
 	border-bottom: 2px solid transparent;
 	background: transparent;
@@ -1178,7 +1141,7 @@ h2 {
 	min-height: 0;
 	overflow-y: auto;
 	overflow-x: hidden;
-	padding: 0.9rem;
+	padding: 0.75rem 0.9rem;
 	overscroll-behavior: contain;
 }
 
@@ -1201,14 +1164,23 @@ h2 {
 
 .ticket-chat-event {
 	min-width: 0;
-	padding: 0.8rem;
-	border: 1px solid var(--border);
-	border-radius: 0.7rem;
-	background: var(--surface-elevated);
 }
 
 .ticket-chat-event + .ticket-chat-event {
-	margin-top: 0.7rem;
+	margin-top: 0.45rem;
+}
+
+.ticket-chat-event-created {
+	width: min(92%, 19rem);
+	padding: 0.6rem 0.7rem;
+	border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+	border-radius: 0.65rem;
+	background: color-mix(in srgb, var(--accent) 5%, var(--surface-elevated));
+}
+
+:root[data-theme='dark'] .ticket-chat-event-created {
+	border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+	background: color-mix(in srgb, var(--accent) 8%, var(--surface-elevated));
 }
 
 .ticket-chat-event-heading {
@@ -1221,34 +1193,44 @@ h2 {
 .ticket-chat-event-heading strong {
 	display: block;
 	color: var(--text);
-	font-size: 0.78rem;
-	line-height: 1.35;
+	font-size: 0.74rem;
+	line-height: 1.3;
 	overflow-wrap: anywhere;
 }
 
 .ticket-chat-event-heading p {
-	margin: 0.12rem 0 0;
+	margin: 0.08rem 0 0;
 	color: var(--text-muted);
-	font-size: 0.76rem;
-	line-height: 1.35;
+	font-size: 0.72rem;
+	line-height: 1.3;
 }
 
 .ticket-chat-event-heading time {
+	display: grid;
+	gap: 0.05rem;
 	color: var(--text-muted);
-	font-size: 0.66rem;
-	line-height: 1.35;
+	font-size: 0.62rem;
+	line-height: 1.25;
 	text-align: right;
 	white-space: nowrap;
 }
 
-.ticket-chat-event-details {
-	margin-top: 0.7rem;
-	padding-top: 0.7rem;
-	border-top: 1px solid var(--border);
+.ticket-chat-event-body {
+	display: grid;
+	gap: 0.12rem;
+	margin-top: 0.45rem;
+}
+
+.ticket-chat-event-body p {
+	margin: 0;
+	color: var(--text);
+	font-size: 0.72rem;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
 }
 
 .ticket-chat-event-accepted {
-	background: color-mix(in srgb, var(--accent) 5%, var(--surface-elevated));
+	padding: 0.25rem 0.1rem;
 }
 
 .ticket-chat-event-accepted .ticket-chat-event-heading {
@@ -1261,17 +1243,17 @@ h2 {
 	align-items: center;
 	gap: 0.25rem;
 	min-width: 0;
-	margin: 0 0.85rem;
-	padding: 0.4rem 0.45rem;
+	margin: 0 0.75rem;
+	padding: 0.25rem 0.35rem;
 	border: 1px solid var(--border);
-	border-radius: 0.7rem;
+	border-radius: 0.6rem;
 	background: var(--surface-elevated);
 }
 
 .ticket-chat-icon-button {
 	display: inline-grid;
-	width: 2rem;
-	min-height: 2rem;
+	width: 1.8rem;
+	min-height: 1.8rem;
 	padding: 0;
 	place-items: center;
 	border: 0;
@@ -1282,9 +1264,9 @@ h2 {
 
 .ticket-chat-composer-input {
 	min-width: 0;
-	padding: 0 0.3rem;
+	padding: 0 0.25rem;
 	color: var(--text-muted);
-	font-size: 0.78rem;
+	font-size: 0.74rem;
 	line-height: 1.35;
 	user-select: none;
 }
@@ -1293,13 +1275,14 @@ h2 {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 0.45rem;
-	padding: 0.75rem 0.85rem 0.85rem;
+	padding: 0.55rem 0.75rem 0.7rem;
 }
 
 .ticket-chat-actions .secondary-button {
 	min-width: 0;
-	padding: 0.55rem 0.45rem;
-	font-size: 0.76rem;
+	min-height: 2.15rem;
+	padding: 0.4rem 0.35rem;
+	font-size: 0.72rem;
 }
 
 .load-more-row {
