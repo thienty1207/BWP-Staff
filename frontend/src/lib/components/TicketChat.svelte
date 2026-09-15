@@ -42,6 +42,20 @@
 		return formatTimestamp(value)?.time ?? null;
 	}
 
+	function summaryTimestamp(value: string | null): string {
+		if (!value) {
+			return '—';
+		}
+
+		const date = new Date(value);
+		if (Number.isNaN(date.getTime())) {
+			return '—';
+		}
+
+		const month = date.toLocaleString('en-US', { month: 'short' });
+		return `${month}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+	}
+
 </script>
 
 <section class="ticket-chat" aria-labelledby="ticket-chat-heading">
@@ -59,6 +73,10 @@
 		<div class="ticket-chat-summary">
 			<div class="ticket-chat-summary-heading">
 				<div class="ticket-chat-title-row">
+					<svg class="ticket-chat-monitor-icon" viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+						<rect x="3" y="4" width="18" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+						<path d="M9 20h6M12 16v4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.6" />
+					</svg>
 					<h3 class="ticket-chat-title" class:ticket-title-priority={state.ticket.priority}>{state.ticket.title}</h3>
 				</div>
 				<span
@@ -77,10 +95,7 @@
 				</div>
 				<div class="ticket-chat-summary-line">
 					<strong class="ticket-chat-summary-value">{locationLabel(state.ticket.location)}</strong>
-					<time class="ticket-chat-summary-created" datetime={state.ticket.created_at}>
-						<span>{timestampDate(state.ticket.created_at)}</span>
-						{#if timestampTime(state.ticket.created_at)}<span>{timestampTime(state.ticket.created_at)}</span>{/if}
-					</time>
+					<time class="ticket-chat-summary-created" datetime={state.ticket.created_at}>{summaryTimestamp(state.ticket.created_at)}</time>
 				</div>
 			</div>
 		</div>

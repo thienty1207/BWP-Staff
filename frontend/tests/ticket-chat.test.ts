@@ -3,6 +3,15 @@ import { getTicket } from '../src/lib/client/tickets/api';
 import { TicketChatStateMachine } from '../src/lib/client/ticket-chat-state';
 import type { TicketSummary } from '../src/lib/client/tickets/model';
 
+function styleBlock(styles: string, selector: string): string {
+	const start = styles.lastIndexOf(selector);
+	if (start < 0) {
+		return '';
+	}
+	const end = styles.indexOf('}', start);
+	return end < 0 ? styles.slice(start) : styles.slice(start, end + 1);
+}
+
 const originalFetch = globalThis.fetch;
 
 const ticket: TicketSummary = {
@@ -230,9 +239,13 @@ test('Chat summary and created activity follow the compact Sara conversation hie
 	const summaryMarkup = chat.slice(summaryStart, summaryEnd);
 
 	expect(summaryMarkup).toContain('ticket-chat-summary-line');
+	expect(summaryMarkup).toContain('<svg class="ticket-chat-monitor-icon"');
+	expect(summaryMarkup).toContain('summaryTimestamp(state.ticket.created_at)');
 	expect(summaryMarkup).toContain('identityLabel(state.ticket.requester)');
 	expect(summaryMarkup).toContain('locationLabel(state.ticket.location)');
-	expect(summaryMarkup).toContain('timestampDate(state.ticket.created_at)');
+	expect(summaryMarkup).not.toContain('timestampDate(state.ticket.created_at)');
+	expect(summaryMarkup).not.toContain('timestampTime(state.ticket.created_at)');
+	expect(summaryMarkup).not.toContain('◈');
 	expect(summaryMarkup).not.toContain('ticket-chat-summary-label');
 	expect(summaryMarkup).not.toContain('ticket-chat-summary-created-label');
 	expect(summaryMarkup).not.toMatch(/>Requester</);
@@ -256,12 +269,42 @@ test('Chat summary and created activity follow the compact Sara conversation hie
 	expect(createdMarkup).not.toContain('<dt>');
 	expect(createdMarkup).not.toContain('<dd>');
 	expect(createdMarkup).not.toContain('>◈</span>');
+	expect(createdMarkup).not.toContain('ticket-chat-monitor-icon');
+	expect(createdMarkup).toContain('timestampDate(state.ticket.created_at)');
+	expect(createdMarkup).toContain('timestampTime(state.ticket.created_at)');
+	expect(createdMarkup).not.toContain('summaryTimestamp(state.ticket.created_at)');
 
 	expect(styles).toContain('.ticket-chat-event-created');
 	expect(styles).toContain('.ticket-chat-event-body');
 	expect(styles).toContain('.ticket-chat-event-accepted');
 	expect(styles).toContain('.ticket-chat-event-created .ticket-chat-event-heading time');
 	expect(styles).toContain('align-self: start;');
+
+	const titleRowStyles = styleBlock(styles, '.ticket-chat-title-row {');
+	const titleStyles = styleBlock(styles, '.ticket-chat-title {');
+	const priorityTitleStyles = styleBlock(styles, '.ticket-chat-title.ticket-title-priority {');
+	const statusStyles = styleBlock(styles, '.ticket-chat-summary-heading > .status-badge {');
+	const summaryLineStyles = styleBlock(styles, '.ticket-chat-summary-line {');
+	const summaryTimestampStyles = styleBlock(styles, '.ticket-chat-summary-created {');
+	const createdHeadingStyles = styleBlock(styles, '.ticket-chat-event-created .ticket-chat-event-heading {');
+
+	expect(titleRowStyles).toContain('flex: 1 1 auto;');
+	expect(titleRowStyles).toContain('min-width: 0;');
+	expect(titleStyles).toContain('min-width: 0;');
+	expect(titleStyles).toContain('flex: 1 1 auto;');
+	expect(titleStyles).toContain('white-space: nowrap;');
+	expect(titleStyles).toContain('overflow: hidden;');
+	expect(titleStyles).toContain('text-overflow: ellipsis;');
+	expect(priorityTitleStyles).toContain('width: auto;');
+	expect(priorityTitleStyles).toContain('overflow-wrap: normal;');
+	expect(statusStyles).toContain('flex: 0 0 auto;');
+	expect(statusStyles).toContain('white-space: nowrap;');
+	expect(summaryLineStyles).toContain('align-items: baseline;');
+	expect(summaryTimestampStyles).toContain('color: var(--accent);');
+	expect(summaryTimestampStyles).toContain('white-space: nowrap;');
+	expect(summaryTimestampStyles).toContain('text-align: right;');
+	expect(summaryTimestampStyles).not.toContain('display: grid;');
+	expect(createdHeadingStyles).toContain('grid-template-columns: minmax(0, 1fr) auto;');
 	expect(styles).not.toContain('.ticket-chat-event-details');
 });
 
