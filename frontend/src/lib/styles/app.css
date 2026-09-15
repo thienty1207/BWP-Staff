@@ -842,6 +842,26 @@ h2 {
 	border-bottom: 0;
 }
 
+.ticket-row-clickable {
+	cursor: pointer;
+}
+
+.desktop-ticket-table tbody tr.ticket-row-clickable:hover td {
+	background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+}
+
+.desktop-ticket-table tbody tr.ticket-row-selected td {
+	background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+}
+
+.desktop-ticket-table tbody tr.ticket-row-selected td:first-child {
+	box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.desktop-ticket-table tbody tr.ticket-row-selected:hover td {
+	background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
 .desktop-ticket-table td {
 	color: var(--text-muted);
 	font-size: 0.87rem;
@@ -935,6 +955,16 @@ h2 {
 	color: var(--text-muted);
 }
 
+.status-badge.accepted {
+	background: color-mix(in srgb, #2f9e62 18%, var(--surface));
+	color: color-mix(in srgb, #227849 82%, var(--text));
+}
+
+:root[data-theme='dark'] .status-badge.accepted {
+	background: color-mix(in srgb, #64d894 18%, var(--surface));
+	color: #83e0a8;
+}
+
 .mobile-ticket-cards {
 	display: none;
 }
@@ -962,10 +992,6 @@ h2 {
 	gap: 0.75rem;
 	padding: 0.85rem 1rem;
 	border-bottom: 1px solid var(--border);
-}
-
-.ticket-chat-header .eyebrow {
-	margin-bottom: 0.25rem;
 }
 
 .ticket-chat-header h2 {
@@ -1031,7 +1057,6 @@ h2 {
 	overflow-wrap: anywhere;
 }
 
-.ticket-chat-summary-list,
 .ticket-chat-event-details {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1039,12 +1064,10 @@ h2 {
 	margin: 0.75rem 0 0;
 }
 
-.ticket-chat-summary-list > div,
 .ticket-chat-event-details > div {
 	min-width: 0;
 }
 
-.ticket-chat-summary-list dt,
 .ticket-chat-event-details dt {
 	margin-bottom: 0.15rem;
 	color: var(--text-muted);
@@ -1054,13 +1077,61 @@ h2 {
 	text-transform: uppercase;
 }
 
-.ticket-chat-summary-list dd,
 .ticket-chat-event-details dd {
 	margin: 0;
 	color: var(--text);
 	font-size: 0.78rem;
 	line-height: 1.35;
 	overflow-wrap: anywhere;
+}
+
+.ticket-chat-summary-meta {
+	display: grid;
+	gap: 0.4rem;
+	margin-top: 0.7rem;
+}
+
+.ticket-chat-summary-line {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: baseline;
+	gap: 0.45rem;
+	min-width: 0;
+}
+
+.ticket-chat-summary-label,
+.ticket-chat-summary-created-label {
+	color: var(--text-muted);
+	font-size: 0.66rem;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.ticket-chat-summary-value {
+	min-width: 0;
+	color: var(--text);
+	font-size: 0.78rem;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+
+.ticket-chat-summary-owner,
+.ticket-chat-summary-created {
+	min-width: 0;
+	color: var(--text-muted);
+	font-size: 0.72rem;
+	line-height: 1.35;
+	text-align: right;
+	overflow-wrap: anywhere;
+}
+
+.ticket-chat-summary-created {
+	display: inline-flex;
+	align-items: baseline;
+	justify-content: flex-end;
+	gap: 0.25rem;
+	white-space: nowrap;
 }
 
 .ticket-chat-summary-loading {
@@ -1094,6 +1165,12 @@ h2 {
 .ticket-chat-tab.active {
 	border-bottom-color: var(--accent);
 	color: var(--accent);
+}
+
+.ticket-chat-tab:disabled,
+.ticket-chat-icon-button:disabled,
+.ticket-chat-actions button:disabled {
+	cursor: default;
 }
 
 .ticket-chat-conversation {
@@ -1566,6 +1643,20 @@ h2 {
 	.ticket-card {
 		min-width: 0;
 		padding: 1rem;
+	}
+
+	.ticket-card-clickable {
+		cursor: pointer;
+	}
+
+	.ticket-card-clickable:hover {
+		border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+	}
+
+	.ticket-card-selected {
+		border-color: var(--accent);
+		background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+		box-shadow: inset 3px 0 0 var(--accent), 0 12px 30px rgb(33 67 111 / 5%);
 	}
 
 	.ticket-card-heading {

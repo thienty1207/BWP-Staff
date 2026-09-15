@@ -225,6 +225,21 @@
 		void loadTicketChat(request);
 	}
 
+	function openTicketChatFromTitle(event: MouseEvent, ticketID: number) {
+		event.stopPropagation();
+		openTicketChat(ticketID);
+	}
+
+	function openTicketChatFromRowKey(event: KeyboardEvent, ticketID: number) {
+		if (event.target !== event.currentTarget) {
+			return;
+		}
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			openTicketChat(ticketID);
+		}
+	}
+
 	async function loadTicketChat(request: TicketChatRequest) {
 		try {
 			const ticket = await getTicket(request.ticketID);
@@ -482,16 +497,34 @@
 							</thead>
 							<tbody>
 								{#each tickets as ticket (ticket.id)}
-									<tr>
+									<tr
+										class="ticket-row-clickable"
+										class:ticket-row-selected={chatState.selectedTicketID === ticket.id}
+										onclick={() => openTicketChat(ticket.id)}
+										onkeydown={(event) => openTicketChatFromRowKey(event, ticket.id)}
+									>
 										<td>{identityLabel(ticket.requester)}</td>
 										<td>{ticket.location?.name ?? '—'}</td>
 										<td class="ticket-title-cell">
-											<button class="ticket-title-button" type="button" onclick={() => openTicketChat(ticket.id)}>
+											<button
+												class="ticket-title-button"
+												type="button"
+												onclick={(event) => openTicketChatFromTitle(event, ticket.id)}
+												onkeydown={(event) => event.stopPropagation()}
+											>
 												<span class:ticket-title-priority={ticket.priority}>{ticket.title}</span>
 											</button>
 										</td>
 										<td><span class="ticket-description">{descriptionLabel(ticket.description)}</span></td>
-										<td><span class:closed={ticket.status === 'closed'} class="status-badge">{statusLabel(ticket.status)}</span></td>
+										<td>
+											<span
+												class:accepted={ticket.status === 'accepted'}
+												class:closed={ticket.status === 'closed'}
+												class="status-badge"
+											>
+												{statusLabel(ticket.status)}
+											</span>
+										</td>
 										<td>{ticket.accepted_by ? identityLabel(ticket.accepted_by) : '—'}</td>
 										<td>
 											<time class="ticket-timestamp" datetime={ticket.created_at}>
@@ -513,36 +546,53 @@
 						</table>
 					</div>
 
-					<div class="mobile-ticket-cards">
-						{#each tickets as ticket (ticket.id)}
-							<article class="ticket-card">
-								<div class="ticket-card-heading">
-									<div class="ticket-card-title">
-										<span class="ticket-card-icon" aria-hidden="true">◈</span>
-										<h2>
-											<button class="ticket-title-button" type="button" onclick={() => openTicketChat(ticket.id)}>
-												<span class:ticket-title-priority={ticket.priority}>{ticket.title}</span>
-											</button>
-										</h2>
+						<div class="mobile-ticket-cards">
+							{#each tickets as ticket (ticket.id)}
+								<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+								<article
+									class="ticket-card ticket-card-clickable"
+									class:ticket-card-selected={chatState.selectedTicketID === ticket.id}
+									onclick={() => openTicketChat(ticket.id)}
+									onkeydown={(event) => openTicketChatFromRowKey(event, ticket.id)}
+								>
+									<div class="ticket-card-heading">
+										<div class="ticket-card-title">
+											<span class="ticket-card-icon" aria-hidden="true">◈</span>
+											<h2>
+												<button
+													class="ticket-title-button"
+													type="button"
+													onclick={(event) => openTicketChatFromTitle(event, ticket.id)}
+													onkeydown={(event) => event.stopPropagation()}
+												>
+													<span class:ticket-title-priority={ticket.priority}>{ticket.title}</span>
+												</button>
+											</h2>
+										</div>
+										<span
+											class:accepted={ticket.status === 'accepted'}
+											class:closed={ticket.status === 'closed'}
+											class="status-badge"
+										>
+											{statusLabel(ticket.status)}
+										</span>
 									</div>
-									<span class:closed={ticket.status === 'closed'} class="status-badge">{statusLabel(ticket.status)}</span>
-								</div>
-								<div class="ticket-card-meta">
-									<div><span>Location</span><strong>{ticket.location?.name ?? '—'}</strong></div>
-									{#if ticket.accepted_by}<div><span>Owner</span><strong>{identityLabel(ticket.accepted_by)}</strong></div>{/if}
-									<div><span>Requester</span><strong>{identityLabel(ticket.requester)}</strong></div>
-									<div>
-										<span>Created</span>
-										<strong class="ticket-timestamp">
-											<span class="ticket-timestamp-date">{timestampDate(ticket.created_at)}</span>
-											{#if timestampTime(ticket.created_at)}<span class="ticket-timestamp-time">{timestampTime(ticket.created_at)}</span>{/if}
-										</strong>
+									<div class="ticket-card-meta">
+										<div><span>Location</span><strong>{ticket.location?.name ?? '—'}</strong></div>
+										{#if ticket.accepted_by}<div><span>Owner</span><strong>{identityLabel(ticket.accepted_by)}</strong></div>{/if}
+										<div><span>Requester</span><strong>{identityLabel(ticket.requester)}</strong></div>
+										<div>
+											<span>Created</span>
+											<strong class="ticket-timestamp">
+												<span class="ticket-timestamp-date">{timestampDate(ticket.created_at)}</span>
+												{#if timestampTime(ticket.created_at)}<span class="ticket-timestamp-time">{timestampTime(ticket.created_at)}</span>{/if}
+											</strong>
+										</div>
 									</div>
-								</div>
-								{#if ticket.description?.trim()}<p class="ticket-card-description">{ticket.description.trim()}</p>{/if}
-							</article>
-						{/each}
-					</div>
+									{#if ticket.description?.trim()}<p class="ticket-card-description">{ticket.description.trim()}</p>{/if}
+								</article>
+							{/each}
+						</div>
 
 					{#if page.has_more && !loadMoreErrorMessage}
 						<div class="load-more-row">

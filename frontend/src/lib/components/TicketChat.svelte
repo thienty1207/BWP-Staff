@@ -51,7 +51,6 @@
 <section class="ticket-chat" aria-labelledby="ticket-chat-heading">
 	<header class="ticket-chat-header">
 		<div>
-			<p class="eyebrow">Tickets</p>
 			<h2 id="ticket-chat-heading">Chat</h2>
 		</div>
 		<div class="ticket-chat-header-actions">
@@ -67,23 +66,31 @@
 					<span class="ticket-chat-icon" aria-hidden="true">◈</span>
 					<h3 class="ticket-chat-title" class:ticket-title-priority={state.ticket.priority}>{state.ticket.title}</h3>
 				</div>
-				<span class:closed={state.ticket.status === 'closed'} class="status-badge">{statusLabel(state.ticket.status)}</span>
+				<span
+					class:accepted={state.ticket.status === 'accepted'}
+					class:closed={state.ticket.status === 'closed'}
+					class="status-badge"
+				>
+					{statusLabel(state.ticket.status)}
+				</span>
 			</div>
 
-			<dl class="ticket-chat-summary-list">
-				<div><dt>Requester</dt><dd>{identityLabel(state.ticket.requester)}</dd></div>
-				{#if state.ticket.accepted_by}<div><dt>Owner</dt><dd>{identityLabel(state.ticket.accepted_by)}</dd></div>{/if}
-				<div><dt>Location</dt><dd>{locationLabel(state.ticket.location)}</dd></div>
-				<div>
-					<dt>Created</dt>
-					<dd>
-						<time class="ticket-timestamp" datetime={state.ticket.created_at}>
-							<span class="ticket-timestamp-date">{timestampDate(state.ticket.created_at)}</span>
-							{#if timestampTime(state.ticket.created_at)}<span class="ticket-timestamp-time">{timestampTime(state.ticket.created_at)}</span>{/if}
-						</time>
-					</dd>
+			<div class="ticket-chat-summary-meta">
+				<div class="ticket-chat-summary-line">
+					<span class="ticket-chat-summary-label">Requester</span>
+					<strong class="ticket-chat-summary-value">{identityLabel(state.ticket.requester)}</strong>
+					{#if state.ticket.accepted_by}<span class="ticket-chat-summary-owner">by {identityLabel(state.ticket.accepted_by)}</span>{/if}
 				</div>
-			</dl>
+				<div class="ticket-chat-summary-line">
+					<span class="ticket-chat-summary-label">Location</span>
+					<strong class="ticket-chat-summary-value">{locationLabel(state.ticket.location)}</strong>
+					<time class="ticket-chat-summary-created" datetime={state.ticket.created_at}>
+						<span class="ticket-chat-summary-created-label">Created</span>
+						<span>{timestampDate(state.ticket.created_at)}</span>
+						{#if timestampTime(state.ticket.created_at)}<span>{timestampTime(state.ticket.created_at)}</span>{/if}
+					</time>
+				</div>
+			</div>
 		</div>
 	{:else if state.status === 'loading'}
 		<div class="ticket-chat-summary ticket-chat-summary-loading" role="status" aria-live="polite">

@@ -170,6 +170,69 @@ test('Tickets page keeps chat interactions separate from list controls and expos
 	expect(page).toContain('onBack={closeTicketChat}');
 });
 
+test('ticket rows and cards open Chat while the title remains a single semantic activation', async () => {
+	const page = await Bun.file(new URL('../src/routes/+page.svelte', import.meta.url)).text();
+
+	const tableRows = page.slice(page.indexOf('<tbody>'), page.indexOf('</tbody>'));
+	const mobileCards = page.slice(page.indexOf('<div class="mobile-ticket-cards">'), page.indexOf('{#if page.has_more'));
+
+	expect(tableRows).toContain('class="ticket-row-clickable"');
+	expect(tableRows).toContain('class:ticket-row-selected={chatState.selectedTicketID === ticket.id}');
+	expect(tableRows).toContain('onclick={() => openTicketChat(ticket.id)}');
+	expect(mobileCards).toContain('class="ticket-card ticket-card-clickable"');
+	expect(mobileCards).toContain('class:ticket-card-selected={chatState.selectedTicketID === ticket.id}');
+	expect(mobileCards).toContain('onclick={() => openTicketChat(ticket.id)}');
+
+	expect(page).toContain('class="ticket-title-button"');
+	expect(page).toContain('function openTicketChatFromTitle(event: MouseEvent, ticketID: number)');
+	expect(page).toContain('event.stopPropagation();');
+	expect(page).toMatch(/openTicketChatFromTitle\(event, ticket\.id\)/);
+
+	const titleActivations = page.match(/openTicketChatFromTitle\(event, ticket\.id\)/g) ?? [];
+	expect(titleActivations).toHaveLength(2);
+});
+
+test('Chat presentation uses compact Sara-aligned semantics and scoped disabled cursors', async () => {
+	const chat = await Bun.file(new URL('../src/lib/components/TicketChat.svelte', import.meta.url)).text();
+	const styles = await Bun.file(new URL('../src/lib/styles/app.css', import.meta.url)).text();
+
+	expect(chat).not.toContain('<p class="eyebrow">Tickets</p>');
+	expect(chat).toContain('<h2 id="ticket-chat-heading">Chat</h2>');
+	expect(chat).toContain('ticket-chat-summary-meta');
+	expect(chat).toContain('by {identityLabel(state.ticket.accepted_by)}');
+	expect(chat).toContain('class:accepted={state.ticket.status === \'accepted\'}');
+	expect(chat).toContain('class:closed={state.ticket.status === \'closed\'}');
+
+	const summaryStart = chat.indexOf('<div class="ticket-chat-summary">');
+	const summaryEnd = chat.indexOf('{:else if state.status === \'loading\'}', summaryStart);
+	const summaryMarkup = chat.slice(summaryStart, summaryEnd);
+	expect(summaryMarkup.match(/{state\.ticket\.title}/g) ?? []).toHaveLength(1);
+	expect(chat).not.toContain('ticket-chat-summary-list');
+
+	expect(styles).toContain('.status-badge.accepted');
+	expect(styles).toContain('.ticket-row-clickable');
+	expect(styles).toContain('.ticket-row-selected');
+	expect(styles).toContain('.ticket-card-clickable');
+	expect(styles).toContain('.ticket-card-selected');
+	expect(styles).toContain('.ticket-chat-tab:disabled');
+	expect(styles).toContain('.ticket-chat-icon-button:disabled');
+	expect(styles).toContain('.ticket-chat-actions button:disabled');
+	expect(styles).toContain('cursor: default;');
+	expect(styles).toContain('button:disabled {\n\tcursor: wait;');
+});
+
+test('canonical SPEC makes whole-ticket pointer activation mandatory', async () => {
+	const spec = await Bun.file(
+		new URL('../../Context-Spec-BWP-SonaSea/Spec/SPEC-07-ticket-chat-shell-conversation-foundation.md', import.meta.url)
+	).text();
+
+	expect(spec).toContain('pointer click/tap anywhere on the ticket row/card MUST open Chat');
+	expect(spec).toContain('whole row/card pointer target');
+	expect(spec).toContain('one user activation = one GET request');
+	expect(spec).toContain('selected ticket has visible but subtle selection feedback');
+	expect(spec).not.toContain('row/card pointer click also opens Chat');
+});
+
 test('Ticket Chat keeps the summary compact and uses real persisted activity only', async () => {
 	const chat = await Bun.file(new URL('../src/lib/components/TicketChat.svelte', import.meta.url)).text();
 

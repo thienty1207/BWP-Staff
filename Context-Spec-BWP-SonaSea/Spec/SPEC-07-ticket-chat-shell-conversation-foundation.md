@@ -287,7 +287,7 @@ Chat does not expand document height based on conversation content
 Chat remains visually compact like the Sara reference
 ```
 
-The selected ticket may receive a subtle row highlight.
+The selected ticket has visible but subtle selection feedback without changing table geometry. The feedback must clear when Chat closes and move when another ticket is selected.
 
 Do not add a new Action column just for opening Chat.
 
@@ -919,27 +919,44 @@ List request sequencing and Chat sequencing must not invalidate each other.
 
 Do not add an Action column.
 
-At least one semantic keyboard-focusable control must open Chat.
+The whole ticket is the pointer target.
 
-Recommended:
+Desktop:
+
+```text
+clicking anywhere on the ticket row MUST open Chat for that ticket
+```
+
+Mobile:
+
+```text
+tapping anywhere on the visible ticket card MUST open Chat for that ticket
+```
+
+The required interaction is: **pointer click/tap anywhere on the ticket row/card MUST open Chat**.
+
+The implementation must provide both:
+
+```text
+whole row/card pointer target
+keyboard-operable semantic activation control
+```
+
+The title remains a real semantic button/link-like control so keyboard and screen-reader users have an explicit activation path.
 
 ```text
 Title acts as semantic button/link-like control
 ```
 
-Optional:
+If the pointer target and semantic title control both exist:
 
 ```text
-row/card pointer click also opens Chat
-```
-
-If both exist:
-
-```text
-one click → one GET request
+one user activation = one GET request
 ```
 
 Prevent event-bubbling double fetches.
+
+The selected row/card must use `chatState.selectedTicketID` as its source of truth and show subtle feedback in both Light and Dark themes.
 
 ---
 
