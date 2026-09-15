@@ -1039,7 +1039,6 @@ h2 {
 	gap: 0.4rem;
 }
 
-.ticket-chat-icon,
 .ticket-chat-event-icon {
 	flex: 0 0 auto;
 	color: var(--accent);
@@ -1213,6 +1212,10 @@ h2 {
 	line-height: 1.25;
 	text-align: right;
 	white-space: nowrap;
+}
+
+.ticket-chat-event-created .ticket-chat-event-heading time {
+	align-self: start;
 }
 
 .ticket-chat-event-body {

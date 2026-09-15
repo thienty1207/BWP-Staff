@@ -255,10 +255,13 @@ test('Chat summary and created activity follow the compact Sara conversation hie
 	expect(createdMarkup).not.toContain('<dl');
 	expect(createdMarkup).not.toContain('<dt>');
 	expect(createdMarkup).not.toContain('<dd>');
+	expect(createdMarkup).not.toContain('>◈</span>');
 
 	expect(styles).toContain('.ticket-chat-event-created');
 	expect(styles).toContain('.ticket-chat-event-body');
 	expect(styles).toContain('.ticket-chat-event-accepted');
+	expect(styles).toContain('.ticket-chat-event-created .ticket-chat-event-heading time');
+	expect(styles).toContain('align-self: start;');
 	expect(styles).not.toContain('.ticket-chat-event-details');
 });
 

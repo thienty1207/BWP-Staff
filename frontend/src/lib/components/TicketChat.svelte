@@ -59,7 +59,6 @@
 		<div class="ticket-chat-summary">
 			<div class="ticket-chat-summary-heading">
 				<div class="ticket-chat-title-row">
-					<span class="ticket-chat-icon" aria-hidden="true">◈</span>
 					<h3 class="ticket-chat-title" class:ticket-title-priority={state.ticket.priority}>{state.ticket.title}</h3>
 				</div>
 				<span
@@ -109,7 +108,6 @@
 		{:else if state.ticket}
 			<article class="ticket-chat-event ticket-chat-event-created">
 				<div class="ticket-chat-event-heading">
-					<span class="ticket-chat-event-icon" aria-hidden="true">◈</span>
 					<div>
 						<strong>{identityLabel(state.ticket.requester)}</strong>
 						<p>has created a new request</p>
