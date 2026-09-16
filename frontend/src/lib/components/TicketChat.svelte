@@ -183,7 +183,7 @@
 
 	<div class="ticket-chat-actions" aria-label="Ticket actions">
 		<button
-			class="secondary-button"
+			class="secondary-button ticket-action-button ticket-action-accept"
 			type="button"
 			disabled={!state.ticket || state.ticket.status !== 'pending' || acceptInFlight}
 			aria-busy={acceptInFlight}
@@ -191,7 +191,7 @@
 		>
 			{acceptInFlight ? 'Accepting…' : 'Accept'}
 		</button>
-		<button class="secondary-button" type="button" aria-disabled="true" disabled>Assign</button>
-		<button class="secondary-button" type="button" aria-disabled="true" disabled>Close</button>
+		<button class="secondary-button ticket-action-button ticket-action-assign" type="button" aria-disabled="true" disabled>Assign</button>
+		<button class="secondary-button ticket-action-button ticket-action-close" type="button" aria-disabled="true" disabled>Close</button>
 	</div>
 </section>

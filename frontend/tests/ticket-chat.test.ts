@@ -345,6 +345,22 @@ test('desktop rows expose isolated action buttons while mobile cards keep chat-o
 	expect(mobileCards).not.toContain('ticket-row-action-button');
 });
 
+test('Chat actions share semantic colors and equal aligned columns', async () => {
+	const chat = await Bun.file(new URL('../src/lib/components/TicketChat.svelte', import.meta.url)).text();
+	const styles = await Bun.file(new URL('../src/lib/styles/app.css', import.meta.url)).text();
+	const actionMarkup = chat.slice(chat.indexOf('<div class="ticket-chat-actions"'));
+	const actionStyles = styleBlock(styles, '.ticket-chat-actions {');
+	const actionButtonStyles = styleBlock(styles, '.ticket-chat-actions .ticket-action-button {');
+
+	expect(actionMarkup).toMatch(/class="[^"]*ticket-action-button[^"]*ticket-action-accept[^"]*"/);
+	expect(actionMarkup).toMatch(/class="[^"]*ticket-action-button[^"]*ticket-action-assign[^"]*"/);
+	expect(actionMarkup).toMatch(/class="[^"]*ticket-action-button[^"]*ticket-action-close[^"]*"/);
+	expect(actionStyles).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
+	expect(actionStyles).toContain('align-items: stretch;');
+	expect(actionButtonStyles).toContain('width: 100%;');
+	expect(actionButtonStyles).toContain('min-height: 2.15rem;');
+});
+
 test('acceptance controller uses the submitted row ID, prevents duplicate submits, and preserves another Chat selection', async () => {
 	const acceptedTicket = { ...ticket, id: 301, status: 'accepted' as const, accepted_at: '2026-09-16T08:05:00Z' };
 	let resolveAcceptance: ((value: TicketSummary) => void) | undefined;

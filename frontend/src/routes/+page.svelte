@@ -673,10 +673,10 @@
 												</time>
 											</div>
 										</td>
-										<td class="ticket-actions-cell">
+										<td class="ticket-actions-cell" onclick={handleRowAction}>
 											<div class="ticket-row-actions">
 												<button
-													class="secondary-button ticket-row-action-button"
+													class="secondary-button ticket-action-button ticket-action-accept ticket-row-action-button"
 													type="button"
 													disabled={ticket.status !== 'pending' || isAcceptInFlight(ticket.id)}
 													aria-busy={isAcceptInFlight(ticket.id)}
@@ -685,7 +685,7 @@
 													{isAcceptInFlight(ticket.id) ? 'Accepting…' : 'Accept'}
 												</button>
 												<button
-													class="secondary-button ticket-row-action-button"
+													class="secondary-button ticket-action-button ticket-action-assign ticket-row-action-button"
 													type="button"
 													aria-disabled="true"
 													disabled
@@ -694,7 +694,7 @@
 													Assign
 												</button>
 												<button
-													class="secondary-button ticket-row-action-button"
+													class="secondary-button ticket-action-button ticket-action-close ticket-row-action-button"
 													type="button"
 													aria-disabled="true"
 													disabled

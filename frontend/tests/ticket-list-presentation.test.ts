@@ -3,6 +3,15 @@ import { expect, test } from 'bun:test';
 const pagePath = new URL('../src/routes/+page.svelte', import.meta.url);
 const stylesPath = new URL('../src/lib/styles/app.css', import.meta.url);
 
+function styleBlock(styles: string, selector: string): string {
+	const start = styles.indexOf(selector);
+	if (start < 0) {
+		return '';
+	}
+	const end = styles.indexOf('}', start);
+	return end < 0 ? styles.slice(start) : styles.slice(start, end + 1);
+}
+
 test('desktop ticket columns follow the approved business hierarchy', async () => {
 	const page = await Bun.file(pagePath).text();
 	const columns = [...page.matchAll(/<th scope="col">([^<]+)<\/th>/g)].map((match) => match[1].trim());
@@ -79,4 +88,34 @@ test('desktop ticket actions stay on one horizontal row', async () => {
 
 	expect(actionStyles).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
 	expect(errorStyles).toContain('grid-column: 1 / -1;');
+});
+
+test('desktop ticket actions use shared semantic colors and isolate row activation', async () => {
+	const page = await Bun.file(pagePath).text();
+	const styles = await Bun.file(stylesPath).text();
+	const tableStart = page.indexOf('<div class="desktop-ticket-table">');
+	const tableEnd = page.indexOf('<div class="mobile-ticket-cards">', tableStart);
+	const table = page.slice(tableStart, tableEnd);
+	const actionButtonStyles = styleBlock(styles, '.ticket-action-button {');
+	const disabledActionStyles = styleBlock(styles, '.ticket-action-button:disabled {');
+
+	expect(table).toMatch(/class="[^"]*ticket-action-button[^"]*ticket-action-accept[^"]*"/);
+	expect(table).toMatch(/class="[^"]*ticket-action-button[^"]*ticket-action-assign[^"]*"/);
+	expect(table).toMatch(/class="[^"]*ticket-action-button[^"]*ticket-action-close[^"]*"/);
+	expect(table).toContain('<td class="ticket-actions-cell" onclick={handleRowAction}>');
+	expect(table).toMatch(/ticket-action-assign[\s\S]*?aria-disabled="true"[\s\S]*?disabled/);
+	expect(table).toMatch(/ticket-action-close[\s\S]*?aria-disabled="true"[\s\S]*?disabled/);
+
+	expect(actionButtonStyles).toContain('display: inline-flex;');
+	expect(actionButtonStyles).toContain('white-space: nowrap;');
+	expect(disabledActionStyles).toContain('cursor: default;');
+	expect(disabledActionStyles).toContain('opacity: 1;');
+	expect(styles).toContain('.ticket-action-accept {');
+	expect(styles).toContain('.ticket-action-assign {');
+	expect(styles).toContain('.ticket-action-close {');
+	expect(styles).toContain(":root[data-theme='dark'] .ticket-action-accept {");
+	expect(styles).toContain(":root[data-theme='dark'] .ticket-action-assign {");
+	expect(styles).toContain(":root[data-theme='dark'] .ticket-action-close {");
+	expect(styles).toContain('.ticket-row-actions .ticket-action-button {');
+	expect(styles).toContain('width: 100%;');
 });

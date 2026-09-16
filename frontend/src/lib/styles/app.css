@@ -408,6 +408,57 @@ h2 {
 	color: var(--text);
 }
 
+.ticket-action-button {
+	--ticket-action-color: #1769e0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	border-color: color-mix(in srgb, var(--ticket-action-color) 42%, var(--border));
+	background: color-mix(in srgb, var(--ticket-action-color) 10%, var(--surface));
+	color: var(--ticket-action-color);
+	line-height: 1.2;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.ticket-action-button:hover:not(:disabled) {
+	border-color: color-mix(in srgb, var(--ticket-action-color) 72%, var(--border));
+	background: color-mix(in srgb, var(--ticket-action-color) 18%, var(--surface));
+}
+
+.ticket-action-button:disabled {
+	cursor: default;
+	opacity: 1;
+	border-color: color-mix(in srgb, var(--ticket-action-color) 28%, var(--border));
+	background: color-mix(in srgb, var(--ticket-action-color) 6%, var(--surface));
+	color: color-mix(in srgb, var(--ticket-action-color) 60%, var(--text-muted));
+}
+
+.ticket-action-accept {
+	--ticket-action-color: #2f9e62;
+}
+
+.ticket-action-assign {
+	--ticket-action-color: #1769e0;
+}
+
+.ticket-action-close {
+	--ticket-action-color: #bd2634;
+}
+
+:root[data-theme='dark'] .ticket-action-accept {
+	--ticket-action-color: #64d894;
+}
+
+:root[data-theme='dark'] .ticket-action-assign {
+	--ticket-action-color: #78a9ff;
+}
+
+:root[data-theme='dark'] .ticket-action-close {
+	--ticket-action-color: #f06a70;
+}
+
 .error-message {
 	margin: 1rem 0 0;
 	padding: 0.8rem 0.9rem;
@@ -975,20 +1026,26 @@ h2 {
 }
 
 .ticket-actions-cell {
-	min-width: 10rem;
+	min-width: 14rem;
+	vertical-align: middle;
 }
 
 .ticket-row-actions {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
+	align-items: stretch;
 	gap: 0.35rem;
-	min-width: 9rem;
+	min-width: 13.5rem;
 }
 
 .ticket-row-actions .ticket-row-action-button {
 	min-height: 2rem;
 	padding: 0.35rem 0.45rem;
 	font-size: 0.72rem;
+}
+
+.ticket-row-actions .ticket-action-button {
+	width: 100%;
 }
 
 .ticket-row-actions button:disabled {
@@ -1354,6 +1411,7 @@ h2 {
 .ticket-chat-actions {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
+	align-items: stretch;
 	gap: 0.45rem;
 	padding: 0.55rem 0.75rem 0.7rem;
 }
@@ -1384,8 +1442,10 @@ h2 {
 	font-size: 0.68rem;
 }
 
-.ticket-chat-actions .secondary-button {
+.ticket-chat-actions .ticket-action-button {
+	align-self: stretch;
 	min-width: 0;
+	width: 100%;
 	min-height: 2.15rem;
 	padding: 0.4rem 0.35rem;
 	font-size: 0.72rem;

@@ -1639,3 +1639,25 @@ presentation assumption that actions only live inside Chat.
 The shared Accept flow remains ID-based and race-safe: row and Chat actions
 must patch only the submitted ticket, must not duplicate a request, and must
 not replace a newer Chat selection.
+
+## Final action UI hardening amendment
+
+SPEC-08 remains **OPEN / NOT CLOSED**. The desktop and Chat action controls
+share the following presentation contract:
+
+- `Accept` uses a semantic green treatment.
+- `Assign` uses a semantic blue treatment.
+- `Close` uses a semantic red treatment.
+- Desktop `Accept`, `Assign`, and `Close` remain horizontally aligned with
+  equal, compact geometry; any row error/retry content remains beneath them.
+- Chat keeps the same three aligned actions with equal-width controls.
+- Semantic colors remain distinguishable in Light and Dark themes, including
+  when an action is disabled.
+- Disabled `Assign` and `Close` remain non-mutating and use a default or
+  not-allowed cursor; only an in-flight `Accept` represents loading.
+- The desktop Action cell is an interaction boundary and must not activate the
+  whole-row Chat handler.
+
+The existing mobile contract remains unchanged: mobile cards do not receive a
+desktop Action column, while Chat continues to show the compact colored action
+row.
