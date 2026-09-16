@@ -248,6 +248,42 @@ test('Chat presentation uses compact Sara-aligned semantics and scoped disabled 
 	expect(styles).toContain('button:disabled {\n\tcursor: wait;');
 });
 
+test('mobile Chat uses dynamic viewport chrome and a touch-scroll conversation region', async () => {
+	const chat = await Bun.file(new URL('../src/lib/components/TicketChat.svelte', import.meta.url)).text();
+	const styles = await Bun.file(new URL('../src/lib/styles/app.css', import.meta.url)).text();
+	const mobileStyles = styles.slice(styles.lastIndexOf('@media (max-width: 900px)'));
+	const desktopChatStyles = styleBlock(styles, '.ticket-chat {');
+	const mobileViewStyles = styleBlock(mobileStyles, '.app-main.chat-view {');
+	const mobileChatStyles = styleBlock(mobileStyles, '.ticket-chat {');
+	const conversationStyles = styleBlock(styles, '.ticket-chat-conversation {');
+
+	expect(desktopChatStyles).toContain('position: sticky;');
+	expect(desktopChatStyles).toContain('height: 100%;');
+	expect(desktopChatStyles).toContain('max-height: 100%;');
+	expect(desktopChatStyles).not.toContain('100dvh');
+	expect(mobileViewStyles).toContain('height: 100svh;');
+	expect(mobileViewStyles).toContain('height: 100dvh;');
+	expect(mobileViewStyles).toContain('overflow: hidden;');
+	expect(mobileViewStyles).toContain('env(safe-area-inset-top, 0px)');
+	expect(mobileViewStyles).toContain('env(safe-area-inset-bottom, 0px)');
+	expect(mobileChatStyles).toContain('height: calc(100svh - 1.5rem);');
+	expect(mobileChatStyles).toContain(
+		'height: calc(100dvh - 1.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));'
+	);
+	expect(mobileChatStyles).toContain(
+		'max-height: calc(100dvh - 1.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));'
+	);
+	expect(conversationStyles).toContain('overflow-y: auto;');
+	expect(conversationStyles).toContain('overflow-x: hidden;');
+	expect(conversationStyles).toContain('min-height: 0;');
+	expect(conversationStyles).toContain('touch-action: pan-y;');
+	expect(conversationStyles).toContain('-webkit-overflow-scrolling: touch;');
+	expect(conversationStyles).toContain('overscroll-behavior: contain;');
+	expect(chat).toContain('<button class="secondary-button ticket-chat-close"');
+	expect(chat).toContain('aria-label="Close Chat"');
+	expect(chat).not.toContain('Back to Tickets');
+});
+
 test('Chat summary and created activity follow the compact Sara conversation hierarchy', async () => {
 	const chat = await Bun.file(new URL('../src/lib/components/TicketChat.svelte', import.meta.url)).text();
 	const styles = await Bun.file(new URL('../src/lib/styles/app.css', import.meta.url)).text();

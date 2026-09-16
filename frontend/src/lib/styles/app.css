@@ -1268,6 +1268,8 @@ h2 {
 	overflow-x: hidden;
 	padding: 0.75rem 0.9rem;
 	overscroll-behavior: contain;
+	touch-action: pan-y;
+	-webkit-overflow-scrolling: touch;
 }
 
 .ticket-chat-status {
@@ -1745,8 +1747,15 @@ h2 {
 	}
 
 	.app-main.chat-view {
+		height: 100svh;
+		height: 100dvh;
 		min-height: 100svh;
-		padding: 0.75rem;
+		min-height: 100dvh;
+		overflow: hidden;
+		padding: calc(0.75rem + env(safe-area-inset-top, 0px))
+			calc(0.75rem + env(safe-area-inset-right, 0px))
+			calc(0.75rem + env(safe-area-inset-bottom, 0px))
+			calc(0.75rem + env(safe-area-inset-left, 0px));
 	}
 
 	.app-main.chat-view .mobile-header,
@@ -1766,7 +1775,9 @@ h2 {
 	.ticket-chat {
 		position: static;
 		height: calc(100svh - 1.5rem);
-		max-height: none;
+		height: calc(100dvh - 1.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+		max-height: calc(100svh - 1.5rem);
+		max-height: calc(100dvh - 1.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
 	}
 
 	.desktop-ticket-table {
