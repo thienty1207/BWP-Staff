@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'bun:test';
-import { listTickets } from '../src/lib/client/tickets/api';
+import { acceptTicket, listTickets } from '../src/lib/client/tickets/api';
 
 const originalFetch = globalThis.fetch;
 
@@ -68,7 +68,8 @@ test('ticket list preserves description and requester/owner department codes', a
 		status: 'accepted',
 		description: 'The real ticket description.',
 		requester: { id: 10, full_name: 'Requester', department_code: 'REC' },
-		accepted_by: { id: 20, full_name: 'Owner', department_code: 'IT' }
+		accepted_by: { id: 20, full_name: 'Owner', department_code: 'IT' },
+		accepted_at: '2026-09-11T10:05:00Z'
 	};
 	respondWithJson({ tickets: [acceptedTicket], page: { has_more: false, next_before_created_at: null, next_before_id: null } });
 
@@ -135,4 +136,71 @@ test('ticket list rejects invalid has_more and cursor combinations', async () =>
 	for (const invalidPage of invalidPages) {
 		await expectRetryablePayload({ tickets: [], page: invalidPage });
 	}
+});
+
+test('acceptTicket sends an authenticated empty-body POST and parses the canonical ticket envelope', async () => {
+	const acceptedTicket = {
+		...page.tickets[0],
+		status: 'accepted' as const,
+		accepted_by: { id: 20, full_name: 'Accepter', department_code: 'HK' },
+		accepted_at: '2026-09-16T08:05:00Z',
+		updated_at: '2026-09-16T08:05:00Z'
+	};
+	let requestInput: RequestInfo | URL | undefined;
+	let requestInit: RequestInit | undefined;
+	globalThis.fetch = async (input, init) => {
+		requestInput = input;
+		requestInit = init;
+		return new Response(JSON.stringify({ ticket: acceptedTicket }), { status: 200 });
+	};
+
+	const result = await acceptTicket(101);
+
+	expect(result).toEqual(acceptedTicket);
+	expect(String(requestInput)).toBe('/api/v1/tickets/101/accept');
+	expect(requestInit?.method).toBe('POST');
+	expect(requestInit?.credentials).toBe('include');
+	expect(requestInit?.body).toBeUndefined();
+});
+
+test('acceptTicket distinguishes lifecycle conflicts and safe failures', async () => {
+	const cases = [
+		{ status: 400, code: 'invalid_request', kind: 'invalid_input' },
+		{ status: 401, code: 'unauthenticated', kind: 'unauthenticated' },
+		{ status: 404, code: 'ticket_not_found', kind: 'not_found' },
+		{ status: 409, code: 'ticket_already_accepted', kind: 'already_accepted' },
+		{ status: 409, code: 'ticket_closed', kind: 'closed' },
+		{ status: 503, code: 'internal_server_error', kind: 'retryable' }
+	] as const;
+
+	for (const expected of cases) {
+		globalThis.fetch = async () => new Response(JSON.stringify({ error: { code: expected.code } }), { status: expected.status });
+		const expectedError = { kind: expected.kind, status: expected.status } as Record<string, unknown>;
+		if (expected.status !== 503) {
+			expectedError.code = expected.code;
+		}
+		await expect(acceptTicket(101)).rejects.toMatchObject(expectedError);
+	}
+});
+
+test('acceptTicket rejects malformed successful payloads and network failures safely', async () => {
+	globalThis.fetch = async () => new Response(JSON.stringify({ ticket: { ...page.tickets[0], status: 'accepted' } }), { status: 200 });
+	await expect(acceptTicket(101)).rejects.toMatchObject({ kind: 'retryable', status: 200 });
+
+	globalThis.fetch = async () => {
+		throw new Error('offline');
+	};
+	await expect(acceptTicket(101)).rejects.toMatchObject({ kind: 'retryable' });
+});
+
+test('acceptTicket rejects malformed IDs before making a request', async () => {
+	let requests = 0;
+	globalThis.fetch = async () => {
+		requests += 1;
+		return new Response('{}', { status: 500 });
+	};
+
+	await expect(acceptTicket(0)).rejects.toMatchObject({ kind: 'invalid_input' });
+	await expect(acceptTicket(Number.MAX_SAFE_INTEGER + 1)).rejects.toMatchObject({ kind: 'invalid_input' });
+	expect(requests).toBe(0);
 });

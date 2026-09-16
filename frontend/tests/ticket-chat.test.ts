@@ -116,6 +116,21 @@ test('chat close invalidates in-flight responses without reopening the view', ()
 	expect(machine.state).toEqual({ status: 'closed', selectedTicketID: null, ticket: null, errorMessage: '' });
 });
 
+test('chat selected-ticket updates preserve the active selection and reject stale mutations', () => {
+	const machine = new TicketChatStateMachine();
+	const request = machine.begin(ticket.id);
+	expect(machine.succeed(request, ticket)).toBe(true);
+	const acceptedTicket = { ...ticket, status: 'accepted' as const, accepted_at: '2026-09-16T08:05:00Z' };
+
+	expect(machine.updateSelected(ticket.id, acceptedTicket)).toBe(true);
+	expect(machine.state).toMatchObject({ status: 'ready', selectedTicketID: ticket.id, ticket: acceptedTicket });
+
+	const otherTicket = { ...ticket, id: 202, title: 'Other ticket' };
+	expect(machine.updateSelected(otherTicket.id, otherTicket)).toBe(false);
+	machine.close();
+	expect(machine.updateSelected(ticket.id, acceptedTicket)).toBe(false);
+});
+
 test('Tickets page keeps chat interactions separate from list controls and exposes accessible chat states', async () => {
 	const page = await Bun.file(new URL('../src/routes/+page.svelte', import.meta.url)).text();
 	const chat = await Bun.file(new URL('../src/lib/components/TicketChat.svelte', import.meta.url)).text();
@@ -337,18 +352,42 @@ test('Ticket Chat keeps the summary compact and uses real persisted activity onl
 	expect(chat).not.toContain('due_at');
 });
 
-test('Ticket Chat does not expose operational mutations in the shell', async () => {
+test('Ticket Chat activates Accept while keeping Assign and Close non-mutating shells', async () => {
 	const chat = await Bun.file(new URL('../src/lib/components/TicketChat.svelte', import.meta.url)).text();
 
 	expect(chat).toContain('aria-label="Attach file"');
 	expect(chat).toContain('aria-label="Voice message"');
 	expect(chat).toContain('aria-label="More message options"');
-	expect(chat).toContain('>Accept</button>');
+	expect(chat).toContain('Accept');
 	expect(chat).toContain('>Assign</button>');
 	expect(chat).toContain('>Close</button>');
-	expect(chat).not.toContain('onclick={onAccept}');
+	expect(chat).toContain('onclick={onAccept}');
+	expect(chat).toContain('acceptInFlight');
+	expect(chat).toContain('onRetryAccept');
 	expect(chat).not.toContain('onclick={onAssign}');
 	expect(chat).not.toContain('onclick={onCloseTicket}');
+});
+
+test('Accept patches only the submitted ticket and cannot replace a newer Chat selection', async () => {
+	const page = await Bun.file(new URL('../src/routes/+page.svelte', import.meta.url)).text();
+	const acceptStart = page.indexOf('async function handleAcceptTicket');
+	const acceptEnd = page.indexOf('\n\t}\n', acceptStart);
+	const acceptBody = page.slice(acceptStart, acceptEnd);
+
+	expect(page).toContain('acceptTicket');
+	expect(page).toContain('function patchTicketInList');
+	expect(page).toContain('ticketChatMachine.updateSelected');
+	expect(page).toContain('onAccept={handleAcceptTicket}');
+	expect(page).toContain('acceptInFlight={isAcceptInFlight(chatState.selectedTicketID)}');
+	expect(page).toContain('acceptErrorMessage={selectedAcceptErrorMessage}');
+	expect(acceptBody).toContain('const ticketID = chatState.selectedTicketID;');
+	expect(acceptBody).toContain('acceptTicket(ticketID)');
+	expect(acceptBody).toContain('patchTicketInList(updatedTicket);');
+	expect(acceptBody).not.toContain('listTickets(');
+	expect(acceptBody).not.toContain('new Date(');
+
+	const currentChatGuard = acceptBody.indexOf('isCurrentAcceptChatContext');
+	expect(currentChatGuard).toBeGreaterThanOrEqual(0);
 });
 
 test('New Request keeps create-ticket error codes narrowly scoped', async () => {

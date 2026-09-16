@@ -1,5 +1,6 @@
 import {
 	TicketApiError,
+	type AcceptTicketErrorCode,
 	type CreateTicketErrorCode,
 	type CreateTicketRequest,
 	type TicketDetailErrorCode,
@@ -84,6 +85,65 @@ export async function getTicket(id: number): Promise<TicketSummary> {
 		const code = await parseTicketDetailErrorCode(response);
 		if (code === 'ticket_not_found') {
 			throw new TicketApiError('not_found', 'Ticket not found.', response.status, code);
+		}
+		throw retryableError(response.status);
+	}
+	if (response.status !== 200) {
+		throw retryableError(response.status);
+	}
+
+	let payload: unknown;
+	try {
+		payload = await response.json();
+	} catch {
+		throw retryableError(response.status);
+	}
+	if (!isRecord(payload)) {
+		throw retryableError(response.status);
+	}
+	const ticket = parseTicket(payload.ticket);
+	if (!ticket) {
+		throw retryableError(response.status);
+	}
+	return ticket;
+}
+
+export async function acceptTicket(id: number): Promise<TicketSummary> {
+	if (!isPositiveSafeInteger(id)) {
+		throw new TicketApiError('invalid_input', 'Invalid ticket acceptance request.', 400, 'invalid_request');
+	}
+
+	let response: Response;
+	try {
+		response = await fetch(`${ticketsPath}/${id}/accept`, {
+			method: 'POST',
+			credentials: 'include'
+		});
+	} catch {
+		throw retryableError();
+	}
+
+	if (response.status === 400) {
+		const code = await parseAcceptTicketErrorCode(response);
+		throw new TicketApiError('invalid_input', 'Invalid ticket acceptance request.', response.status, code);
+	}
+	if (response.status === 401) {
+		throw new TicketApiError('unauthenticated', 'Unauthenticated.', response.status, 'unauthenticated');
+	}
+	if (response.status === 404) {
+		const code = await parseAcceptTicketErrorCode(response);
+		if (code === 'ticket_not_found') {
+			throw new TicketApiError('not_found', 'Ticket not found.', response.status, code);
+		}
+		throw retryableError(response.status);
+	}
+	if (response.status === 409) {
+		const code = await parseAcceptTicketErrorCode(response);
+		if (code === 'ticket_already_accepted') {
+			throw new TicketApiError('already_accepted', 'Ticket has already been accepted.', response.status, code);
+		}
+		if (code === 'ticket_closed') {
+			throw new TicketApiError('closed', 'Ticket is closed.', response.status, code);
 		}
 		throw retryableError(response.status);
 	}
@@ -213,6 +273,12 @@ function parseTicket(value: unknown): TicketSummary | null {
 	) {
 		return null;
 	}
+	const lifecycleIsValid =
+		(value.status === 'pending' && value.accepted_by === null && value.accepted_at === null) ||
+		((value.status === 'accepted' || value.status === 'closed') && acceptedBy !== null && value.accepted_at !== null);
+	if (!lifecycleIsValid || (value.status === 'closed' && value.closed_at === null)) {
+		return null;
+	}
 
 	return {
 		id: value.id,
@@ -338,4 +404,28 @@ async function parseTicketDetailErrorCode(response: Response): Promise<TicketDet
 	} catch {
 		return undefined;
 	}
+}
+
+async function parseAcceptTicketErrorCode(
+	response: Response
+): Promise<AcceptTicketErrorCode | TicketDetailErrorCode | 'invalid_request' | 'unauthenticated' | undefined> {
+	try {
+		const payload: unknown = await response.json();
+		if (!isRecord(payload) || !isRecord(payload.error)) {
+			return undefined;
+		}
+		const code = payload.error.code;
+		if (
+			code === 'ticket_already_accepted' ||
+			code === 'ticket_closed' ||
+			code === 'ticket_not_found' ||
+			code === 'invalid_request' ||
+			code === 'unauthenticated'
+		) {
+			return code;
+		}
+	} catch {
+		return undefined;
+	}
+	return undefined;
 }

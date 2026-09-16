@@ -30,3 +30,10 @@ func (service *Service) Create(ctx context.Context, requester IdentitySummary, i
 	}
 	return service.repository.Create(ctx, requester, input)
 }
+
+func (service *Service) Accept(ctx context.Context, ticketID int64, actor IdentitySummary) (Ticket, error) {
+	if service == nil || service.repository == nil {
+		return Ticket{}, errTicketServiceNotConfigured
+	}
+	return service.repository.Accept(ctx, ticketID, actor)
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,10 +14,17 @@ var (
 	ErrDepartmentUnavailable = errors.New("department unavailable")
 	ErrLocationUnavailable   = errors.New("location unavailable")
 	ErrTicketNotFound        = errors.New("ticket not found")
+	ErrTicketAlreadyAccepted = errors.New("ticket already accepted")
+	ErrTicketClosed          = errors.New("ticket closed")
 )
 
 type Repository struct {
 	pool *pgxpool.Pool
+}
+
+type ticketQueryer interface {
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
 func NewRepository(pool *pgxpool.Pool) *Repository {
@@ -148,10 +156,10 @@ LIMIT $4`, string(query.View), query.BeforeCreatedAt, query.BeforeID, query.Limi
 	for index := range tickets {
 		ticketIDs[index] = tickets[index].ID
 	}
-	if err := repository.loadDepartmentAssignments(ctx, tickets, ticketIDs); err != nil {
+	if err := repository.loadDepartmentAssignments(ctx, repository.pool, tickets, ticketIDs); err != nil {
 		return ListResponse{}, err
 	}
-	if err := repository.loadUserAssignments(ctx, tickets, ticketIDs); err != nil {
+	if err := repository.loadUserAssignments(ctx, repository.pool, tickets, ticketIDs); err != nil {
 		return ListResponse{}, err
 	}
 	return response, nil
@@ -161,7 +169,10 @@ func (repository *Repository) FindByID(ctx context.Context, id int64) (Ticket, e
 	if repository == nil || repository.pool == nil {
 		return Ticket{}, fmt.Errorf("ticket repository is not configured")
 	}
+	return repository.findByID(ctx, repository.pool, id)
+}
 
+func (repository *Repository) findByID(ctx context.Context, queryer ticketQueryer, id int64) (Ticket, error) {
 	var (
 		ticket                 Ticket
 		status                 string
@@ -172,7 +183,7 @@ func (repository *Repository) FindByID(ctx context.Context, id int64) (Ticket, e
 		acceptedID             *int64
 		acceptedName           *string
 	)
-	if err := repository.pool.QueryRow(ctx, `
+	if err := queryer.QueryRow(ctx, `
 SELECT
     t.id,
     t.title,
@@ -244,13 +255,80 @@ WHERE t.id = $1`, id).Scan(
 	ticket.AssignedUsers = make([]IdentitySummary, 0)
 	tickets := []Ticket{ticket}
 	ticketIDs := []int64{id}
-	if err := repository.loadDepartmentAssignments(ctx, tickets, ticketIDs); err != nil {
+	if err := repository.loadDepartmentAssignments(ctx, queryer, tickets, ticketIDs); err != nil {
 		return Ticket{}, err
 	}
-	if err := repository.loadUserAssignments(ctx, tickets, ticketIDs); err != nil {
+	if err := repository.loadUserAssignments(ctx, queryer, tickets, ticketIDs); err != nil {
 		return Ticket{}, err
 	}
 	return tickets[0], nil
+}
+
+func (repository *Repository) Accept(ctx context.Context, ticketID int64, actor IdentitySummary) (Ticket, error) {
+	if repository == nil || repository.pool == nil {
+		return Ticket{}, fmt.Errorf("ticket repository is not configured")
+	}
+
+	transaction, err := repository.pool.Begin(ctx)
+	if err != nil {
+		return Ticket{}, fmt.Errorf("begin ticket acceptance: %w", err)
+	}
+	defer func() { _ = transaction.Rollback(ctx) }()
+
+	var (
+		status     string
+		acceptedBy *int64
+	)
+	if err := transaction.QueryRow(ctx, `
+SELECT status::text, accepted_by
+FROM tickets
+WHERE id = $1
+FOR UPDATE`, ticketID).Scan(&status, &acceptedBy); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Ticket{}, ErrTicketNotFound
+		}
+		return Ticket{}, fmt.Errorf("lock ticket for acceptance: %w", err)
+	}
+
+	switch status {
+	case "pending":
+		var acceptedAt, updatedAt time.Time
+		if err := transaction.QueryRow(ctx, `
+UPDATE tickets
+SET status = 'accepted'::ticket_status,
+    accepted_by = $2,
+    accepted_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1 AND status = 'pending'::ticket_status
+RETURNING accepted_at, updated_at`, ticketID, actor.ID).Scan(&acceptedAt, &updatedAt); err != nil {
+			return Ticket{}, fmt.Errorf("accept ticket: %w", err)
+		}
+		if !acceptedAt.Equal(updatedAt) {
+			return Ticket{}, fmt.Errorf("acceptance timestamps diverged")
+		}
+		if _, err := transaction.Exec(ctx, `
+INSERT INTO ticket_activity (ticket_id, actor_user_id, action, created_at)
+VALUES ($1, $2, 'accepted', $3)`, ticketID, actor.ID, acceptedAt); err != nil {
+			return Ticket{}, fmt.Errorf("insert ticket acceptance activity: %w", err)
+		}
+	case "accepted":
+		if acceptedBy == nil || *acceptedBy != actor.ID {
+			return Ticket{}, ErrTicketAlreadyAccepted
+		}
+	case "closed":
+		return Ticket{}, ErrTicketClosed
+	default:
+		return Ticket{}, fmt.Errorf("unsupported ticket status %q", status)
+	}
+
+	ticket, err := repository.findByID(ctx, transaction, ticketID)
+	if err != nil {
+		return Ticket{}, fmt.Errorf("read accepted ticket: %w", err)
+	}
+	if err := transaction.Commit(ctx); err != nil {
+		return Ticket{}, fmt.Errorf("commit ticket acceptance: %w", err)
+	}
+	return ticket, nil
 }
 
 func (repository *Repository) Create(ctx context.Context, requester IdentitySummary, input CreateRequest) (Ticket, error) {
@@ -357,8 +435,8 @@ VALUES ($1, $2, 'created')`, ticket.ID, requester.ID); err != nil {
 	return ticket, nil
 }
 
-func (repository *Repository) loadDepartmentAssignments(ctx context.Context, tickets []Ticket, ticketIDs []int64) error {
-	rows, err := repository.pool.Query(ctx, `
+func (repository *Repository) loadDepartmentAssignments(ctx context.Context, queryer ticketQueryer, tickets []Ticket, ticketIDs []int64) error {
+	rows, err := queryer.Query(ctx, `
 SELECT
     assignment.ticket_id,
     department.id,
@@ -394,8 +472,8 @@ ORDER BY assignment.ticket_id ASC, assignment.id ASC`, ticketIDs)
 	return nil
 }
 
-func (repository *Repository) loadUserAssignments(ctx context.Context, tickets []Ticket, ticketIDs []int64) error {
-	rows, err := repository.pool.Query(ctx, `
+func (repository *Repository) loadUserAssignments(ctx context.Context, queryer ticketQueryer, tickets []Ticket, ticketIDs []int64) error {
+	rows, err := queryer.Query(ctx, `
 SELECT
     assignment.ticket_id,
     assigned_user.id,

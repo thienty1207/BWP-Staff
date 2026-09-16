@@ -60,6 +60,19 @@ export class TicketChatStateMachine {
 		return true;
 	}
 
+	updateSelected(ticketID: number, ticket: TicketSummary): boolean {
+		if (this.currentState.status === 'closed' || this.currentState.selectedTicketID !== ticketID) {
+			return false;
+		}
+		this.currentState = {
+			status: 'ready',
+			selectedTicketID: ticketID,
+			ticket,
+			errorMessage: ''
+		};
+		return true;
+	}
+
 	fail(request: TicketChatRequest, status: 'error' | 'not_found', errorMessage: string): boolean {
 		if (!this.isCurrent(request)) {
 			return false;

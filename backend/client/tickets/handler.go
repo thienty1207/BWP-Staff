@@ -27,6 +27,7 @@ func RegisterRoutes(api fiber.Router, pool *pgxpool.Pool, authService *auth.Serv
 	api.Get("/tickets", authService.RequireAuth(), handler.list)
 	api.Get("/tickets/:id", authService.RequireAuth(), handler.detail)
 	api.Post("/tickets", authService.RequireAuth(), handler.create)
+	api.Post("/tickets/:id/accept", authService.RequireAuth(), handler.accept)
 }
 
 type handler struct {
@@ -62,6 +63,42 @@ func (handler *handler) detail(c fiber.Ctx) error {
 			Message:    "Ticket not found",
 			HTTPStatus: fiber.StatusNotFound,
 		}
+	}
+	if err != nil {
+		return err
+	}
+	return c.Status(fiber.StatusOK).JSON(struct {
+		Ticket Ticket `json:"ticket"`
+	}{Ticket: ticket})
+}
+
+func (handler *handler) accept(c fiber.Ctx) error {
+	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil || id <= 0 {
+		return invalidTicketDetailIDError()
+	}
+
+	principal, ok := auth.CurrentPrincipal(c)
+	if !ok {
+		return &httperror.AppError{
+			Code:       "unauthenticated",
+			Message:    "Authentication required",
+			HTTPStatus: fiber.StatusUnauthorized,
+		}
+	}
+	ticket, err := handler.service.Accept(c.Context(), id, IdentitySummary{
+		ID:             principal.User.ID,
+		FullName:       principal.User.FullName,
+		DepartmentCode: principal.User.Department.Code,
+	})
+	if errors.Is(err, ErrTicketNotFound) {
+		return &httperror.AppError{Code: "ticket_not_found", Message: "Ticket not found", HTTPStatus: fiber.StatusNotFound}
+	}
+	if errors.Is(err, ErrTicketAlreadyAccepted) {
+		return &httperror.AppError{Code: "ticket_already_accepted", Message: "Ticket has already been accepted", HTTPStatus: fiber.StatusConflict}
+	}
+	if errors.Is(err, ErrTicketClosed) {
+		return &httperror.AppError{Code: "ticket_closed", Message: "Ticket is closed", HTTPStatus: fiber.StatusConflict}
 	}
 	if err != nil {
 		return err

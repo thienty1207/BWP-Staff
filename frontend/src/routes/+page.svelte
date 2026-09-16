@@ -7,7 +7,7 @@
 	import TicketChat from '$lib/components/TicketChat.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { getCurrentUser, logout } from '$lib/client/auth/api';
-	import { getTicket, listTickets } from '$lib/client/tickets/api';
+	import { acceptTicket, getTicket, listTickets } from '$lib/client/tickets/api';
 	import { TicketChatStateMachine, type TicketChatRequest, type TicketChatState } from '$lib/client/ticket-chat-state';
 	import { TicketApiError, type TicketIdentity, type TicketListPage, type TicketSummary, type TicketView } from '$lib/client/tickets/model';
 	import type { AuthenticatedUser } from '$lib/client/auth/model';
@@ -37,8 +37,19 @@
 	let drawerOpen = $state(false);
 	let newRequestOpen = $state(false);
 	let ticketRequestSequence = 0;
+	let acceptInFlightIDs: number[] = $state([]);
+	let acceptErrorTicketID: number | null = $state(null);
+	let acceptErrorMessage = $state('');
+	let acceptRetryableTicketID: number | null = $state(null);
+	let chatViewGeneration = 0;
 	const ticketChatMachine = new TicketChatStateMachine();
 	let chatState: TicketChatState = $state(ticketChatMachine.state);
+	let selectedAcceptErrorMessage = $derived(
+		acceptErrorTicketID === chatState.selectedTicketID ? acceptErrorMessage : ''
+	);
+	let selectedAcceptRetryable = $derived(
+		acceptRetryableTicketID !== null && acceptRetryableTicketID === chatState.selectedTicketID
+	);
 
 	onMount(() => {
 		void verifySession();
@@ -219,7 +230,48 @@
 		chatState = ticketChatMachine.state;
 	}
 
+	type AcceptMutationRequest = {
+		ticketID: number;
+		chatGeneration: number;
+	};
+
+	function isAcceptInFlight(ticketID: number | null): boolean {
+		return ticketID !== null && acceptInFlightIDs.includes(ticketID);
+	}
+
+	function setAcceptInFlight(ticketID: number, inFlight: boolean) {
+		if (inFlight) {
+			if (!acceptInFlightIDs.includes(ticketID)) {
+				acceptInFlightIDs = [...acceptInFlightIDs, ticketID];
+			}
+			return;
+		}
+		acceptInFlightIDs = acceptInFlightIDs.filter((value) => value !== ticketID);
+	}
+
+	function isCurrentAcceptChatContext(request: AcceptMutationRequest): boolean {
+		return (
+			request.chatGeneration === chatViewGeneration &&
+			chatState.status !== 'closed' &&
+			chatState.selectedTicketID === request.ticketID
+		);
+	}
+
+	function patchTicketInList(updatedTicket: TicketSummary) {
+		tickets = tickets.map((ticket) => (ticket.id === updatedTicket.id ? updatedTicket : ticket));
+	}
+
+	function setAcceptError(ticketID: number, message: string, retryable: boolean) {
+		acceptErrorTicketID = ticketID;
+		acceptErrorMessage = message;
+		acceptRetryableTicketID = retryable ? ticketID : null;
+	}
+
 	function openTicketChat(ticketID: number) {
+		chatViewGeneration += 1;
+		acceptErrorTicketID = null;
+		acceptErrorMessage = '';
+		acceptRetryableTicketID = null;
 		const request = ticketChatMachine.begin(ticketID);
 		syncTicketChatState();
 		void loadTicketChat(request);
@@ -267,6 +319,10 @@
 	}
 
 	function closeTicketChat() {
+		chatViewGeneration += 1;
+		acceptErrorTicketID = null;
+		acceptErrorMessage = '';
+		acceptRetryableTicketID = null;
 		ticketChatMachine.close();
 		syncTicketChatState();
 	}
@@ -275,9 +331,88 @@
 		if (chatState.selectedTicketID === null || chatState.status === 'loading') {
 			return;
 		}
+		chatViewGeneration += 1;
 		const request = ticketChatMachine.begin(chatState.selectedTicketID);
 		syncTicketChatState();
 		void loadTicketChat(request);
+	}
+
+	async function refreshTicketAfterAcceptConflict(request: AcceptMutationRequest) {
+		try {
+			const refreshedTicket = await getTicket(request.ticketID);
+			patchTicketInList(refreshedTicket);
+			if (isCurrentAcceptChatContext(request) && ticketChatMachine.updateSelected(request.ticketID, refreshedTicket)) {
+				syncTicketChatState();
+			}
+		} catch (error) {
+			if (
+				isCurrentAcceptChatContext(request) &&
+				error instanceof TicketApiError &&
+				error.kind === 'unauthenticated'
+			) {
+				closeTicketChat();
+				await goto('/login', { replaceState: true });
+			}
+		}
+	}
+
+	async function handleAcceptTicket() {
+		const ticketID = chatState.selectedTicketID;
+		const currentTicket = chatState.ticket;
+		if (
+			ticketID === null ||
+			currentTicket === null ||
+			currentTicket.status !== 'pending' ||
+			isAcceptInFlight(ticketID)
+		) {
+			return;
+		}
+
+		const request: AcceptMutationRequest = { ticketID, chatGeneration: chatViewGeneration };
+		setAcceptInFlight(ticketID, true);
+		setAcceptError(ticketID, '', false);
+
+		try {
+			const updatedTicket = await acceptTicket(ticketID);
+			patchTicketInList(updatedTicket);
+			if (isCurrentAcceptChatContext(request) && ticketChatMachine.updateSelected(ticketID, updatedTicket)) {
+				syncTicketChatState();
+				setAcceptError(ticketID, '', false);
+			}
+		} catch (error) {
+			if (error instanceof TicketApiError && error.kind === 'unauthenticated') {
+				if (isCurrentAcceptChatContext(request)) {
+					closeTicketChat();
+					await goto('/login', { replaceState: true });
+				}
+				return;
+			}
+
+			if (error instanceof TicketApiError && (error.kind === 'already_accepted' || error.kind === 'closed')) {
+				if (isCurrentAcceptChatContext(request)) {
+					setAcceptError(
+						ticketID,
+						error.kind === 'already_accepted'
+							? 'This ticket was already accepted by another staff member.'
+							: 'Closed tickets cannot be accepted.',
+						false
+					);
+				}
+				await refreshTicketAfterAcceptConflict(request);
+				return;
+			}
+
+			if (!isCurrentAcceptChatContext(request)) {
+				return;
+			}
+			if (error instanceof TicketApiError && error.kind === 'not_found') {
+				setAcceptError(ticketID, 'Ticket not found. It may have been removed.', false);
+				return;
+			}
+			setAcceptError(ticketID, 'Unable to accept this ticket. Please try again.', true);
+		} finally {
+			setAcceptInFlight(ticketID, false);
+		}
 	}
 
 	function initials(fullName: string): string {
@@ -610,6 +745,11 @@
 						onClose={closeTicketChat}
 						onBack={closeTicketChat}
 						onRetry={retryTicketChat}
+						onAccept={handleAcceptTicket}
+						onRetryAccept={handleAcceptTicket}
+						acceptInFlight={isAcceptInFlight(chatState.selectedTicketID)}
+						acceptErrorMessage={selectedAcceptErrorMessage}
+						acceptRetryable={selectedAcceptRetryable}
 					/>
 				{/if}
 			</div>

@@ -15,9 +15,25 @@
 		onClose: () => void;
 		onBack: () => void;
 		onRetry: () => void;
+		onAccept: () => void;
+		onRetryAccept: () => void;
+		acceptInFlight: boolean;
+		acceptErrorMessage: string;
+		acceptRetryable: boolean;
 	};
 
-	let { state, formatTimestamp, onClose, onBack, onRetry }: Props = $props();
+	let {
+		state,
+		formatTimestamp,
+		onClose,
+		onBack,
+		onRetry,
+		onAccept,
+		onRetryAccept,
+		acceptInFlight,
+		acceptErrorMessage,
+		acceptRetryable
+	}: Props = $props();
 
 	function identityLabel(identity: TicketIdentity | null): string {
 		if (!identity) {
@@ -161,8 +177,25 @@
 		<button class="ticket-chat-icon-button" type="button" aria-label="More message options" aria-disabled="true" disabled>⋮</button>
 	</div>
 
+	{#if acceptErrorMessage}
+		<div class="ticket-chat-action-error" role="alert" aria-live="assertive">
+			<span>{acceptErrorMessage}</span>
+			{#if acceptRetryable}
+				<button class="secondary-button" type="button" disabled={acceptInFlight} onclick={onRetryAccept}>Retry</button>
+			{/if}
+		</div>
+	{/if}
+
 	<div class="ticket-chat-actions" aria-label="Ticket actions">
-		<button class="secondary-button" type="button" aria-disabled="true" disabled>Accept</button>
+		<button
+			class="secondary-button"
+			type="button"
+			disabled={!state.ticket || state.ticket.status !== 'pending' || acceptInFlight}
+			aria-busy={acceptInFlight}
+			onclick={onAccept}
+		>
+			{acceptInFlight ? 'Accepting…' : 'Accept'}
+		</button>
 		<button class="secondary-button" type="button" aria-disabled="true" disabled>Assign</button>
 		<button class="secondary-button" type="button" aria-disabled="true" disabled>Close</button>
 	</div>

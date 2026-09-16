@@ -58,13 +58,21 @@ export type TicketCursor = {
 	before_id: number;
 };
 
-export type TicketApiErrorKind = 'invalid_input' | 'unauthenticated' | 'not_found' | 'retryable';
+export type TicketApiErrorKind =
+	| 'invalid_input'
+	| 'unauthenticated'
+	| 'not_found'
+	| 'already_accepted'
+	| 'closed'
+	| 'retryable';
 
 export type CreateTicketErrorCode = 'department_unavailable' | 'location_unavailable' | 'invalid_request';
 
 export type TicketDetailErrorCode = 'ticket_not_found';
 
-export type TicketApiErrorCode = CreateTicketErrorCode | TicketDetailErrorCode;
+export type AcceptTicketErrorCode = 'ticket_already_accepted' | 'ticket_closed';
+
+export type TicketApiErrorCode = CreateTicketErrorCode | TicketDetailErrorCode | AcceptTicketErrorCode | 'unauthenticated';
 
 export class TicketApiError extends Error {
 	readonly kind: TicketApiErrorKind;
