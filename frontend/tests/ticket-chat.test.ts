@@ -1,10 +1,11 @@
 import { afterEach, expect, test } from 'bun:test';
 import { getTicket } from '../src/lib/client/tickets/api';
 import { TicketChatStateMachine } from '../src/lib/client/ticket-chat-state';
-import type { TicketSummary } from '../src/lib/client/tickets/model';
+import { TicketAcceptanceController, type AcceptViewContext } from '../src/lib/client/ticket-acceptance';
+import { TicketApiError, type TicketSummary } from '../src/lib/client/tickets/model';
 
 function styleBlock(styles: string, selector: string): string {
-	const start = styles.lastIndexOf(selector);
+	const start = styles.indexOf(selector);
 	if (start < 0) {
 		return '';
 	}
@@ -145,7 +146,8 @@ test('Tickets page keeps chat interactions separate from list controls and expos
 	expect(page).toContain('loadMore');
 	expect(page).toContain('TicketChat');
 	expect(page).not.toContain('TicketDetail');
-	expect(chat).toContain('Back to Tickets');
+	expect(chat).not.toContain('Back to Tickets');
+	expect(chat).toContain('aria-label="Close Chat"');
 	expect(chat).toContain('aria-labelledby="ticket-chat-heading"');
 	expect(chat).toContain('role="status"');
 	expect(chat).toContain('role="alert"');
@@ -173,10 +175,11 @@ test('Tickets page keeps chat interactions separate from list controls and expos
 	expect(styles).toContain('.tickets-workspace.chat-open');
 	expect(styles).toContain('grid-template-columns: minmax(0, 1fr) clamp(19rem, 22vw, 22rem)');
 	expect(styles).toContain('.ticket-chat');
-	expect(styles).toContain('.ticket-chat-back');
+	expect(styles).not.toContain('.ticket-chat-back');
+	expect(styles).toContain('.ticket-chat-close');
 	expect(styles).toContain('.ticket-chat-conversation');
 	expect(styles).toContain('overflow-y: auto');
-	expect(styles).toContain('border: 1px solid var(--danger)');
+	expect(styles).not.toContain('border: 1px solid var(--danger)');
 
 	const switchViewStart = page.indexOf('function switchView');
 	const switchViewEnd = page.indexOf('\n\t}\n', switchViewStart);
@@ -191,7 +194,7 @@ test('Tickets page keeps chat interactions separate from list controls and expos
 	const retryChatBody = page.slice(retryChatStart, retryChatEnd);
 	expect(retryChatBody).toContain('loadTicketChat(request)');
 	expect(retryChatBody).not.toContain('loadFirstPage');
-	expect(page).toContain('onBack={closeTicketChat}');
+	expect(page).not.toContain('onBack={closeTicketChat}');
 });
 
 test('ticket rows and cards open Chat while the title remains a single semantic activation', async () => {
@@ -297,10 +300,10 @@ test('Chat summary and created activity follow the compact Sara conversation hie
 
 	const titleRowStyles = styleBlock(styles, '.ticket-chat-title-row {');
 	const titleStyles = styleBlock(styles, '.ticket-chat-title {');
-	const priorityTitleStyles = styleBlock(styles, '.ticket-chat-title.ticket-title-priority {');
+	const priorityTitleStyles = styleBlock(styles, '.ticket-title-priority {\n\tdisplay: inline-block;');
 	const statusStyles = styleBlock(styles, '.ticket-chat-summary-heading > .status-badge {');
 	const summaryLineStyles = styleBlock(styles, '.ticket-chat-summary-line {');
-	const summaryTimestampStyles = styleBlock(styles, '.ticket-chat-summary-created {');
+	const summaryTimestampStyles = styleBlock(styles, '.ticket-chat-summary-created {\n\tdisplay: block;');
 	const createdHeadingStyles = styleBlock(styles, '.ticket-chat-event-created .ticket-chat-event-heading {');
 
 	expect(titleRowStyles).toContain('flex: 1 1 auto;');
@@ -310,8 +313,9 @@ test('Chat summary and created activity follow the compact Sara conversation hie
 	expect(titleStyles).toContain('white-space: nowrap;');
 	expect(titleStyles).toContain('overflow: hidden;');
 	expect(titleStyles).toContain('text-overflow: ellipsis;');
-	expect(priorityTitleStyles).toContain('width: auto;');
-	expect(priorityTitleStyles).toContain('overflow-wrap: normal;');
+	expect(priorityTitleStyles).toContain('background:');
+	expect(priorityTitleStyles).toContain('font-weight: inherit;');
+	expect(priorityTitleStyles).not.toContain('border: 1px solid var(--danger);');
 	expect(statusStyles).toContain('flex: 0 0 auto;');
 	expect(statusStyles).toContain('white-space: nowrap;');
 	expect(summaryLineStyles).toContain('align-items: baseline;');
@@ -321,6 +325,119 @@ test('Chat summary and created activity follow the compact Sara conversation hie
 	expect(summaryTimestampStyles).not.toContain('display: grid;');
 	expect(createdHeadingStyles).toContain('grid-template-columns: minmax(0, 1fr) auto;');
 	expect(styles).not.toContain('.ticket-chat-event-details');
+});
+
+test('desktop rows expose isolated action buttons while mobile cards keep chat-only actions', async () => {
+	const page = await Bun.file(new URL('../src/routes/+page.svelte', import.meta.url)).text();
+	const table = page.slice(page.indexOf('<div class="desktop-ticket-table">'), page.indexOf('<div class="mobile-ticket-cards">'));
+	const mobileCards = page.slice(page.indexOf('<div class="mobile-ticket-cards">'), page.indexOf('{#if page.has_more'));
+
+	expect(table).toContain('<th scope="col">Action</th>');
+	expect(table).toContain('ticket-row-action-button');
+	expect(table).toContain('handleRowAccept(event, ticket.id)');
+	expect(table).toContain('disabled={ticket.status !== \'pending\' || isAcceptInFlight(ticket.id)}');
+	expect(table).toContain('ticket-location-value');
+	expect(table).toMatch(/>\s*Assign\s*<\/button>/);
+	expect(table).toMatch(/>\s*Close\s*<\/button>/);
+	expect(page).toContain('function handleRowAction(event: MouseEvent)');
+	expect(page).toContain('event.stopPropagation();');
+	expect(page).toContain('class="ticket-card-location"');
+	expect(mobileCards).not.toContain('ticket-row-action-button');
+});
+
+test('acceptance controller uses the submitted row ID, prevents duplicate submits, and preserves another Chat selection', async () => {
+	const acceptedTicket = { ...ticket, id: 301, status: 'accepted' as const, accepted_at: '2026-09-16T08:05:00Z' };
+	let resolveAcceptance: ((value: TicketSummary) => void) | undefined;
+	let submittedIDs: number[] = [];
+	const inFlight: Array<[number, boolean]> = [];
+	const patched: TicketSummary[] = [];
+	const chatUpdates: TicketSummary[] = [];
+	let view: AcceptViewContext = {
+		listSequence: 1,
+		listView: 'open',
+		chatGeneration: 4,
+		chatOpen: true,
+		selectedTicketID: 302
+	};
+	const controller = new TicketAcceptanceController({
+		acceptTicket: async (id) => {
+			submittedIDs.push(id);
+			return new Promise<TicketSummary>((resolve) => {
+				resolveAcceptance = resolve;
+			});
+		},
+		getTicket: async () => acceptedTicket
+	});
+
+	const callbacks = {
+		getCurrentTicket: () => ({ ...ticket, id: 301, status: 'pending' as const }),
+		getView: () => view,
+		patchList: (updated: TicketSummary) => patched.push(updated),
+		updateChat: (updated: TicketSummary) => chatUpdates.push(updated),
+		setError: () => undefined,
+		clearError: () => undefined,
+		onUnauthenticated: async () => undefined,
+		onInFlightChange: (id: number, active: boolean) => inFlight.push([id, active])
+	};
+
+	const first = controller.acceptTicketByID(301, 'row', callbacks);
+	const duplicate = controller.acceptTicketByID(301, 'row', callbacks);
+	await Promise.resolve();
+	expect(submittedIDs).toEqual([301]);
+	view = { ...view, chatGeneration: 5, selectedTicketID: 302 };
+	resolveAcceptance?.(acceptedTicket);
+	await Promise.all([first, duplicate]);
+
+	expect(patched).toEqual([acceptedTicket]);
+	expect(chatUpdates).toEqual([]);
+	expect(inFlight).toEqual([
+		[301, true],
+		[301, false]
+	]);
+});
+
+test('acceptance conflicts refresh the submitted ticket once without opening or replacing Chat', async () => {
+	const conflictTicket = { ...ticket, id: 303, status: 'accepted' as const, accepted_at: '2026-09-16T08:05:00Z' };
+	let acceptCalls = 0;
+	let refreshCalls = 0;
+	const patched: TicketSummary[] = [];
+	const chatUpdates: TicketSummary[] = [];
+	const errors: Array<[string, number, string, boolean]> = [];
+	const controller = new TicketAcceptanceController({
+		acceptTicket: async () => {
+			acceptCalls += 1;
+			throw new TicketApiError('already_accepted', 'conflict', 409, 'ticket_already_accepted');
+		},
+		getTicket: async (id) => {
+			refreshCalls += 1;
+			expect(id).toBe(303);
+			return conflictTicket;
+		}
+	});
+	const callbacks = {
+		getCurrentTicket: () => ({ ...ticket, id: 303, status: 'pending' as const }),
+		getView: (): AcceptViewContext => ({
+			listSequence: 2,
+			listView: 'open',
+			chatGeneration: 1,
+			chatOpen: false,
+			selectedTicketID: null
+		}),
+		patchList: (updated: TicketSummary) => patched.push(updated),
+		updateChat: (updated: TicketSummary) => chatUpdates.push(updated),
+		setError: (origin: 'row' | 'chat', id: number, message: string, retryable: boolean) => errors.push([origin, id, message, retryable]),
+		clearError: () => undefined,
+		onUnauthenticated: async () => undefined,
+		onInFlightChange: () => undefined
+	};
+
+	await controller.acceptTicketByID(303, 'row', callbacks);
+
+	expect(acceptCalls).toBe(1);
+	expect(refreshCalls).toBe(1);
+	expect(patched).toEqual([conflictTicket]);
+	expect(chatUpdates).toEqual([]);
+	expect(errors).toEqual([['row', 303, 'This ticket was already accepted by another staff member.', false]]);
 });
 
 test('canonical SPEC makes whole-ticket pointer activation mandatory', async () => {
@@ -380,14 +497,14 @@ test('Accept patches only the submitted ticket and cannot replace a newer Chat s
 	expect(page).toContain('onAccept={handleAcceptTicket}');
 	expect(page).toContain('acceptInFlight={isAcceptInFlight(chatState.selectedTicketID)}');
 	expect(page).toContain('acceptErrorMessage={selectedAcceptErrorMessage}');
-	expect(acceptBody).toContain('const ticketID = chatState.selectedTicketID;');
-	expect(acceptBody).toContain('acceptTicket(ticketID)');
-	expect(acceptBody).toContain('patchTicketInList(updatedTicket);');
+	expect(acceptBody).toContain('acceptTicketByID(chatState.selectedTicketID, \'chat\')');
+	expect(page).toContain('function acceptTicketByID(ticketID: number, origin: AcceptOrigin)');
+	expect(page).toContain('patchList: patchTicketInList');
+	expect(page).toContain('updateChat: updateSelectedChat');
+	expect(page).toContain('listSequence: ticketRequestSequence');
 	expect(acceptBody).not.toContain('listTickets(');
 	expect(acceptBody).not.toContain('new Date(');
-
-	const currentChatGuard = acceptBody.indexOf('isCurrentAcceptChatContext');
-	expect(currentChatGuard).toBeGreaterThanOrEqual(0);
+	expect(page).toContain('chatGeneration: chatViewGeneration');
 });
 
 test('New Request keeps create-ticket error codes narrowly scoped', async () => {

@@ -7,11 +7,11 @@ test('desktop ticket columns follow the approved business hierarchy', async () =
 	const page = await Bun.file(pagePath).text();
 	const columns = [...page.matchAll(/<th scope="col">([^<]+)<\/th>/g)].map((match) => match[1].trim());
 
-	expect(columns).toEqual(['Requester', 'Location', 'Title', 'Description', 'Status', 'Owner', 'Created On', 'Due Date']);
+	expect(columns).toEqual(['Requester', 'Location', 'Title', 'Description', 'Status', 'Owner', 'Created On', 'Due Date', 'Action']);
 	expect(page).not.toContain('ticket-id');
 	expect(page).not.toContain('Assignment');
 	expect(page).not.toContain('<th scope="col">Department</th>');
-	expect(page).not.toContain('<th scope="col">Action</th>');
+	expect(page).toContain('<th scope="col">Action</th>');
 });
 
 test('ticket list renders real descriptions and accepted_by owner labels', async () => {
@@ -55,12 +55,15 @@ test('ticket list splits timestamps and styles priority titles without a badge',
 	const priorityStart = styles.indexOf('.ticket-title-priority');
 	const priorityEnd = styles.indexOf('}', priorityStart);
 	const priorityStyles = styles.slice(priorityStart, priorityEnd);
-	expect(priorityStyles).toContain('border: 1px solid var(--danger)');
+	expect(priorityStyles).not.toContain('border: 1px solid var(--danger)');
 	expect(priorityStyles).toContain('display: inline-block');
 	expect(priorityStyles).toContain('width: fit-content');
 	expect(priorityStyles).toContain('max-width: 100%');
 	expect(priorityStyles).toContain('box-sizing: border-box');
-	expect(priorityStyles).toContain('overflow-wrap: anywhere');
-	expect(priorityStyles).toContain('font-weight: 800');
+	expect(priorityStyles).toContain('background:');
+	expect(priorityStyles).toContain('overflow: hidden');
+	expect(priorityStyles).toContain('text-overflow: ellipsis');
+	expect(priorityStyles).toContain('white-space: nowrap');
+	expect(priorityStyles).toContain('font-weight: inherit');
 	expect(priorityStyles).not.toContain('color: var(--danger)');
 });

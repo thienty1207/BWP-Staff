@@ -7,8 +7,15 @@
 	import TicketChat from '$lib/components/TicketChat.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { getCurrentUser, logout } from '$lib/client/auth/api';
-	import { acceptTicket, getTicket, listTickets } from '$lib/client/tickets/api';
+	import { getTicket, listTickets } from '$lib/client/tickets/api';
 	import { TicketChatStateMachine, type TicketChatRequest, type TicketChatState } from '$lib/client/ticket-chat-state';
+	import {
+		TicketAcceptanceController,
+		type AcceptMutationRequest,
+		type AcceptOrigin,
+		type AcceptViewContext,
+		type TicketAcceptanceCallbacks
+	} from '$lib/client/ticket-acceptance';
 	import { TicketApiError, type TicketIdentity, type TicketListPage, type TicketSummary, type TicketView } from '$lib/client/tickets/model';
 	import type { AuthenticatedUser } from '$lib/client/auth/model';
 	import { AuthApiError } from '$lib/client/auth/model';
@@ -39,16 +46,18 @@
 	let ticketRequestSequence = 0;
 	let acceptInFlightIDs: number[] = $state([]);
 	let acceptErrorTicketID: number | null = $state(null);
+	let acceptErrorOrigin: AcceptOrigin | null = $state(null);
 	let acceptErrorMessage = $state('');
 	let acceptRetryableTicketID: number | null = $state(null);
 	let chatViewGeneration = 0;
 	const ticketChatMachine = new TicketChatStateMachine();
+	const ticketAcceptance = new TicketAcceptanceController();
 	let chatState: TicketChatState = $state(ticketChatMachine.state);
 	let selectedAcceptErrorMessage = $derived(
-		acceptErrorTicketID === chatState.selectedTicketID ? acceptErrorMessage : ''
+		acceptErrorOrigin === 'chat' && acceptErrorTicketID === chatState.selectedTicketID ? acceptErrorMessage : ''
 	);
 	let selectedAcceptRetryable = $derived(
-		acceptRetryableTicketID !== null && acceptRetryableTicketID === chatState.selectedTicketID
+		acceptErrorOrigin === 'chat' && acceptRetryableTicketID !== null && acceptRetryableTicketID === chatState.selectedTicketID
 	);
 
 	onMount(() => {
@@ -230,11 +239,6 @@
 		chatState = ticketChatMachine.state;
 	}
 
-	type AcceptMutationRequest = {
-		ticketID: number;
-		chatGeneration: number;
-	};
-
 	function isAcceptInFlight(ticketID: number | null): boolean {
 		return ticketID !== null && acceptInFlightIDs.includes(ticketID);
 	}
@@ -249,26 +253,38 @@
 		acceptInFlightIDs = acceptInFlightIDs.filter((value) => value !== ticketID);
 	}
 
-	function isCurrentAcceptChatContext(request: AcceptMutationRequest): boolean {
-		return (
-			request.chatGeneration === chatViewGeneration &&
-			chatState.status !== 'closed' &&
-			chatState.selectedTicketID === request.ticketID
-		);
-	}
-
 	function patchTicketInList(updatedTicket: TicketSummary) {
 		tickets = tickets.map((ticket) => (ticket.id === updatedTicket.id ? updatedTicket : ticket));
 	}
 
-	function setAcceptError(ticketID: number, message: string, retryable: boolean) {
+	function setAcceptError(origin: AcceptOrigin, ticketID: number, message: string, retryable: boolean) {
+		acceptErrorOrigin = origin;
 		acceptErrorTicketID = ticketID;
 		acceptErrorMessage = message;
 		acceptRetryableTicketID = retryable ? ticketID : null;
 	}
 
+	function clearAcceptError(origin: AcceptOrigin, ticketID: number) {
+		if (acceptErrorOrigin !== origin || acceptErrorTicketID !== ticketID) {
+			return;
+		}
+		acceptErrorOrigin = null;
+		acceptErrorTicketID = null;
+		acceptErrorMessage = '';
+		acceptRetryableTicketID = null;
+	}
+
+	function rowAcceptErrorMessage(ticketID: number): string {
+		return acceptErrorOrigin === 'row' && acceptErrorTicketID === ticketID ? acceptErrorMessage : '';
+	}
+
+	function rowAcceptRetryable(ticketID: number): boolean {
+		return acceptErrorOrigin === 'row' && acceptRetryableTicketID === ticketID;
+	}
+
 	function openTicketChat(ticketID: number) {
 		chatViewGeneration += 1;
+		acceptErrorOrigin = null;
 		acceptErrorTicketID = null;
 		acceptErrorMessage = '';
 		acceptRetryableTicketID = null;
@@ -320,6 +336,7 @@
 
 	function closeTicketChat() {
 		chatViewGeneration += 1;
+		acceptErrorOrigin = null;
 		acceptErrorTicketID = null;
 		acceptErrorMessage = '';
 		acceptRetryableTicketID = null;
@@ -337,82 +354,62 @@
 		void loadTicketChat(request);
 	}
 
-	async function refreshTicketAfterAcceptConflict(request: AcceptMutationRequest) {
-		try {
-			const refreshedTicket = await getTicket(request.ticketID);
-			patchTicketInList(refreshedTicket);
-			if (isCurrentAcceptChatContext(request) && ticketChatMachine.updateSelected(request.ticketID, refreshedTicket)) {
-				syncTicketChatState();
-			}
-		} catch (error) {
-			if (
-				isCurrentAcceptChatContext(request) &&
-				error instanceof TicketApiError &&
-				error.kind === 'unauthenticated'
-			) {
-				closeTicketChat();
-				await goto('/login', { replaceState: true });
-			}
+	function getAcceptViewContext(): AcceptViewContext {
+		return {
+			listSequence: ticketRequestSequence,
+			listView: activeView,
+			chatGeneration: chatViewGeneration,
+			chatOpen: chatState.status !== 'closed',
+			selectedTicketID: chatState.selectedTicketID
+		};
+	}
+
+	function getCurrentTicketForAccept(ticketID: number, origin: AcceptOrigin): TicketSummary | null {
+		if (origin === 'chat' && chatState.selectedTicketID === ticketID) {
+			return chatState.ticket;
+		}
+		return tickets.find((ticket) => ticket.id === ticketID) ?? null;
+	}
+
+	function updateSelectedChat(updatedTicket: TicketSummary) {
+		if (ticketChatMachine.updateSelected(updatedTicket.id, updatedTicket)) {
+			syncTicketChatState();
 		}
 	}
 
+	async function handleAcceptUnauthenticated(_request: AcceptMutationRequest) {
+		closeTicketChat();
+		await goto('/login', { replaceState: true });
+	}
+
+	const acceptCallbacks: TicketAcceptanceCallbacks = {
+		getCurrentTicket: getCurrentTicketForAccept,
+		getView: getAcceptViewContext,
+		patchList: patchTicketInList,
+		updateChat: updateSelectedChat,
+		setError: setAcceptError,
+		clearError: clearAcceptError,
+		onUnauthenticated: handleAcceptUnauthenticated,
+		onInFlightChange: setAcceptInFlight
+	};
+
+	function acceptTicketByID(ticketID: number, origin: AcceptOrigin): Promise<void> {
+		return ticketAcceptance.acceptTicketByID(ticketID, origin, acceptCallbacks);
+	}
+
 	async function handleAcceptTicket() {
-		const ticketID = chatState.selectedTicketID;
-		const currentTicket = chatState.ticket;
-		if (
-			ticketID === null ||
-			currentTicket === null ||
-			currentTicket.status !== 'pending' ||
-			isAcceptInFlight(ticketID)
-		) {
-			return;
+		if (chatState.selectedTicketID !== null) {
+			await acceptTicketByID(chatState.selectedTicketID, 'chat');
 		}
+	}
 
-		const request: AcceptMutationRequest = { ticketID, chatGeneration: chatViewGeneration };
-		setAcceptInFlight(ticketID, true);
-		setAcceptError(ticketID, '', false);
+	function handleRowAccept(event: MouseEvent, ticketID: number) {
+		event.stopPropagation();
+		void acceptTicketByID(ticketID, 'row');
+	}
 
-		try {
-			const updatedTicket = await acceptTicket(ticketID);
-			patchTicketInList(updatedTicket);
-			if (isCurrentAcceptChatContext(request) && ticketChatMachine.updateSelected(ticketID, updatedTicket)) {
-				syncTicketChatState();
-				setAcceptError(ticketID, '', false);
-			}
-		} catch (error) {
-			if (error instanceof TicketApiError && error.kind === 'unauthenticated') {
-				if (isCurrentAcceptChatContext(request)) {
-					closeTicketChat();
-					await goto('/login', { replaceState: true });
-				}
-				return;
-			}
-
-			if (error instanceof TicketApiError && (error.kind === 'already_accepted' || error.kind === 'closed')) {
-				if (isCurrentAcceptChatContext(request)) {
-					setAcceptError(
-						ticketID,
-						error.kind === 'already_accepted'
-							? 'This ticket was already accepted by another staff member.'
-							: 'Closed tickets cannot be accepted.',
-						false
-					);
-				}
-				await refreshTicketAfterAcceptConflict(request);
-				return;
-			}
-
-			if (!isCurrentAcceptChatContext(request)) {
-				return;
-			}
-			if (error instanceof TicketApiError && error.kind === 'not_found') {
-				setAcceptError(ticketID, 'Ticket not found. It may have been removed.', false);
-				return;
-			}
-			setAcceptError(ticketID, 'Unable to accept this ticket. Please try again.', true);
-		} finally {
-			setAcceptInFlight(ticketID, false);
-		}
+	function handleRowAction(event: MouseEvent) {
+		event.stopPropagation();
 	}
 
 	function initials(fullName: string): string {
@@ -628,6 +625,7 @@
 									<th scope="col">Owner</th>
 									<th scope="col">Created On</th>
 									<th scope="col">Due Date</th>
+									<th scope="col">Action</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -639,7 +637,7 @@
 										onkeydown={(event) => openTicketChatFromRowKey(event, ticket.id)}
 									>
 										<td>{identityLabel(ticket.requester)}</td>
-										<td>{ticket.location?.name ?? '—'}</td>
+										<td><strong class="ticket-location-value">{ticket.location?.name ?? '—'}</strong></td>
 										<td class="ticket-title-cell">
 											<button
 												class="ticket-title-button"
@@ -675,6 +673,52 @@
 												</time>
 											</div>
 										</td>
+										<td class="ticket-actions-cell">
+											<div class="ticket-row-actions">
+												<button
+													class="secondary-button ticket-row-action-button"
+													type="button"
+													disabled={ticket.status !== 'pending' || isAcceptInFlight(ticket.id)}
+													aria-busy={isAcceptInFlight(ticket.id)}
+													onclick={(event) => handleRowAccept(event, ticket.id)}
+												>
+													{isAcceptInFlight(ticket.id) ? 'Accepting…' : 'Accept'}
+												</button>
+												<button
+													class="secondary-button ticket-row-action-button"
+													type="button"
+													aria-disabled="true"
+													disabled
+													onclick={handleRowAction}
+												>
+													Assign
+												</button>
+												<button
+													class="secondary-button ticket-row-action-button"
+													type="button"
+													aria-disabled="true"
+													disabled
+													onclick={handleRowAction}
+												>
+													Close
+												</button>
+												{#if rowAcceptErrorMessage(ticket.id)}
+													<div class="ticket-row-action-error" role="alert" aria-live="assertive">
+														<span>{rowAcceptErrorMessage(ticket.id)}</span>
+														{#if rowAcceptRetryable(ticket.id)}
+															<button
+																class="secondary-button ticket-row-action-button"
+																type="button"
+																disabled={isAcceptInFlight(ticket.id)}
+																onclick={(event) => handleRowAccept(event, ticket.id)}
+															>
+																Retry
+															</button>
+														{/if}
+													</div>
+												{/if}
+											</div>
+										</td>
 									</tr>
 								{/each}
 							</tbody>
@@ -692,7 +736,6 @@
 								>
 									<div class="ticket-card-heading">
 										<div class="ticket-card-title">
-											<span class="ticket-card-icon" aria-hidden="true">◈</span>
 											<h2>
 												<button
 													class="ticket-title-button"
@@ -713,7 +756,7 @@
 										</span>
 									</div>
 									<div class="ticket-card-meta">
-										<div><span>Location</span><strong>{ticket.location?.name ?? '—'}</strong></div>
+										<div class="ticket-card-location"><span>Location</span><strong>{ticket.location?.name ?? '—'}</strong></div>
 										{#if ticket.accepted_by}<div><span>Owner</span><strong>{identityLabel(ticket.accepted_by)}</strong></div>{/if}
 										<div><span>Requester</span><strong>{identityLabel(ticket.requester)}</strong></div>
 										<div>
@@ -743,7 +786,6 @@
 						state={chatState}
 						formatTimestamp={formatTimestamp}
 						onClose={closeTicketChat}
-						onBack={closeTicketChat}
 						onRetry={retryTicketChat}
 						onAccept={handleAcceptTicket}
 						onRetryAccept={handleAcceptTicket}

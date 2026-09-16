@@ -13,7 +13,6 @@
 		state: TicketChatState;
 		formatTimestamp: (value: string | null) => TicketTimestamp | null;
 		onClose: () => void;
-		onBack: () => void;
 		onRetry: () => void;
 		onAccept: () => void;
 		onRetryAccept: () => void;
@@ -26,7 +25,6 @@
 		state,
 		formatTimestamp,
 		onClose,
-		onBack,
 		onRetry,
 		onAccept,
 		onRetryAccept,
@@ -76,13 +74,8 @@
 
 <section class="ticket-chat" aria-labelledby="ticket-chat-heading">
 	<header class="ticket-chat-header">
-		<div>
-			<h2 id="ticket-chat-heading">Chat</h2>
-		</div>
-		<div class="ticket-chat-header-actions">
-			<button class="secondary-button ticket-chat-back" type="button" onclick={onBack}>Back to Tickets</button>
-			<button class="secondary-button ticket-chat-close" type="button" aria-label="Close Chat" onclick={onClose}>×</button>
-		</div>
+		<h2 id="ticket-chat-heading">Chat</h2>
+		<button class="secondary-button ticket-chat-close" type="button" aria-label="Close Chat" onclick={onClose}>×</button>
 	</header>
 
 	{#if state.ticket}
@@ -93,7 +86,9 @@
 						<rect x="3" y="4" width="18" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6" />
 						<path d="M9 20h6M12 16v4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.6" />
 					</svg>
-					<h3 class="ticket-chat-title" class:ticket-title-priority={state.ticket.priority}>{state.ticket.title}</h3>
+					<h3 class="ticket-chat-title">
+						<span class:ticket-title-priority={state.ticket.priority}>{state.ticket.title}</span>
+					</h3>
 				</div>
 				<span
 					class:accepted={state.ticket.status === 'accepted'}
@@ -110,7 +105,7 @@
 					{#if state.ticket.accepted_by}<span class="ticket-chat-summary-owner">by {identityLabel(state.ticket.accepted_by)}</span>{/if}
 				</div>
 				<div class="ticket-chat-summary-line">
-					<strong class="ticket-chat-summary-value">{locationLabel(state.ticket.location)}</strong>
+					<strong class="ticket-chat-summary-value ticket-chat-summary-location">{locationLabel(state.ticket.location)}</strong>
 					<time class="ticket-chat-summary-created" datetime={state.ticket.created_at}>{summaryTimestamp(state.ticket.created_at)}</time>
 				</div>
 			</div>
@@ -139,7 +134,7 @@
 		{:else if state.ticket}
 			<article class="ticket-chat-event ticket-chat-event-created">
 				<div class="ticket-chat-event-heading">
-					<div>
+					<div class="ticket-chat-event-copy">
 						<strong>{identityLabel(state.ticket.requester)}</strong>
 						<p>has created a new request</p>
 					</div>

@@ -25,6 +25,7 @@ type ticketAcceptanceFixture struct {
 	LocationID           int64
 	AssignedDepartmentID int64
 	AssignedUserID       int64
+	SpoofTicketID        int64
 	PendingTicketID      int64
 	ClosedTicketID       int64
 }
@@ -79,7 +80,7 @@ func TestAcceptTicketEndpointEnforcesLifecycleContract(t *testing.T) {
 
 	t.Run("ignores actor fields in an untrusted request body", func(t *testing.T) {
 		body := fmt.Sprintf(`{"accepted_by":%d,"accepted_at":"2035-01-01T00:00:00Z","status":"accepted","actor_user_id":%d}`, fixture.SecondAccepterID, fixture.SecondAccepterID)
-		response := requestAcceptTicket(t, server, formatInt64(fixture.PendingTicketID), fixture.FirstAccepterToken, body)
+		response := requestAcceptTicket(t, server, formatInt64(fixture.SpoofTicketID), fixture.FirstAccepterToken, body)
 		var result ticketDetailResponse
 		decodeTicketResponse(t, response, &result)
 		response.Body.Close()
@@ -97,6 +98,15 @@ func TestAcceptTicketEndpointEnforcesLifecycleContract(t *testing.T) {
 	t.Run("first acceptance persists canonical state and one activity atomically", func(t *testing.T) {
 		if fixture.PendingTicketID == 0 {
 			t.Fatal("pending ticket was not seeded")
+		}
+		var status string
+		var acceptedBy *int64
+		var acceptedAt *time.Time
+		if err := pool.QueryRow(ctx, `SELECT status::text, accepted_by, accepted_at FROM tickets WHERE id = $1`, fixture.PendingTicketID).Scan(&status, &acceptedBy, &acceptedAt); err != nil {
+			t.Fatalf("read pending ticket before first acceptance: %v", err)
+		}
+		if status != "pending" || acceptedBy != nil || acceptedAt != nil {
+			t.Fatalf("first-acceptance fixture was not genuinely pending: status=%s accepted_by=%v accepted_at=%v", status, acceptedBy, acceptedAt)
 		}
 		var body ticketDetailResponse
 		response := requestAcceptTicket(t, server, formatInt64(fixture.PendingTicketID), fixture.FirstAccepterToken, "")
@@ -314,6 +324,7 @@ func seedTicketAcceptanceFixture(t *testing.T, pool *pgxpool.Pool, ctx context.C
 	fixture.SecondAccepterToken = insertSession(t, pool, ctx, fixture.SecondAccepterID)
 
 	createdAt := time.Date(2026, 9, 16, 8, 0, 0, 0, time.UTC)
+	fixture.SpoofTicketID = insertPendingAcceptanceTicket(t, pool, ctx, fixture.RequesterID, fixture.RequestDepartmentID, fixture.LocationID, "SPEC-08 spoof request", createdAt)
 	if err := pool.QueryRow(ctx, `
 INSERT INTO tickets (requester_id, department_id, location_id, title, description, status, priority, created_at, updated_at)
 VALUES ($1, $2, $3, 'SPEC-08 pending request', 'Acceptance test description', 'pending'::ticket_status, TRUE, $4, $4)
@@ -336,6 +347,18 @@ RETURNING id`, fixture.RequesterID, fixture.RequestDepartmentID, fixture.FirstAc
 		t.Fatalf("insert closed acceptance ticket: %v", err)
 	}
 	return fixture
+}
+
+func insertPendingAcceptanceTicket(t *testing.T, pool *pgxpool.Pool, ctx context.Context, requesterID, departmentID, locationID int64, title string, createdAt time.Time) int64 {
+	t.Helper()
+	var ticketID int64
+	if err := pool.QueryRow(ctx, `
+INSERT INTO tickets (requester_id, department_id, location_id, title, description, status, priority, created_at, updated_at)
+VALUES ($1, $2, $3, $4, 'Acceptance test description', 'pending'::ticket_status, TRUE, $5, $5)
+RETURNING id`, requesterID, departmentID, locationID, title, createdAt).Scan(&ticketID); err != nil {
+		t.Fatalf("insert pending acceptance ticket: %v", err)
+	}
+	return ticketID
 }
 
 func requestAcceptTicket(t *testing.T, server *fiber.App, rawID, token, body string) *http.Response {
