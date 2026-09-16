@@ -8,9 +8,24 @@
 >
 > Closed before this SPEC: SPEC-01 through SPEC-06.7.
 >
-> Status: **OPEN / NOT CLOSED**
+> Status: **✅ CLOSED**
 >
 > This SPEC **replaces the previous SPEC-07 — Ticket Detail Read contract**. The previous SPEC-07 was never CLOSED and used the wrong user-facing concept. Git history preserves it; it must not remain the active canonical SPEC document.
+
+## Closure note — final implemented contract
+
+SPEC-07 is closed after final manual browser verification and independent source review. The shipped contract is:
+
+- Selecting a ticket opens **Ticket Chat**, not a Ticket Detail inspector.
+- The whole desktop ticket row is clickable, and the whole mobile ticket card is tappable.
+- The semantic Title button remains keyboard accessible, with one Title activation protected from row/card bubbling.
+- Desktop Chat is a sibling right-side panel rather than an overlay/modal; mobile and narrow layouts use dedicated full-width Chat content.
+- The Chat header is compact. Its summary follows `Title / Status`, `Requester / by accepted_by`, and `Location / compact created timestamp`.
+- Long summary titles use one-line ellipsis; the monitor icon precedes the Title; `Location` displays `location.name` only; timestamps use the theme accent.
+- Chats is active, Checklist remains a non-functional shell, the conversation region scrolls independently, and the composer remains a non-functional shell.
+- Accept / Assign / Close remain visual shells at SPEC-07 closure.
+- Created and accepted system activity are derived from persisted ticket data; `GET /api/v1/tickets/:id` remains PostgreSQL-backed.
+- No runtime mock ticket/chat data and no migration `0021` were introduced.
 
 ---
 

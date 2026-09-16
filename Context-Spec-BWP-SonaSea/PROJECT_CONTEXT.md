@@ -1,12 +1,12 @@
 # BWP SonaSea — PROJECT_CONTEXT (Current Canonical Context)
 
-> **Last context refresh:** 2026-09-13
+> **Last context refresh:** 2026-09-16
 >
 > **Repository:** `thienty1207/BWP-Staff`
 >
-> **Verified source baseline while this context was prepared:** `main` at `23bf1097808c7c4b4aa457332fb5a63dffc109c1`
+> **Verified source baseline while this context was prepared:** `main` at `89be98275c92bf704186f9519af703fab0bed063`
 >
-> **Important:** SPEC-06.7 cleanup has been merged and reviewed. `ROOM-8020` and `ROOM-7309` remain stored but inactive, canonical `BWP-ROOM-8020` / `BWP-ROOM-7309` remain active, and the 06.7 integration test file now uses a descriptive domain filename. SPEC-06.7 is CLOSED.
+> **Important:** SPEC-06.7 cleanup has been merged and reviewed. `ROOM-8020` and `ROOM-7309` remain stored but inactive, canonical `BWP-ROOM-8020` / `BWP-ROOM-7309` remain active, and the 06.7 integration test file now uses a descriptive domain filename. SPEC-06.7 is CLOSED. SPEC-07 is also **✅ CLOSED** as **Ticket Chat Shell + Conversation Foundation**.
 
 ---
 
@@ -37,6 +37,63 @@ Priority when instructions conflict:
 Closed SPECs are historical implementation contracts. Later SPECs may deliberately supersede selected UI or behavior details. Do not blindly copy an older SPEC when a later SPEC explicitly changed that rule.
 
 If a visual reference is supplied by the user and the user says to follow it, treat that image as a **binding visual/interaction contract** for the requested elements. Do not "improve" it into a materially different hierarchy or behavior unless the user explicitly permits deviation.
+
+## Current SPEC-07 state — ✅ CLOSED
+
+SPEC-07's canonical selected-ticket UX is:
+
+```text
+Ticket List
+    → click/tap ticket
+Ticket Chat
+```
+
+It is not a Ticket Detail inspector. The final contract is:
+
+```text
+DESKTOP
+- Ticket List + sibling Chat panel
+- Chat does not overlay the list
+- whole ticket row opens Chat
+- selected row has subtle feedback
+
+MOBILE
+- whole ticket card opens Chat
+- Chat becomes dedicated full-width content
+- Back preserves loaded list state
+
+CHAT SUMMARY
+- compact 3-row Sara-style hierarchy:
+  Title / Status
+  Requester / by accepted_by
+  Location / created timestamp
+- monitor icon before Title
+- Title uses one-line ellipsis
+- pending omits `by —`
+- location.name only
+- timestamp is compact and theme-accented
+
+CHAT BODY
+- Chats active
+- Checklist visual shell only
+- created-request activity comes from persisted data
+- accepted activity appears only when accepted_by + accepted_at exist
+- conversation scrolls independently
+- composer shell is non-submitting
+- Accept / Assign / Close remain non-mutating at SPEC-07 closure
+
+DATA / API
+- GET /api/v1/tickets/:id is the canonical selected-ticket read
+- PostgreSQL is the source of truth
+- no runtime mocks
+- no migration 0021
+
+RACE / STATE
+- Chat state is separate from list state
+- latest selection wins
+- a late response for A cannot overwrite B
+- Close, tab switch, and New Request invalidate old selected-ticket responses
+```
 
 ---
 
@@ -654,7 +711,7 @@ Do not revert to the old tall developer-style card that stacks every backend fie
 
 Do not display Ticket ID.
 
-The mobile card remains a summary. Ticket Detail/Chat navigation is intentionally deferred to SPEC-07+.
+The mobile card remains a summary and is a full-card interaction target: tapping the card opens the selected Ticket Chat defined by SPEC-07.
 
 Priority uses the same rule as desktop:
 
@@ -1066,35 +1123,27 @@ Report and Settings are not implemented merely because they exist in navigation.
 
 ---
 
-# 26. Ticket Detail / actions are NOT implemented yet
+# 26. Ticket Chat / future actions at SPEC-07 closure
 
-Next major intended product phase remains Ticket Detail Read.
-
-Current list must not pretend these actions exist:
+SPEC-07 is **✅ CLOSED**. The selected-ticket flow is:
 
 ```text
+Ticket List → click/tap ticket → Ticket Chat
+```
+
+Desktop uses a sibling right-side Chat panel that does not cover the table. Mobile uses a dedicated full-width Chat view, and Back preserves the loaded list state.
+
+At SPEC-07 closure, these remain visual/non-mutating shells:
+
+```text
+Checklist
+composer
 Accept
 Assign
 Close
-Chat
-Checklist
 ```
 
-Ticket Detail desktop direction remains:
-
-```text
-right-side integrated panel
-does not cover the table
-full-height allowed
-```
-
-Mobile direction remains:
-
-```text
-dedicated detail/chat screen
-```
-
-Do not implement fake click-through content or dead action controls.
+The Chat shell uses persisted selected-ticket data and does not invent fake click-through content or runtime mock messages.
 
 ---
 
@@ -1493,15 +1542,14 @@ without explicit approval.
 
 ---
 
-# 40. Next intended phase
-
-After PROJECT_CONTEXT/spec supersession notes are synchronized:
+# 40. Next phase
 
 ```text
-SPEC-07 — Ticket Detail Read
+SPEC-07 ✅ CLOSED
+→ SPEC-08 — Accept Ticket
 ```
 
-Do not bundle Accept/Assign/Close/Chat/Checklist unless the SPEC explicitly includes them.
+This context alignment does not implement SPEC-08. Its backend/frontend work begins only under the canonical SPEC-08 contract.
 
 ---
 
@@ -1543,6 +1591,14 @@ PRIORITY UI:
 normal Title text + red content-sized border
 no Priority badge
 
+SPEC-07:
+✅ CLOSED — Ticket Chat Shell + Conversation Foundation
+Ticket List → click/tap ticket → Ticket Chat
+whole desktop row and mobile card open Chat
+compact Sara-style summary
+persisted selected-ticket activity
+no runtime mock data
+
 CREATE TICKET:
 department + optional location + title + optional description + boolean priority + optional due time
 requester from auth principal
@@ -1575,6 +1631,6 @@ measure first
 future dedicated load-test phase up to ~10k concurrency where meaningful
 
 NEXT:
-SPEC-06.7 CLOSED
-then SPEC-07 Ticket Detail Read
+SPEC-07 ✅ CLOSED
+then SPEC-08 — Accept Ticket
 ```
