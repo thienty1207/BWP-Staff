@@ -980,6 +980,7 @@ h2 {
 
 .ticket-row-actions {
 	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 0.35rem;
 	min-width: 9rem;
 }
@@ -995,6 +996,7 @@ h2 {
 }
 
 .ticket-row-action-error {
+	grid-column: 1 / -1;
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;

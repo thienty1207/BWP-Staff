@@ -67,3 +67,16 @@ test('ticket list splits timestamps and styles priority titles without a badge',
 	expect(priorityStyles).toContain('font-weight: inherit');
 	expect(priorityStyles).not.toContain('color: var(--danger)');
 });
+
+test('desktop ticket actions stay on one horizontal row', async () => {
+	const styles = await Bun.file(stylesPath).text();
+	const actionStart = styles.indexOf('.ticket-row-actions');
+	const actionEnd = styles.indexOf('}', actionStart);
+	const actionStyles = styles.slice(actionStart, actionEnd);
+	const errorStart = styles.indexOf('.ticket-row-action-error');
+	const errorEnd = styles.indexOf('}', errorStart);
+	const errorStyles = styles.slice(errorStart, errorEnd);
+
+	expect(actionStyles).toContain('grid-template-columns: repeat(3, minmax(0, 1fr));');
+	expect(errorStyles).toContain('grid-column: 1 / -1;');
+});
