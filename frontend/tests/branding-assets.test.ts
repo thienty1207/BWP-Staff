@@ -6,14 +6,11 @@ const frontendRoot = join(import.meta.dir, '..');
 test('Hotel Staff login assets are available', async () => {
 	const background = Bun.file(join(frontendRoot, 'static/images/login-background.jpg'));
 	const loginIcon = Bun.file(join(frontendRoot, 'static/images/hotel-login-icon.svg'));
-	const logo = Bun.file(join(frontendRoot, 'static/images/bwp-logo.png'));
 
 	expect(await background.exists()).toBe(true);
 	expect(background.size).toBeGreaterThan(0);
 	expect(await loginIcon.exists()).toBe(true);
 	expect(loginIcon.size).toBeGreaterThan(0);
-	expect(await logo.exists()).toBe(true);
-	expect(logo.size).toBeGreaterThan(0);
 });
 
 test('login page uses public asset paths instead of local filesystem paths', async () => {

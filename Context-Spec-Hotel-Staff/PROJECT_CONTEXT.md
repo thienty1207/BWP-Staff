@@ -8,11 +8,11 @@
 >
 > **GitHub repository:** `thienty1207/Hotel_Staff`
 >
-> **Verified repository baseline before rebrand implementation:** `main` at `95cf693e905dd970a5388db27a7346659745b76a`
+> **Verified post-rebrand implementation baseline:** `main` at `d70c6bd2affd8ee194b21e842197452ea5a49233`
 >
 > **Local PostgreSQL database:** `hotel_staff`
 >
-> **Current feature state:** SPEC-01 through SPEC-08 are ✅ CLOSED. SPEC-08 is persistence-verified. The next authorized work is the bounded **Hotel Staff rebrand transition** defined by SPEC-08.1. SPEC-09 Assign Ticket must not begin until that transition is independently verified.
+> **Current feature state:** SPEC-01 through SPEC-08.1 are ✅ CLOSED. The Hotel Staff rebrand and its runtime, desktop, and user-reported mobile/narrow verification are complete. SPEC-09 Assign Ticket is the next design item; SPEC-09 has not been created or implemented.
 
 ---
 
@@ -39,9 +39,19 @@ bwp-sonasea
 hotel_staff
 ```
 
-The source tree is **not yet fully rebranded** at baseline `95cf693e...`.
+Current technical identity:
 
-Historical names in closed SPECs describe the project state when those SPECs were implemented. They must not be treated as the current product brand.
+```text
+Go module:                  github.com/thienty1207/Hotel_Staff/backend
+Session cookie:             hotel_staff_session
+Theme storage key:           hotel-staff-theme
+Remembered username key:     hotel-staff-remembered-username
+Database backup filename:    hotel_staff.dump
+Canonical docs directory:    Context-Spec-Hotel-Staff/
+```
+
+The implementation baseline is post-rebrand. Historical names in closed SPECs describe the project
+state when those SPECs were implemented. They must not be treated as the current product brand.
 
 ---
 
@@ -140,99 +150,49 @@ A future data anonymization/master-data migration requires its own explicit migr
 
 ---
 
-# 4. Current known rebrand debt at baseline 95cf693e
+# 4. Current post-rebrand identity and verification state
 
-The repository name is already `Hotel_Staff`, but current source still contains old identity references.
+The rebrand implementation landed at `d70c6bd2affd8ee194b21e842197452ea5a49233`. The current
+`main`/`origin/main` baseline was verified at that commit on 2026-09-18.
 
-## Frontend
-
-Known examples:
-
-```text
-frontend/src/routes/+page.svelte
-- "Tickets | BWP SonaSea"
-- "BWP SonaSea staff tickets"
-- /images/bwp-logo.png
-- alt="BWP SonaSea"
-
-frontend/src/routes/login/+page.svelte
-- "BWP SonaSea — Login"
-- "BWP SonaSea sign-in"
-- "BWP SONASEA STAFF"
-- "Access your BWP SonaSea account."
-- localStorage key: bwp-remembered-username
-
-frontend/src/lib/theme.ts
-- localStorage key: bwp-theme
-```
-
-Known brand asset:
+Verified active identity:
 
 ```text
-frontend/static/images/bwp-logo.png
+Git remote:                  https://github.com/thienty1207/Hotel_Staff.git
+Go module/import path:       github.com/thienty1207/Hotel_Staff/backend
+Session cookie:              hotel_staff_session
+Theme storage key:            hotel-staff-theme
+Remembered username key:      hotel-staff-remembered-username
+Local PostgreSQL database:    hotel_staff
+Backup filename:              hotel_staff.dump
+Canonical docs directory:     Context-Spec-Hotel-Staff/
 ```
 
-The login background must also be visually audited because an old product name may be baked into the image itself.
+The active frontend uses Hotel Staff copy, a neutral hotel icon, and `login-background.jpg`. The
+login page was visually inspected and showed no BWP, SonaSea, or Best Western branding. The
+historical `frontend/static/images/bwp-logo.png` asset remains in the repository, is not rendered by
+active UI, and is no longer required by the branding asset test.
 
-## Backend / Go module
+The local backend runtime was checked against `hotel_staff`: `/health` and `/ready` succeeded; API
+login, `/api/v1/auth/me`, Open/Closed ticket lists, persisted ticket detail for IDs 15 and 16,
+logout, and unauthenticated post-logout `/me` were verified. In the authenticated browser, Open
+showed the four existing tickets, Closed loaded its empty state, and Chat opened a persisted
+accepted ticket with its created and accepted activity. Light and Dark theme selections both
+persisted through reload. At the available desktop viewport (1197×912), the document had no
+page-level horizontal overflow; the ticket table used its intended internal scroll. The user
+manually verified mobile/narrow behavior after the rebrand: no body-level horizontal overflow, a
+ticket card opens Chat, the compact close control remains reachable, conversation scrolling stays
+contained, composer/actions remain reachable, and Accept / Assign / Close remain correctly laid
+out. Read-only database counts remained stable: 16 departments (14 active), 866 locations
+(864 active), 155 `BWP-AREA-*`, 564 `BWP-ROOM-*`, and 4 tickets (all accepted).
 
-Current module path is still:
-
-```text
-github.com/thienty1207/BWP-Staff/backend
-```
-
-and Go source imports still use the old repository path.
-
-The canonical target after SPEC-08.1 is:
-
-```text
-github.com/thienty1207/Hotel_Staff/backend
-```
-
-## Authentication technical naming
-
-Current cookie name at baseline:
-
-```text
-bwp_session
-```
-
-This is a legacy implementation identifier.
-
-SPEC-08.1 must handle any cookie rename deliberately because changing the cookie name invalidates existing browser sessions and requires auth/integration test updates.
-
-## Database / operational files
-
-The local runtime database has already been renamed to:
-
-```text
-hotel_staff
-```
-
-But repository documentation/scripts still contain old backup naming such as:
-
-```text
-database/bwp-sonasea.dump
-```
-
-and the backup script currently targets the old filename.
-
-## Documentation folder
-
-Current repository folder:
-
-```text
-Context-Spec-BWP-SonaSea/
-```
-
-Canonical target:
-
-```text
-Context-Spec-Hotel-Staff/
-```
-
-Use `git mv` during the rebrand so history is preserved.
+Baron metadata exception: `.baron/project.toml` still has the internal
+`project_slug = "bwp-sonasea"`. The installed Baron CLI exposes no supported rename/rebind
+operation in the current trusted-receipt environment; `baron automation reconcile` passed without
+identity repair, and repository rules prohibit manually rewriting Baron-owned identity metadata.
+The slug is not runtime/product branding and is not exposed in the application UI or API. No fake
+trusted execution or review receipt was created. This is an accepted internal-tooling exception,
+not a product closure blocker.
 
 ---
 
@@ -440,7 +400,9 @@ bounded PHC verification parameters
 
 Remember Me stores username only.
 
-At pre-rebrand baseline, the cookie/local-storage keys still use legacy names. SPEC-08.1 owns the bounded identity migration.
+Current technical names are `hotel_staff_session`, `hotel-staff-theme`, and
+`hotel-staff-remembered-username`. Remember Me stores the username only; it must not store a
+password, cookie, or raw token.
 
 ---
 
@@ -526,7 +488,7 @@ no migration 0021
 
 Never rewrite applied migrations.
 
-SPEC-08.1 rebranding must not create migration `0021` merely to rename branding.
+The rebrand created no migration `0021`. Do not add a branding-only migration or rewrite already-applied migrations.
 
 ---
 
@@ -1104,15 +1066,16 @@ SPEC-06.6 ✅ CLOSED
 SPEC-06.7 ✅ CLOSED
 SPEC-07   ✅ CLOSED
 SPEC-08   ✅ CLOSED
-SPEC-08.1 ⏳ CURRENT — Hotel Staff Rebrand Transition
+SPEC-08.1 ✅ CLOSED — Hotel Staff rebrand; runtime, automated, desktop, and user-reported
+mobile/narrow verification recorded
 SPEC-09   NOT CREATED / NOT IMPLEMENTED
 ```
 
 ---
 
-# 27. Current transition — SPEC-08.1
+# 27. SPEC-08.1 closure state
 
-Before SPEC-09, complete the product/repository identity transition:
+The product/repository identity transition is implemented:
 
 ```text
 BWP SonaSea / BWP-Staff
@@ -1120,30 +1083,26 @@ BWP SonaSea / BWP-Staff
 Hotel Staff / Hotel_Staff
 ```
 
-Required rebrand audit includes:
+The implementation includes:
 
 ```text
-Git remote
-Go module/import path
-canonical docs folder
-PROJECT_CONTEXT
-README/current docs
-frontend title/meta/copy
-sidebar/login branding
-brand assets
-localStorage keys
-session cookie naming
-database backup filename/scripts
-local DATABASE_URL target
-tests affected by technical-name changes
-final old-brand occurrence audit
+Git remote, Go module/imports, canonical docs, README/current docs,
+frontend identity, cookie/storage keys, backup naming, and local DB target
 ```
 
-Do not mutate `BWP-AREA-*` / `BWP-ROOM-*` persisted identifiers.
+Do not mutate `BWP-AREA-*` / `BWP-ROOM-*` persisted identifiers or their seed ownership
+descriptions.
 
 Do not create migration `0021`.
 
-Do not implement Assign/Close/Chat persistence during this transition.
+Do not implement SPEC-09, Assign/Close mutations, or Chat persistence as part of rebrand closure.
+
+SPEC-08.1 is ✅ CLOSED. Authenticated browser checks verified the real Open/Closed ticket views,
+persisted accepted-ticket Chat, created/accepted activity, and Light/Dark persistence. The user
+also manually verified the mobile/narrow ticket-card and Chat behavior described in Section 4.
+Frontend and backend automated verification passed; no GitHub CI result is claimed. The Baron
+internal-slug/receipt limitation is documented as an accepted tooling exception and does not
+change product runtime identity or block this product closure.
 
 ---
 
@@ -1151,12 +1110,11 @@ Do not implement Assign/Close/Chat persistence during this transition.
 
 ```text
 SPEC-08 ✅ CLOSED
-→ SPEC-08.1 Hotel Staff Rebrand Transition
-→ independent rebrand verification
-→ SPEC-09 Assign Ticket
+→ SPEC-08.1 ✅ CLOSED — Hotel Staff rebrand
+→ SPEC-09 Assign Ticket design (SPEC-09 is not yet created)
 ```
 
-SPEC-09 is blocked until SPEC-08.1 is closed.
+SPEC-09 implementation remains out of scope for this closure task.
 
 ---
 
@@ -1226,8 +1184,8 @@ RUNTIME MOCK DATA:
 forbidden
 
 CURRENT:
-SPEC-08.1 — Hotel Staff Rebrand Transition
+SPEC-08.1 — ✅ CLOSED; Hotel Staff rebrand and recorded runtime/UI verification complete
 
 NEXT FEATURE:
-SPEC-09 — Assign Ticket
+SPEC-09 — Assign Ticket design; not created or implemented
 ```

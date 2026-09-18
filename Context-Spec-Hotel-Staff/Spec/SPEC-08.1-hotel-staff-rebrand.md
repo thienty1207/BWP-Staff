@@ -10,7 +10,7 @@
 >
 > **Prerequisite:** SPEC-08 ✅ CLOSED
 >
-> **Status:** ⏳ OPEN / NOT CLOSED
+> **Status:** ✅ CLOSED
 >
 > This SPEC is a bounded project-identity migration. It must finish before SPEC-09 Assign Ticket begins.
 
@@ -827,3 +827,40 @@ or:
 ```text
 SPEC-08.1 Hotel Staff rebrand has remaining blockers.
 ```
+
+---
+
+# 29. Closure record — 2026-09-18
+
+This final closure record supersedes the pre-closure response alternatives above. SPEC-08.1 is
+closed after the rebrand gates and the additional user-reported mobile/narrow checks were verified.
+The following closure evidence is recorded:
+
+- GitHub repository identity verified as `thienty1207/Hotel_Staff`.
+- Go module/import identity verified as `github.com/thienty1207/Hotel_Staff/backend`.
+- Active runtime presents Hotel Staff branding; the login background is neutral.
+- Authentication uses `hotel_staff_session`; theme and remembered-username storage use
+  `hotel-staff-theme` and `hotel-staff-remembered-username`.
+- Local backend connects to `hotel_staff`; login, `/me`, logout, and unauthenticated post-logout
+  behavior passed.
+- Open and Closed ticket lists and a persisted accepted-ticket Chat passed; created and accepted
+  activity were visible.
+- Light and Dark themes worked and persisted through reload.
+- The user manually verified mobile/narrow behavior: no body-level horizontal overflow, full-card
+  Chat activation, reachable close control, contained conversation scrolling, reachable
+  composer/actions, and correct Accept / Assign / Close layout.
+- Existing local database data remained intact: 16 departments (14 active), 866 locations
+  (864 active), 155 `BWP-AREA-*` rows, 564 `BWP-ROOM-*` rows, and 4 tickets. Tickets 15 and 16
+  retained their persisted acceptance fields.
+- `BWP-AREA-*` and `BWP-ROOM-*` identifiers were preserved; no seed or business-data rewrite was
+  run. Backup naming uses `hotel_staff.dump`.
+- No migration `0021` was created. Frontend and backend automated verification passed locally;
+  GitHub CI is not claimed.
+- Baron retains internal `project_slug = "bwp-sonasea"`. It is not runtime/product branding and
+  is not exposed by the application UI or API. Repository policy prohibits manual edits to
+  Baron-owned identity metadata, and no supported rename/rebind path is available in the current
+  trusted-receipt environment. No fake trusted execution/review receipt was created; this is an
+  accepted internal tooling exception, not a product closure blocker.
+
+SPEC-07 remains CLOSED. SPEC-08 remains CLOSED. SPEC-08.1 is CLOSED. SPEC-09 was not created or
+implemented; its design is the next authorized planning step.
