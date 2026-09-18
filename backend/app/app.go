@@ -21,6 +21,7 @@ func New(state AppState, settings config.Config) *fiber.App {
 	server.Use(requestLogger())
 	server.Use(recover.New())
 	server.Use(corsMiddleware(settings.FrontendOrigin))
+	server.Use(mutationOriginGuard(settings.FrontendOrigin))
 
 	server.Get("/health", healthHandler)
 	server.Get("/ready", readinessHandler(state.DB, settings.DatabaseAcquireTimeoutSeconds))

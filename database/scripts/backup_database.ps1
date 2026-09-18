@@ -46,6 +46,9 @@ $databaseName = [Uri]::UnescapeDataString($databaseUri.AbsolutePath.TrimStart('/
 if ([string]::IsNullOrWhiteSpace($databaseName)) {
     throw 'DATABASE_URL must contain a database name'
 }
+if ($databaseName -ne 'hotel_staff') {
+    throw "Refusing backup: DATABASE_URL targets `"$databaseName`"; expected `"hotel_staff`"."
+}
 
 $pgDump = (Get-Command pg_dump.exe -ErrorAction SilentlyContinue).Source
 if ([string]::IsNullOrWhiteSpace($pgDump)) {

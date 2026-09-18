@@ -50,3 +50,28 @@ test('login page uses public asset paths instead of local filesystem paths', asy
 	expect(loginPage).not.toContain('file://');
 	expect(stylesheet).not.toContain('file://');
 });
+
+test('runtime public assets exclude retired BWP files and the Svelte starter favicon', async () => {
+	const bwpLogo = Bun.file(join(frontendRoot, 'static/images/bwp-logo.png'));
+	const retiredLoginBackground = Bun.file(join(frontendRoot, 'static/images/login-background.png'));
+	const starterFavicon = Bun.file(join(frontendRoot, 'src/lib/assets/favicon.svg'));
+	const layout = await Bun.file(join(frontendRoot, 'src/routes/+layout.svelte')).text();
+
+	expect(await bwpLogo.exists()).toBe(false);
+	expect(await retiredLoginBackground.exists()).toBe(false);
+	expect(await starterFavicon.exists()).toBe(false);
+	expect(layout).toContain('<link rel="icon" href="/images/hotel-login-icon.svg" />');
+	expect(layout).not.toContain('$lib/assets/favicon.svg');
+	expect(layout).not.toContain('favicon.svg');
+});
+
+test('frontend crawler and environment-file policies protect the internal runtime surface', async () => {
+	const robots = await Bun.file(join(frontendRoot, 'static/robots.txt')).text();
+	const ignoreRules = await Bun.file(join(frontendRoot, '.gitignore')).text();
+
+	expect(robots.trim()).toBe('User-agent: *\nDisallow: /');
+	expect(ignoreRules).toMatch(/^\.env$/m);
+	expect(ignoreRules).toMatch(/^\.env\.\*$/m);
+	expect(ignoreRules).not.toContain('!.env.example');
+	expect(ignoreRules).not.toContain('!.env.test');
+});

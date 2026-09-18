@@ -1,13 +1,13 @@
 # Current Baron Plan
 
-- Title: SPEC-05 authenticated shell and tickets read/list foundation
-- Plan: `docs/baron/plans/2026-09-11/2026-09-11-spec-05-authenticated-shell-and-tickets-read-list-foundation.md`
+- Title: SPEC-08.2 Post-Rebrand Repository Hardening
+- Plan: `docs/baron/plans/2026-09-18/2026-09-18-spec-08-2-post-rebrand-repository-hardening.md`
 - Status: `in_progress`
-- Risk: `high`
-- Task ID: `task-spec-05-authenticated-shell-and-tickets-read-list-foundation`
+- Risk: `medium`
+- Task ID: `task-spec-08-2-post-rebrand-repository-hardening`
 - Verification: not_run
-- Next action: Implementation complete. Go formatting, tidy, vet, full tests, race tests, build, Bun checks/tests/build, real PostgreSQL temporary-schema ticket tests, browser auth and real empty-state checks, and staged scope review passed; exact mobile viewport resize was unavailable.
-- Updated: 2026-09-11T20:34:53+07:00
+- Next action: Implementation and verification passed for runtime static cleanup, favicon, robots, frontend ignore contract, backup target guard, CI workflow, and mutation Origin validation. Code-map refresh remains blocked because Graphify is unavailable; keep SPEC-08.2 open until supported tooling can replace stale Stack Map detection.
+- Updated: 2026-09-18T19:47:54+07:00
 
 ## Rules
 

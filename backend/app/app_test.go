@@ -438,3 +438,88 @@ func TestRequestLoggingIncludesRequestContext(t *testing.T) {
 		t.Fatal("request log used client-supplied request ID")
 	}
 }
+
+func TestMutationOriginGuardRejectsForeignOriginsWithStableErrorEnvelope(t *testing.T) {
+	server := New(AppState{}, testAppSettings())
+
+	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete} {
+		t.Run(method, func(t *testing.T) {
+			request := httptest.NewRequest(method, "/health", nil)
+			request.Header.Set("Origin", "https://unrelated.example.com")
+			response, err := server.Test(request)
+			if err != nil {
+				t.Fatalf("request foreign-origin %s: %v", method, err)
+			}
+			defer response.Body.Close()
+
+			if response.StatusCode != http.StatusForbidden {
+				t.Fatalf("expected foreign-origin %s to return 403, got %d", method, response.StatusCode)
+			}
+			responseRequestID := response.Header.Get("X-Request-ID")
+			if responseRequestID == "" {
+				t.Fatal("expected foreign-origin response request ID")
+			}
+
+			var body errorResponse
+			if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
+				t.Fatalf("decode foreign-origin error: %v", err)
+			}
+			if body.Error.Code != "forbidden_origin" || body.Error.Message != "Request origin is not allowed" {
+				t.Fatalf("unexpected foreign-origin error: %+v", body.Error)
+			}
+			if body.Error.RequestID != responseRequestID {
+				t.Fatalf("expected error request ID %q, got %q", responseRequestID, body.Error.RequestID)
+			}
+		})
+	}
+}
+
+func TestMutationOriginGuardAllowsConfiguredAndMissingOrigins(t *testing.T) {
+	server := New(AppState{}, testAppSettings())
+
+	for _, origin := range []string{"http://localhost:5173", ""} {
+		t.Run(origin, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader("{}"))
+			request.Header.Set("Content-Type", "application/json")
+			if origin != "" {
+				request.Header.Set("Origin", origin)
+			}
+			response, err := server.Test(request)
+			if err != nil {
+				t.Fatalf("request mutation with origin %q: %v", origin, err)
+			}
+			defer response.Body.Close()
+
+			if response.StatusCode != http.StatusBadRequest {
+				t.Fatalf("expected mutation with origin %q to reach the login handler, got %d", origin, response.StatusCode)
+			}
+		})
+	}
+}
+
+func TestMutationOriginGuardDoesNotBlockReadsOrPreflight(t *testing.T) {
+	server := New(AppState{}, testAppSettings())
+
+	readRequest := httptest.NewRequest(http.MethodGet, "/health", nil)
+	readRequest.Header.Set("Origin", "https://unrelated.example.com")
+	readResponse, err := server.Test(readRequest)
+	if err != nil {
+		t.Fatalf("request foreign-origin read: %v", err)
+	}
+	defer readResponse.Body.Close()
+	if readResponse.StatusCode != http.StatusOK {
+		t.Fatalf("expected foreign-origin GET to remain readable, got %d", readResponse.StatusCode)
+	}
+
+	preflightRequest := httptest.NewRequest(http.MethodOptions, "/api/v1/auth/login", nil)
+	preflightRequest.Header.Set("Origin", "http://localhost:5173")
+	preflightRequest.Header.Set("Access-Control-Request-Method", http.MethodPost)
+	preflightResponse, err := server.Test(preflightRequest)
+	if err != nil {
+		t.Fatalf("request configured preflight: %v", err)
+	}
+	defer preflightResponse.Body.Close()
+	if preflightResponse.StatusCode == http.StatusForbidden {
+		t.Fatal("expected configured preflight to bypass mutation-origin rejection")
+	}
+}

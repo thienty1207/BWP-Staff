@@ -1,22 +1,22 @@
 # Baron Continuity Resume
 
-- Last updated: 2026-09-10T21:33:49+07:00
+- Last updated: 2026-09-18T19:49:28+07:00
 - Adapter: `codex`
 - Session ID: `none`
 - Request ID: `none`
 - Lifecycle event key: `none`
-- Latest checkpoint: Permanent Go/Fiber v3 migration is ready for commit and push: Rust artifacts removed; pgxpool runner preserves 19 existing migration checksums; fresh/existing PostgreSQL migration and idempotent seed passed; Fiber health, gofmt, go vet, go test, go build, Bun check, backup, schema/index, EXPLAIN, and secret/artifact scans passed. Baron gate recorder remains blocked because no active task id is available.
+- Latest checkpoint: SPEC-08.2 implementation is complete and locally verified; closure remains blocked only by unavailable Graphify preventing supported Stack Map refresh. The current recovery records this exact safe next action. Do not hand-edit Baron-managed Stack Map state.
 - Latest automation event: `TraceScored`
-- Current task: `SPEC-01 database foundation identified continuation`
-- Plan status: `completed`
+- Current task: `SPEC-08.2 Post-Rebrand Repository Hardening`
+- Plan status: `in_progress`
 - Harness story: `unknown`
 - Harness risk: `unknown`
-- Proof status: recorded `20260910191620557` - trusted execution receipt receipt-8942b679c9125c6c passed for database via rust-cargo-local
+- Proof status: recorded `20260918093044973` - SPEC-08.1 verified: Bun install/check/tests/build passed (58 tests); go mod download, gofmt, go list, go vet, Go tests, race tests, and build passed. Local PostgreSQL was checked in read-only transactions before/after tests; department/location/ticket counts and legacy BWP area/room seed counts matched. Login browser check confirmed the existing neutral JPG and Hotel Staff copy; auth service was unavailable in the preview, so no authenticated-shell browser claim is made.
 - Trace status: scored `standard/standard` passed `yes`
-- Recovery outcome: `failed`
-- Recovery next action: Continue with the explicitly authorized bounded layout cleanup and verify repository paths and Rust checks
-- Changed files: .gitignore, Context-Spec-BWP-SonaSea/PROJECT_CONTEXT.md, Context-Spec-BWP-SonaSea/Spec/SPEC-01-database-foundation.md, README.md, backend/.gitignore, backend/Cargo.lock, backend/Cargo.toml, backend/admin/seed.go, backend/admin/seed_test.go, backend/app/app.go, backend/app/app_test.go, backend/cmd/seed_development/main.go
-- Next action: start the next explicit task
+- Recovery outcome: `blocked`
+- Recovery next action: Install or enable the supported Graphify provider, rerun baron automation code-map refresh, verify the managed Stack Map describes Go/Fiber, SvelteKit/Bun, entrypoints, build and test commands, then reassess SPEC-08.2 closure
+- Changed files: Context-Spec-Hotel-Staff/PROJECT_CONTEXT.md, backend/app/app.go, backend/app/app_test.go, backend/app/middleware.go, database/scripts/backup_database.ps1, docs/baron/autopilot/CANDIDATES.md, docs/baron/autopilot/STATE.json, docs/baron/continuity/CURRENT.md, docs/baron/continuity/CURRENT_RECOVERY.md, docs/baron/continuity/INDEX.md, docs/baron/continuity/RECOVERY_INDEX.md, docs/baron/control-plane/GATES.md
+- Next action: Implementation and verification passed for runtime static cleanup, favicon, robots, frontend ignore contract, backup target guard, CI workflow, and mutation Origin validation. Code-map refresh remains blocked because Graphify is unavailable; keep SPEC-08.2 open until supported tooling can replace stale Stack Map detection.
 
 ## Resume Rules
 

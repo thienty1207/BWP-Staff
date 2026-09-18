@@ -8,11 +8,11 @@
 >
 > **GitHub repository:** `thienty1207/Hotel_Staff`
 >
-> **Verified post-rebrand implementation baseline:** `main` at `d70c6bd2affd8ee194b21e842197452ea5a49233`
+> **Verified post-rebrand implementation baseline:** `main` at `7ceb9dc493244350a2408bd572925176c95756f0`
 >
 > **Local PostgreSQL database:** `hotel_staff`
 >
-> **Current feature state:** SPEC-01 through SPEC-08.1 are ✅ CLOSED. The Hotel Staff rebrand and its runtime, desktop, and user-reported mobile/narrow verification are complete. SPEC-09 Assign Ticket is the next design item; SPEC-09 has not been created or implemented.
+> **Current feature state:** SPEC-01 through SPEC-08.1 are ✅ CLOSED. SPEC-08.2 post-rebrand repository hardening is **OPEN**: its application hardening passes local verification, but Baron code-map refresh is blocked by unavailable Graphify tooling and leaves the managed Stack Map materially stale. SPEC-09 Assign Ticket is next only after SPEC-08.2 closes; SPEC-09 has not been created or implemented.
 
 ---
 
@@ -152,8 +152,8 @@ A future data anonymization/master-data migration requires its own explicit migr
 
 # 4. Current post-rebrand identity and verification state
 
-The rebrand implementation landed at `d70c6bd2affd8ee194b21e842197452ea5a49233`. The current
-`main`/`origin/main` baseline was verified at that commit on 2026-09-18.
+The rebrand closure landed at `7ceb9dc493244350a2408bd572925176c95756f0`. The current
+`main`/`origin/main` baseline was verified at that commit on 2026-09-18 before SPEC-08.2 began.
 
 Verified active identity:
 
@@ -169,9 +169,9 @@ Canonical docs directory:     Context-Spec-Hotel-Staff/
 ```
 
 The active frontend uses Hotel Staff copy, a neutral hotel icon, and `login-background.jpg`. The
-login page was visually inspected and showed no BWP, SonaSea, or Best Western branding. The
-historical `frontend/static/images/bwp-logo.png` asset remains in the repository, is not rendered by
-active UI, and is no longer required by the branding asset test.
+login page was visually inspected and showed no BWP, SonaSea, or Best Western branding. SPEC-08.2
+removes the unused `frontend/static/images/bwp-logo.png` and `login-background.png` runtime assets;
+historical BWP evidence remains preserved only outside runtime static storage.
 
 The local backend runtime was checked against `hotel_staff`: `/health` and `/ready` succeeded; API
 login, `/api/v1/auth/me`, Open/Closed ticket lists, persisted ticket detail for IDs 15 and 16,
@@ -193,6 +193,29 @@ identity repair, and repository rules prohibit manually rewriting Baron-owned id
 The slug is not runtime/product branding and is not exposed in the application UI or API. No fake
 trusted execution or review receipt was created. This is an accepted internal-tooling exception,
 not a product closure blocker.
+
+### 4.1 SPEC-08.2 post-rebrand hardening state
+
+SPEC-08.2 is **OPEN / NOT CLOSED**. The bounded application hardening is implemented and locally
+verified: retired runtime assets and the Svelte starter favicon are removed; the existing Hotel Staff
+icon is the favicon; `robots.txt` disallows crawling; frontend environment-file exceptions are gone;
+the backup script refuses any database target other than `hotel_staff` before `pg_dump`; a GitHub
+Actions workflow verifies Bun and Go against a synthetic PostgreSQL service; and unsafe requests
+with a supplied foreign Origin receive the `forbidden_origin` error envelope while configured and
+no-Origin requests remain usable.
+
+`baron automation reconcile` succeeded, and the supported current plan, Harness intent, and
+continuity checkpoint now identify SPEC-08.2. `baron automation code-map refresh` cannot complete
+because Graphify is unavailable on this host, leaving `docs/baron/platform/STACK_MAP.md` with stale
+missing-entrypoint/build/test detection. Repository rules prohibit manually repairing that managed
+file, so this is a closure blocker rather than a reason to fabricate state. GitHub Actions has not
+yet been observed on the remote and must not be claimed as passed. No migration, seed, schema, or
+persisted BWP dataset change was made; the next product feature remains SPEC-09, not implemented.
+
+Pre-production login rate limiting remains deferred until a deployment and trusted-proxy/client-IP
+contract exists. Production frontend/backend routing and deployment architecture are also deferred.
+Any future public-CV cleanup or BWP data anonymization requires a separate explicit migration/data
+contract.
 
 ---
 

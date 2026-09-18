@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun test
+      - run: bun run build
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: hotel_staff_ci
+          POSTGRES_USER: hotel_staff_ci
+          POSTGRES_PASSWORD: hotel_staff_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hotel_staff_ci -d hotel_staff_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: backend/go.mod
+      - name: Create synthetic runtime environment
+        run: |
+          cat > backend/.env <<'EOF'
+          APP_ENV=development
+          DATABASE_URL=postgres://hotel_staff_ci:hotel_staff_ci_password@127.0.0.1:5432/hotel_staff_ci?sslmode=disable
+          FRONTEND_ORIGIN=http://localhost:5173
+          EOF
+      - name: Verify backup target guard
+        run: pwsh -File database/scripts/backup_database_guard_test.ps1
+      - name: Check Go formatting
+        working-directory: backend
+        run: test -z "$(gofmt -d .)"
+      - name: List packages
+        working-directory: backend
+        run: go list ./...
+      - name: Vet packages
+        working-directory: backend
+        run: go vet ./...
+      - name: Test packages
+        working-directory: backend
+        run: go test ./... -count=1
+      - name: Test packages with race detector
+        working-directory: backend
+        run: go test -race ./... -count=1
+      - name: Build packages
+        working-directory: backend
+        run: go build ./...

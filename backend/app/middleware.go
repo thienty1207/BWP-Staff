@@ -36,3 +36,23 @@ func requestLogger() fiber.Handler {
 		return err
 	}
 }
+
+func mutationOriginGuard(frontendOrigin string) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		switch c.Method() {
+		case fiber.MethodPost, fiber.MethodPut, fiber.MethodPatch, fiber.MethodDelete:
+			origin := c.Get(fiber.HeaderOrigin)
+			if origin != "" && origin != frontendOrigin {
+				return writeError(
+					c,
+					fiber.StatusForbidden,
+					"forbidden_origin",
+					"Request origin is not allowed",
+					requestid.FromContext(c),
+				)
+			}
+		}
+
+		return c.Next()
+	}
+}
