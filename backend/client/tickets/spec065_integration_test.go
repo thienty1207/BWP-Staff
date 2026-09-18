@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/thienty1207/BWP-Staff/backend/admin"
+	"github.com/thienty1207/Hotel_Staff/backend/admin"
 )
 
 func TestSPEC065DevelopmentSeedCreatesExactly155BWPLocations(t *testing.T) {

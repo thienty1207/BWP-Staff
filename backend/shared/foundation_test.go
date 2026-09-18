@@ -17,10 +17,10 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	"github.com/thienty1207/BWP-Staff/backend/admin"
-	"github.com/thienty1207/BWP-Staff/backend/config"
-	"github.com/thienty1207/BWP-Staff/backend/shared"
-	"github.com/thienty1207/BWP-Staff/backend/shared/security"
+	"github.com/thienty1207/Hotel_Staff/backend/admin"
+	"github.com/thienty1207/Hotel_Staff/backend/config"
+	"github.com/thienty1207/Hotel_Staff/backend/shared"
+	"github.com/thienty1207/Hotel_Staff/backend/shared/security"
 )
 
 func TestSPEC01PostgreSQLFoundation(t *testing.T) {

@@ -14,7 +14,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/thienty1207/BWP-Staff/backend/config"
+	"github.com/thienty1207/Hotel_Staff/backend/config"
 )
 
 type migration struct {
@@ -60,13 +60,13 @@ func RunMigrations(ctx context.Context, pool *pgxpool.Pool, directory string, ac
 	}
 	defer connection.Release()
 
-	if _, err := connection.Exec(acquireContext, `SELECT pg_advisory_lock(hashtext('bwp-sonasea:migrations'))`); err != nil {
+	if _, err := connection.Exec(acquireContext, `SELECT pg_advisory_lock(hashtext('hotel-staff:migrations'))`); err != nil {
 		return fmt.Errorf("lock migrations: %w", err)
 	}
 	defer func() {
 		unlockContext, unlockCancel := context.WithTimeout(context.Background(), acquireTimeout)
 		defer unlockCancel()
-		_, _ = connection.Exec(unlockContext, `SELECT pg_advisory_unlock(hashtext('bwp-sonasea:migrations'))`)
+		_, _ = connection.Exec(unlockContext, `SELECT pg_advisory_unlock(hashtext('hotel-staff:migrations'))`)
 	}()
 
 	if _, err := connection.Exec(ctx, `

@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/thienty1207/BWP-Staff/backend/shared/httperror"
+	"github.com/thienty1207/Hotel_Staff/backend/shared/httperror"
 )
 
 type principalContextKey struct{}

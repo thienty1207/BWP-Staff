@@ -4,10 +4,10 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/recover"
-	"github.com/thienty1207/BWP-Staff/backend/client/auth"
-	"github.com/thienty1207/BWP-Staff/backend/client/lookups"
-	"github.com/thienty1207/BWP-Staff/backend/client/tickets"
-	"github.com/thienty1207/BWP-Staff/backend/config"
+	"github.com/thienty1207/Hotel_Staff/backend/client/auth"
+	"github.com/thienty1207/Hotel_Staff/backend/client/lookups"
+	"github.com/thienty1207/Hotel_Staff/backend/client/tickets"
+	"github.com/thienty1207/Hotel_Staff/backend/config"
 )
 
 // New builds the HTTP application without opening a listener or a database

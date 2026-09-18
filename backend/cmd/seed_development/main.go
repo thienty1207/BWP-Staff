@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	"github.com/thienty1207/BWP-Staff/backend/admin"
-	"github.com/thienty1207/BWP-Staff/backend/config"
-	"github.com/thienty1207/BWP-Staff/backend/shared"
+	"github.com/thienty1207/Hotel_Staff/backend/admin"
+	"github.com/thienty1207/Hotel_Staff/backend/config"
+	"github.com/thienty1207/Hotel_Staff/backend/shared"
 )
 
 func main() {

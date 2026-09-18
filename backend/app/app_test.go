@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/thienty1207/BWP-Staff/backend/config"
+	"github.com/thienty1207/Hotel_Staff/backend/config"
 )
 
 type statusResponse struct {

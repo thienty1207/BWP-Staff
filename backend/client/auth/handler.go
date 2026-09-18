@@ -10,9 +10,9 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/thienty1207/BWP-Staff/backend/config"
-	"github.com/thienty1207/BWP-Staff/backend/shared/httperror"
-	"github.com/thienty1207/BWP-Staff/backend/shared/security"
+	"github.com/thienty1207/Hotel_Staff/backend/config"
+	"github.com/thienty1207/Hotel_Staff/backend/shared/httperror"
+	"github.com/thienty1207/Hotel_Staff/backend/shared/security"
 )
 
 func RegisterRoutes(api fiber.Router, pool *pgxpool.Pool, settings config.Config) *Service {

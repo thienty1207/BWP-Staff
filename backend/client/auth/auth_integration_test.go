@@ -19,10 +19,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	"github.com/thienty1207/BWP-Staff/backend/app"
-	"github.com/thienty1207/BWP-Staff/backend/config"
-	"github.com/thienty1207/BWP-Staff/backend/shared"
-	"github.com/thienty1207/BWP-Staff/backend/shared/security"
+	"github.com/thienty1207/Hotel_Staff/backend/app"
+	"github.com/thienty1207/Hotel_Staff/backend/config"
+	"github.com/thienty1207/Hotel_Staff/backend/shared"
+	"github.com/thienty1207/Hotel_Staff/backend/shared/security"
 )
 
 const (
@@ -99,9 +99,9 @@ func TestSPEC03LoginCreatesSecureServerSideSession(t *testing.T) {
 		}
 	}
 
-	cookie := cookieNamed(response, "bwp_session")
+	cookie := cookieNamed(response, "hotel_staff_session")
 	if cookie == nil || cookie.Value == "" {
-		t.Fatal("expected non-empty bwp_session cookie")
+		t.Fatal("expected non-empty hotel_staff_session cookie")
 	}
 	if !cookie.HttpOnly || cookie.Path != "/" || cookie.SameSite != http.SameSiteLaxMode || cookie.Domain != "" {
 		t.Fatalf("unexpected development session cookie policy: %+v", cookie)
@@ -186,7 +186,7 @@ func TestSPEC03LoginRejectsMalformedAndInvalidInput(t *testing.T) {
 			if body.Error.RequestID == "" || body.Error.RequestID != response.Header.Get("X-Request-ID") {
 				t.Fatalf("request ID mismatch in invalid request response: header=%q body=%q", response.Header.Get("X-Request-ID"), body.Error.RequestID)
 			}
-			if cookieNamed(response, "bwp_session") != nil {
+			if cookieNamed(response, "hotel_staff_session") != nil {
 				t.Fatal("invalid login unexpectedly set a session cookie")
 			}
 		})
@@ -233,7 +233,7 @@ func TestSPEC03CredentialFailuresAreIndistinguishableAndDoNotWriteLoginState(t *
 			if body.Error.RequestID == "" || body.Error.RequestID != response.Header.Get("X-Request-ID") {
 				t.Fatalf("request ID mismatch in credential failure: header=%q body=%q", response.Header.Get("X-Request-ID"), body.Error.RequestID)
 			}
-			if cookieNamed(response, "bwp_session") != nil {
+			if cookieNamed(response, "hotel_staff_session") != nil {
 				t.Fatal("credential failure unexpectedly set a session cookie")
 			}
 		})
@@ -350,7 +350,7 @@ func TestSPEC03LogoutRevokesSessionAndIsIdempotent(t *testing.T) {
 		t.Fatalf("expected logout status 204, got %d", logoutResponse.StatusCode)
 	}
 	logoutResponse.Body.Close()
-	deletionCookie := cookieNamed(logoutResponse, "bwp_session")
+	deletionCookie := cookieNamed(logoutResponse, "hotel_staff_session")
 	if deletionCookie == nil || deletionCookie.Value != "" || deletionCookie.MaxAge >= 0 || deletionCookie.Path != "/" || !deletionCookie.HttpOnly || deletionCookie.SameSite != http.SameSiteLaxMode || deletionCookie.Secure {
 		t.Fatalf("unexpected logout deletion cookie: %+v", deletionCookie)
 	}
@@ -384,7 +384,7 @@ func TestSPEC03LogoutRevokesSessionAndIsIdempotent(t *testing.T) {
 			if response.StatusCode != http.StatusNoContent {
 				t.Fatalf("expected idempotent logout status 204, got %d", response.StatusCode)
 			}
-			if cookieNamed(response, "bwp_session") == nil {
+			if cookieNamed(response, "hotel_staff_session") == nil {
 				t.Fatal("idempotent logout did not clear the browser cookie")
 			}
 		})
@@ -420,7 +420,7 @@ func TestSPEC03LogoutDatabaseFailurePreservesRetryableCookie(t *testing.T) {
 	if body.Error.RequestID == "" || body.Error.RequestID != response.Header.Get("X-Request-ID") {
 		t.Fatalf("request ID mismatch in logout internal error: header=%q body=%q", response.Header.Get("X-Request-ID"), body.Error.RequestID)
 	}
-	if cookieNamed(response, "bwp_session") != nil {
+	if cookieNamed(response, "hotel_staff_session") != nil {
 		t.Fatal("failed logout unexpectedly cleared the retryable session cookie")
 	}
 }
@@ -447,7 +447,7 @@ func TestSPEC03InternalDatabaseFailureReturnsSafeErrorWithoutCookie(t *testing.T
 	if body.Error.Code != "internal_server_error" || body.Error.Message != "Internal server error" {
 		t.Fatalf("unexpected internal error response: %+v", body.Error)
 	}
-	if cookieNamed(response, "bwp_session") != nil {
+	if cookieNamed(response, "hotel_staff_session") != nil {
 		t.Fatal("internal login failure returned a valid session cookie")
 	}
 }
@@ -482,7 +482,7 @@ func performLogin(t *testing.T, server *fiber.App, username, password string) *h
 	if response.StatusCode != http.StatusOK {
 		t.Fatalf("expected successful login, got %d", response.StatusCode)
 	}
-	cookie := cookieNamed(response, "bwp_session")
+	cookie := cookieNamed(response, "hotel_staff_session")
 	if cookie == nil || cookie.Value == "" {
 		t.Fatal("successful login returned no session cookie")
 	}
@@ -493,7 +493,7 @@ func performAuthenticatedRequest(t *testing.T, server *fiber.App, method, path, 
 	t.Helper()
 	request := httptest.NewRequest(method, path, nil)
 	if token != "" {
-		request.AddCookie(&http.Cookie{Name: "bwp_session", Value: token})
+		request.AddCookie(&http.Cookie{Name: "hotel_staff_session", Value: token})
 	}
 	response, err := server.Test(request)
 	if err != nil {

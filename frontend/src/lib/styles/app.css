@@ -80,7 +80,7 @@ button:disabled {
 	overflow: hidden;
 	min-height: 100svh;
 	padding: clamp(1.25rem, 4vw, 3rem);
-	background: #07090d url('/images/login-background.png') center / cover no-repeat;
+	background: #07090d url('/images/login-background.jpg') center / cover no-repeat;
 	color: #f4f5f7;
 	color-scheme: dark;
 }
@@ -601,13 +601,11 @@ h2 {
 	border-bottom: 1px solid var(--border);
 }
 
-.sidebar-logo {
-	display: block;
-	width: auto;
-	height: 2.7rem;
-	max-width: 100%;
-	object-fit: contain;
-	object-position: left center;
+.sidebar-brand-name {
+	color: var(--text);
+	font-size: 1.05rem;
+	font-weight: 750;
+	letter-spacing: 0.01em;
 }
 
 .sidebar-nav {

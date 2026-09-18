@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/thienty1207/BWP-Staff/backend/app"
-	"github.com/thienty1207/BWP-Staff/backend/config"
+	"github.com/thienty1207/Hotel_Staff/backend/app"
+	"github.com/thienty1207/Hotel_Staff/backend/config"
 )
 
 func testServerSettings(address string) config.Config {

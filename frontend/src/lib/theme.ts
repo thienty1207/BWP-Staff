@@ -1,6 +1,6 @@
 export type Theme = 'light' | 'dark';
 
-const themeStorageKey = 'bwp-theme';
+const themeStorageKey = 'hotel-staff-theme';
 
 export function getInitialTheme(): Theme {
 	if (typeof window === 'undefined') {

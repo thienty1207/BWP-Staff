@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/thienty1207/BWP-Staff/backend/shared/security"
+	"github.com/thienty1207/Hotel_Staff/backend/shared/security"
 )
 
 var (

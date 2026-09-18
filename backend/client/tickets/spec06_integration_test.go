@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/thienty1207/BWP-Staff/backend/admin"
+	"github.com/thienty1207/Hotel_Staff/backend/admin"
 )
 
 type spec06LookupDepartment struct {
@@ -484,7 +484,7 @@ func postTickets(t *testing.T, server *fiber.App, body, token string) *http.Resp
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/tickets", bytes.NewBufferString(body))
 	request.Header.Set("Content-Type", "application/json")
 	if token != "" {
-		request.AddCookie(&http.Cookie{Name: "bwp_session", Value: token})
+		request.AddCookie(&http.Cookie{Name: "hotel_staff_session", Value: token})
 	}
 	response, err := server.Test(request)
 	if err != nil {

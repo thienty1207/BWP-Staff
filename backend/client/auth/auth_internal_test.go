@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/thienty1207/BWP-Staff/backend/shared/security"
+	"github.com/thienty1207/Hotel_Staff/backend/shared/security"
 )
 
 func TestUnknownUserVerificationUsesValidDummyArgon2idHash(t *testing.T) {
@@ -32,7 +32,7 @@ func TestKnownUserVerificationUsesStoredArgon2idHash(t *testing.T) {
 func TestSessionCookieContract(t *testing.T) {
 	expiresAt := time.Now().Add(12 * time.Hour)
 	cookie := sessionCookie("test-only-token", expiresAt, false)
-	if cookie.Name != sessionCookieName || cookie.Value != "test-only-token" {
+	if cookie.Name != "hotel_staff_session" || cookie.Value != "test-only-token" {
 		t.Fatal("session cookie has unexpected name or value")
 	}
 	if !cookie.HTTPOnly || cookie.Path != "/" || cookie.Domain != "" {

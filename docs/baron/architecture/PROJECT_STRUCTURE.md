@@ -5,7 +5,7 @@
 - `.agents`
 - `.gitignore`
 - `AGENTS.md`
-- `Context-Spec-BWP-SonaSea`
+- `Context-Spec-Hotel-Staff`
 - `README.md`
 - `backend`
 - `database`

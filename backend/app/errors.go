@@ -7,7 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/requestid"
-	"github.com/thienty1207/BWP-Staff/backend/shared/httperror"
+	"github.com/thienty1207/Hotel_Staff/backend/shared/httperror"
 )
 
 // AppError preserves the app package API while keeping the reusable HTTP

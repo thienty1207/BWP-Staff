@@ -18,10 +18,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	"github.com/thienty1207/BWP-Staff/backend/app"
-	"github.com/thienty1207/BWP-Staff/backend/config"
-	"github.com/thienty1207/BWP-Staff/backend/shared"
-	"github.com/thienty1207/BWP-Staff/backend/shared/security"
+	"github.com/thienty1207/Hotel_Staff/backend/app"
+	"github.com/thienty1207/Hotel_Staff/backend/config"
+	"github.com/thienty1207/Hotel_Staff/backend/shared"
+	"github.com/thienty1207/Hotel_Staff/backend/shared/security"
 )
 
 type ticketListResponse struct {
@@ -246,7 +246,7 @@ func requestTickets(t *testing.T, server *fiber.App, path, token string) *http.R
 	t.Helper()
 	request := httptest.NewRequest(http.MethodGet, path, nil)
 	if token != "" {
-		request.AddCookie(&http.Cookie{Name: "bwp_session", Value: token})
+		request.AddCookie(&http.Cookie{Name: "hotel_staff_session", Value: token})
 	}
 	response, err := server.Test(request)
 	if err != nil {

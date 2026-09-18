@@ -3,8 +3,8 @@ package lookups
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/thienty1207/BWP-Staff/backend/client/auth"
-	"github.com/thienty1207/BWP-Staff/backend/shared/httperror"
+	"github.com/thienty1207/Hotel_Staff/backend/client/auth"
+	"github.com/thienty1207/Hotel_Staff/backend/shared/httperror"
 )
 
 var errLookupServiceNotConfigured = &httperror.AppError{

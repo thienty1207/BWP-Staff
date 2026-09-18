@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/thienty1207/BWP-Staff/backend/shared"
+	"github.com/thienty1207/Hotel_Staff/backend/shared"
 )
 
 func TestRunMigrationsTimesOutWhenLockHeld(t *testing.T) {
@@ -18,7 +18,7 @@ func TestRunMigrationsTimesOutWhenLockHeld(t *testing.T) {
 		t.Fatalf("acquire lock blocker: %v", err)
 	}
 	defer blocker.Release()
-	if _, err := blocker.Exec(ctx, `SELECT pg_advisory_lock(hashtext('bwp-sonasea:migrations'))`); err != nil {
+	if _, err := blocker.Exec(ctx, `SELECT pg_advisory_lock(hashtext('hotel-staff:migrations'))`); err != nil {
 		t.Fatalf("hold migration lock: %v", err)
 	}
 
@@ -29,7 +29,7 @@ func TestRunMigrationsTimesOutWhenLockHeld(t *testing.T) {
 
 	unlockContext, unlockCancel := context.WithTimeout(context.Background(), time.Second)
 	defer unlockCancel()
-	if _, unlockErr := blocker.Exec(unlockContext, `SELECT pg_advisory_unlock(hashtext('bwp-sonasea:migrations'))`); unlockErr != nil {
+	if _, unlockErr := blocker.Exec(unlockContext, `SELECT pg_advisory_unlock(hashtext('hotel-staff:migrations'))`); unlockErr != nil {
 		t.Fatalf("release migration lock: %v", unlockErr)
 	}
 }

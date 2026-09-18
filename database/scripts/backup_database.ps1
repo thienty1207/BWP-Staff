@@ -61,7 +61,7 @@ if ([string]::IsNullOrWhiteSpace($pgDump)) {
 }
 
 $databaseDirectory = Join-Path $ProjectRoot 'database'
-$dumpPath = Join-Path $databaseDirectory 'bwp-sonasea.dump'
+$dumpPath = Join-Path $databaseDirectory 'hotel_staff.dump'
 $schemaPath = Join-Path $databaseDirectory 'full_app_schema.sql'
 $dumpTemp = "$dumpPath.partial"
 $schemaTemp = "$schemaPath.partial"

@@ -1,4 +1,4 @@
-module github.com/thienty1207/BWP-Staff/backend
+module github.com/thienty1207/Hotel_Staff/backend
 
 go 1.27
 

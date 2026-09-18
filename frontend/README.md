@@ -1,4 +1,4 @@
-# BWP SonaSea frontend
+# Hotel Staff frontend
 
 The frontend uses SvelteKit, Svelte 5, TypeScript, Vite, and Bun.
 

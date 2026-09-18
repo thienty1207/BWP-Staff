@@ -8,7 +8,7 @@
 
 	type LoginState = 'checking' | 'form' | 'retry' | 'submitting';
 
-	const rememberedUsernameKey = 'bwp-remembered-username';
+	const rememberedUsernameKey = 'hotel-staff-remembered-username';
 
 	let phase: LoginState = $state('checking');
 	let username = $state('');
@@ -124,8 +124,8 @@
 </script>
 
 <svelte:head>
-	<title>BWP SonaSea — Login</title>
-	<meta name="description" content="BWP SonaSea sign-in" />
+	<title>Hotel Staff — Login</title>
+	<meta name="description" content="Hotel Staff sign-in" />
 </svelte:head>
 
 <main class="page-shell login-shell">
@@ -137,7 +137,7 @@
 			</section>
 		{:else if phase === 'retry'}
 			<section class="login-status" aria-labelledby="login-check-error-title">
-				<p class="login-kicker">BWP SONASEA STAFF</p>
+				<p class="login-kicker">HOTEL STAFF</p>
 				<h1 id="login-check-error-title">Unable to verify session</h1>
 				<p class="muted-copy">The service could not confirm your current session.</p>
 				<p class="error-message" role="alert" aria-live="assertive">{errorMessage}</p>
@@ -152,9 +152,9 @@
 						alt=""
 						aria-hidden="true"
 					/>
-					<p class="login-kicker">BWP SONASEA STAFF</p>
+					<p class="login-kicker">HOTEL STAFF</p>
 					<h1 id="login-title">Sign in</h1>
-					<p class="login-supporting">Access your BWP SonaSea account.</p>
+					<p class="login-supporting">Access your Hotel Staff account.</p>
 				</div>
 
 				<form class="login-form" onsubmit={handleSubmit} aria-busy={phase === 'submitting'}>

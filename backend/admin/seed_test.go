@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/thienty1207/BWP-Staff/backend/config"
-	"github.com/thienty1207/BWP-Staff/backend/shared/security"
+	"github.com/thienty1207/Hotel_Staff/backend/config"
+	"github.com/thienty1207/Hotel_Staff/backend/shared/security"
 )
 
 func TestSeedDevelopmentAdminRejectsOversizedPasswordBeforeDatabaseWork(t *testing.T) {

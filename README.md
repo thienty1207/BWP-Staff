@@ -1,6 +1,6 @@
-# BWP-SonaSea
+# Hotel Staff
 
-Monorepo layout for the SonaSea application:
+Monorepo layout for the Hotel Staff application:
 
 ```text
 frontend/  SvelteKit + TypeScript, managed with Bun
@@ -47,10 +47,10 @@ The backend exposes `GET http://127.0.0.1:3000/health` and returns JSON
 is reachable. Authentication is available through username-only session
 endpoints: `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, and
 `GET /api/v1/auth/me`. Successful login stores the session server-side and
-returns only an HttpOnly `bwp_session` cookie; `AUTH_SESSION_TTL_HOURS`
+returns only an HttpOnly `hotel_staff_session` cookie; `AUTH_SESSION_TTL_HOURS`
 defaults to 12 hours and accepts values from 1 through 720.
 
-The local full database backup is `database/bwp-sonasea.dump`; refresh it, and
+The local full database backup is `database/hotel_staff.dump`; refresh it, and
 the matching `database/full_app_schema.sql`, with:
 
 ```powershell

@@ -382,7 +382,7 @@ func doAcceptTicket(server *fiber.App, ticketID any, token, body string) (*http.
 	}
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/tickets/"+rawID+"/accept", strings.NewReader(body))
 	if token != "" {
-		request.AddCookie(&http.Cookie{Name: "bwp_session", Value: token})
+		request.AddCookie(&http.Cookie{Name: "hotel_staff_session", Value: token})
 	}
 	if body != "" {
 		request.Header.Set("Content-Type", "application/json")

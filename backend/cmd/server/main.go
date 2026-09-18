@@ -12,9 +12,9 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/joho/godotenv"
-	"github.com/thienty1207/BWP-Staff/backend/app"
-	"github.com/thienty1207/BWP-Staff/backend/config"
-	"github.com/thienty1207/BWP-Staff/backend/shared"
+	"github.com/thienty1207/Hotel_Staff/backend/app"
+	"github.com/thienty1207/Hotel_Staff/backend/config"
+	"github.com/thienty1207/Hotel_Staff/backend/shared"
 )
 
 func main() {

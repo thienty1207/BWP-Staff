@@ -494,7 +494,7 @@ test('acceptance conflicts refresh the submitted ticket once without opening or 
 
 test('canonical SPEC makes whole-ticket pointer activation mandatory', async () => {
 	const spec = await Bun.file(
-		new URL('../../Context-Spec-BWP-SonaSea/Spec/SPEC-07-ticket-chat-shell-conversation-foundation.md', import.meta.url)
+		new URL('../../Context-Spec-Hotel-Staff/Spec/SPEC-07-ticket-chat-shell-conversation-foundation.md', import.meta.url)
 	).text();
 
 	expect(spec).toContain('pointer click/tap anywhere on the ticket row/card MUST open Chat');

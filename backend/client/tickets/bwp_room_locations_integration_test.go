@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/thienty1207/BWP-Staff/backend/admin"
+	"github.com/thienty1207/Hotel_Staff/backend/admin"
 )
 
 const spec067BWPRoomsDescription = "Development location seed data: BWP Rooms"

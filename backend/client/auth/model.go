@@ -3,7 +3,7 @@ package auth
 import "time"
 
 const (
-	sessionCookieName     = "bwp_session"
+	sessionCookieName     = "hotel_staff_session"
 	maxUsernameCharacters = 50
 	maxUserAgentBytes     = 512
 )

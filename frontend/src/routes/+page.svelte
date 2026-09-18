@@ -465,8 +465,8 @@
 </script>
 
 <svelte:head>
-	<title>Tickets | BWP SonaSea</title>
-	<meta name="description" content="BWP SonaSea staff tickets" />
+	<title>Tickets | Hotel Staff</title>
+	<meta name="description" content="Hotel Staff tickets" />
 </svelte:head>
 
 {#if phase === 'checking'}
@@ -495,7 +495,7 @@
 
 		<aside id="primary-navigation" class:drawer-open={drawerOpen} class="app-sidebar" aria-label="Primary navigation">
 			<div class="sidebar-brand">
-				<img class="sidebar-logo" src="/images/bwp-logo.png" alt="BWP SonaSea" />
+				<span class="sidebar-brand-name">Hotel Staff</span>
 			</div>
 
 			<nav class="sidebar-nav" aria-label="Staff portal sections">

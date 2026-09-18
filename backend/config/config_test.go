@@ -7,7 +7,7 @@ import (
 
 func setBaseConfigEnvironment(t *testing.T) {
 	t.Helper()
-	t.Setenv("DATABASE_URL", "postgres://postgres:secret@127.0.0.1:5432/bwp-sonasea")
+	t.Setenv("DATABASE_URL", "postgres://postgres:secret@127.0.0.1:5432/hotel_staff")
 	t.Setenv("DATABASE_MAX_CONNECTIONS", "10")
 	t.Setenv("DATABASE_MIN_CONNECTIONS", "1")
 	t.Setenv("DATABASE_ACQUIRE_TIMEOUT_SECONDS", "5")
@@ -26,7 +26,7 @@ func TestLoadRequiresOneDatabaseURL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load config: %v", err)
 	}
-	if config.DatabaseURL != "postgres://postgres:secret@127.0.0.1:5432/bwp-sonasea" {
+	if config.DatabaseURL != "postgres://postgres:secret@127.0.0.1:5432/hotel_staff" {
 		t.Fatalf("unexpected database URL: %s", config.DatabaseURL)
 	}
 	if config.DatabaseMaxConnections != 10 || config.DatabaseMinConnections != 1 {
@@ -45,7 +45,7 @@ func TestLoadRequiresDatabaseURL(t *testing.T) {
 
 func TestLoadRejectsRemoteDatabaseWithoutExplicitTLS(t *testing.T) {
 	setBaseConfigEnvironment(t)
-	t.Setenv("DATABASE_URL", "postgres://postgres:secret@db.example.com:5432/bwp-sonasea")
+	t.Setenv("DATABASE_URL", "postgres://postgres:secret@db.example.com:5432/hotel_staff")
 
 	if _, err := Load(); err == nil {
 		t.Fatal("expected remote database URL without sslmode to be rejected")
@@ -54,7 +54,7 @@ func TestLoadRejectsRemoteDatabaseWithoutExplicitTLS(t *testing.T) {
 
 func TestLoadRejectsInsecureRemoteTLSMode(t *testing.T) {
 	setBaseConfigEnvironment(t)
-	t.Setenv("DATABASE_URL", "postgres://postgres:secret@db.example.com:5432/bwp-sonasea?sslmode=prefer")
+	t.Setenv("DATABASE_URL", "postgres://postgres:secret@db.example.com:5432/hotel_staff?sslmode=prefer")
 
 	if _, err := Load(); err == nil {
 		t.Fatal("expected remote database URL with sslmode=prefer to be rejected")
@@ -63,7 +63,7 @@ func TestLoadRejectsInsecureRemoteTLSMode(t *testing.T) {
 
 func TestLoadAcceptsRemoteDatabaseWithExplicitTLS(t *testing.T) {
 	setBaseConfigEnvironment(t)
-	t.Setenv("DATABASE_URL", "postgres://postgres:secret@db.example.com:5432/bwp-sonasea?sslmode=verify-full")
+	t.Setenv("DATABASE_URL", "postgres://postgres:secret@db.example.com:5432/hotel_staff?sslmode=verify-full")
 
 	if _, err := Load(); err != nil {
 		t.Fatalf("expected remote database URL with sslmode=verify-full to be accepted: %v", err)
@@ -72,7 +72,7 @@ func TestLoadAcceptsRemoteDatabaseWithExplicitTLS(t *testing.T) {
 
 func TestLoadRejectsPoolAboveSafeLimit(t *testing.T) {
 	setBaseConfigEnvironment(t)
-	t.Setenv("DATABASE_URL", "postgres://postgres@127.0.0.1:5432/bwp-sonasea")
+	t.Setenv("DATABASE_URL", "postgres://postgres@127.0.0.1:5432/hotel_staff")
 	t.Setenv("DATABASE_MAX_CONNECTIONS", "101")
 
 	if _, err := Load(); err == nil {
@@ -82,7 +82,7 @@ func TestLoadRejectsPoolAboveSafeLimit(t *testing.T) {
 
 func TestLoadRejectsAcquireTimeoutAboveSafeLimit(t *testing.T) {
 	setBaseConfigEnvironment(t)
-	t.Setenv("DATABASE_URL", "postgres://postgres@127.0.0.1:5432/bwp-sonasea")
+	t.Setenv("DATABASE_URL", "postgres://postgres@127.0.0.1:5432/hotel_staff")
 	t.Setenv("DATABASE_ACQUIRE_TIMEOUT_SECONDS", "61")
 
 	if _, err := Load(); err == nil {

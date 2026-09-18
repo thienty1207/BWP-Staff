@@ -3,7 +3,7 @@
 This directory contains the database backup artifacts, the full application
 schema script, manual checks, and operational notes.
 
-- `bwp-sonasea.dump` is the local PostgreSQL custom-format backup containing
+- `hotel_staff.dump` is the local PostgreSQL custom-format backup containing
   the current schema and data. Keep this file available for crash recovery;
   it is intentionally ignored by Git because it contains database data.
 - `full_app_schema.sql` is the complete schema script for the application,
