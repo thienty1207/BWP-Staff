@@ -1,11 +1,11 @@
 # Baron Continuity Resume
 
-- Last updated: 2026-09-18T19:49:28+07:00
+- Last updated: 2026-09-18T19:56:31+07:00
 - Adapter: `codex`
 - Session ID: `none`
 - Request ID: `none`
 - Lifecycle event key: `none`
-- Latest checkpoint: SPEC-08.2 implementation is complete and locally verified; closure remains blocked only by unavailable Graphify preventing supported Stack Map refresh. The current recovery records this exact safe next action. Do not hand-edit Baron-managed Stack Map state.
+- Latest checkpoint: SPEC-08.2 hardening commit 397b097 is pushed and GitHub Actions CI run 35347035603 passed for Frontend and Backend. The only closure blocker is unavailable Graphify preventing supported Stack Map refresh; do not hand-edit managed Stack Map state.
 - Latest automation event: `TraceScored`
 - Current task: `SPEC-08.2 Post-Rebrand Repository Hardening`
 - Plan status: `in_progress`
@@ -15,8 +15,8 @@
 - Trace status: scored `standard/standard` passed `yes`
 - Recovery outcome: `blocked`
 - Recovery next action: Install or enable the supported Graphify provider, rerun baron automation code-map refresh, verify the managed Stack Map describes Go/Fiber, SvelteKit/Bun, entrypoints, build and test commands, then reassess SPEC-08.2 closure
-- Changed files: Context-Spec-Hotel-Staff/PROJECT_CONTEXT.md, backend/app/app.go, backend/app/app_test.go, backend/app/middleware.go, database/scripts/backup_database.ps1, docs/baron/autopilot/CANDIDATES.md, docs/baron/autopilot/STATE.json, docs/baron/continuity/CURRENT.md, docs/baron/continuity/CURRENT_RECOVERY.md, docs/baron/continuity/INDEX.md, docs/baron/continuity/RECOVERY_INDEX.md, docs/baron/control-plane/GATES.md
-- Next action: Implementation and verification passed for runtime static cleanup, favicon, robots, frontend ignore contract, backup target guard, CI workflow, and mutation Origin validation. Code-map refresh remains blocked because Graphify is unavailable; keep SPEC-08.2 open until supported tooling can replace stale Stack Map detection.
+- Changed files: docs/baron/autopilot/CANDIDATES.md, docs/baron/autopilot/STATE.json, docs/baron/continuity/INDEX.md, docs/baron/continuity/RECOVERY_INDEX.md, docs/baron/control-plane/GATES.md, docs/baron/harness/INTENTS.md, docs/baron/plans/2026-09-18/2026-09-18-spec-08-2-post-rebrand-repository-hardening.md, docs/baron/plans/CURRENT.md, docs/baron/plans/INDEX.md, docs/baron/proofs/INDEX.md, docs/baron/traces/2026-09-11/20260911085830851.md, docs/baron/traces/INDEX.md
+- Next action: GitHub Actions CI run 35347035603 for commit 397b097 completed successfully for Frontend and Backend. Application hardening and hosted CI are verified; only unavailable Graphify prevents supported Stack Map refresh, so keep SPEC-08.2 open.
 
 ## Resume Rules
 

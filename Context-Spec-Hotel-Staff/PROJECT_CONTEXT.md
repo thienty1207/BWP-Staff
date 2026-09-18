@@ -196,8 +196,11 @@ not a product closure blocker.
 
 ### 4.1 SPEC-08.2 post-rebrand hardening state
 
-SPEC-08.2 is **OPEN / NOT CLOSED**. The bounded application hardening is implemented and locally
-verified: retired runtime assets and the Svelte starter favicon are removed; the existing Hotel Staff
+SPEC-08.2 is **OPEN / NOT CLOSED**. Hardening implementation commit
+`397b097f75a7c6a64d62076ca93668ba86ea6eaa` is pushed to `origin/main` and its GitHub Actions CI
+run [35347035603](https://github.com/thienty1207/Hotel_Staff/actions/runs/35347035603) completed
+successfully for both Frontend and Backend. The bounded application hardening removes retired runtime
+assets and the Svelte starter favicon; the existing Hotel Staff
 icon is the favicon; `robots.txt` disallows crawling; frontend environment-file exceptions are gone;
 the backup script refuses any database target other than `hotel_staff` before `pg_dump`; a GitHub
 Actions workflow verifies Bun and Go against a synthetic PostgreSQL service; and unsafe requests
@@ -208,9 +211,9 @@ no-Origin requests remain usable.
 continuity checkpoint now identify SPEC-08.2. `baron automation code-map refresh` cannot complete
 because Graphify is unavailable on this host, leaving `docs/baron/platform/STACK_MAP.md` with stale
 missing-entrypoint/build/test detection. Repository rules prohibit manually repairing that managed
-file, so this is a closure blocker rather than a reason to fabricate state. GitHub Actions has not
-yet been observed on the remote and must not be claimed as passed. No migration, seed, schema, or
-persisted BWP dataset change was made; the next product feature remains SPEC-09, not implemented.
+file, so this is a closure blocker rather than a reason to fabricate state. No migration, seed,
+schema, or persisted BWP dataset change was made; the next product feature remains SPEC-09, not
+implemented.
 
 Pre-production login rate limiting remains deferred until a deployment and trusted-proxy/client-IP
 contract exists. Production frontend/backend routing and deployment architecture are also deferred.

@@ -22,9 +22,11 @@ request-ID error envelope.
 `baron automation reconcile` succeeded, and supported plan/Harness/continuity operations now target
 SPEC-08.2. `baron automation code-map refresh` remains blocked because Graphify is unavailable on
 this host, leaving the managed Stack Map with materially stale missing-entrypoint/build/test
-detection. The repository contract forbids manually rewriting that state. GitHub Actions has not
-yet been observed after push. Therefore this SPEC remains **OPEN / NOT CLOSED** pending supported
-tooling reconciliation and actual hosted CI observation; no closure evidence is claimed here.
+detection. The repository contract forbids manually rewriting that state. GitHub Actions CI run
+[35347035603](https://github.com/thienty1207/Hotel_Staff/actions/runs/35347035603) for hardening
+commit `397b097f75a7c6a64d62076ca93668ba86ea6eaa` completed successfully for Frontend and Backend.
+Therefore this SPEC remains **OPEN / NOT CLOSED** pending supported tooling reconciliation only; no
+closure evidence is claimed here.
 
 ---
 
