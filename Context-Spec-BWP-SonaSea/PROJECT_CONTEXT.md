@@ -1,12 +1,12 @@
 # BWP SonaSea — PROJECT_CONTEXT (Current Canonical Context)
 
-> **Last context refresh:** 2026-09-16
+> **Last context refresh:** 2026-09-18
 >
 > **Repository:** `thienty1207/BWP-Staff`
 >
-> **Verified source baseline while this context was prepared:** `main` at `89be98275c92bf704186f9519af703fab0bed063`
+> **Verified source baseline while this context was prepared:** `main` at `66d617b57f6fc2bf24fa1fa10d4f8ea5265b6141`
 >
-> **Important:** SPEC-06.7 cleanup has been merged and reviewed. `ROOM-8020` and `ROOM-7309` remain stored but inactive, canonical `BWP-ROOM-8020` / `BWP-ROOM-7309` remain active, and the 06.7 integration test file now uses a descriptive domain filename. SPEC-06.7 is CLOSED. SPEC-07 is also **✅ CLOSED** as **Ticket Chat Shell + Conversation Foundation**.
+> **Important:** SPEC-06.7 cleanup has been merged and reviewed. `ROOM-8020` and `ROOM-7309` remain stored but inactive, canonical `BWP-ROOM-8020` / `BWP-ROOM-7309` remain active, and the 06.7 integration test file now uses a descriptive domain filename. SPEC-06.7 is CLOSED. SPEC-07 is **✅ CLOSED** as **Ticket Chat Shell + Conversation Foundation**. SPEC-08 is **✅ CLOSED** as **Accept Ticket**, including verified PostgreSQL persistence for tickets 15 and 16.
 
 ---
 
@@ -339,17 +339,17 @@ GET  /api/v1/auth/me
 GET  /api/v1/departments
 GET  /api/v1/locations
 GET  /api/v1/tickets
+GET  /api/v1/tickets/:id
 POST /api/v1/tickets
+POST /api/v1/tickets/:id/accept
 ```
 
 Not implemented yet:
 
 ```text
-GET  /api/v1/tickets/:id
-POST /api/v1/tickets/:id/accept
 POST /api/v1/tickets/:id/assign
 POST /api/v1/tickets/:id/close
-ticket chat
+ticket chat message/realtime APIs
 checklist APIs
 attachment upload APIs
 notifications
@@ -637,6 +637,7 @@ Status
 Owner
 Created On
 Due Date
+Action
 ```
 
 Do not reintroduce:
@@ -645,10 +646,19 @@ Do not reintroduce:
 Ticket ID
 Department column
 Assignment column
-Action column
 ```
 
-until a later SPEC explicitly changes the table.
+The far-right Action column contains horizontally aligned controls:
+
+```text
+Accept  — implemented for pending tickets
+Assign  — not implemented; disabled, non-mutating shell
+Close   — not implemented; disabled, non-mutating shell
+```
+
+The compact controls are horizontally aligned and use semantic green (Accept),
+blue (Assign), and red (Close) treatments. Action activation must not bubble
+into the row's Chat-open interaction.
 
 Requester label:
 
@@ -663,6 +673,9 @@ accepted_by only
 pending → —
 accepted/closed → first accepter
 ```
+
+Location is the stronger/bold ticket metadata; other ticket metadata remains
+compact and normal-weight.
 
 Description is a compact real database preview.
 
@@ -686,20 +699,18 @@ NO visible "Priority" badge
 NO red Title text
 
 priority=true:
-normal theme Title text
-+ thin red/danger content-sized border
-+ small radius/tight padding
-+ max-width 100%
-+ natural wrapping
+soft red background on the primary Title
+small radius; no outline-only red treatment
+Title is not made bold by priority
+max-width 100%; natural wrapping
 
 priority=false:
 normal Title
 ```
 
-Short Title → short border.
-Long Title → border grows/wraps with content.
+Short and long Titles keep their natural content sizing/wrapping.
 
-This priority rule supersedes older SPEC-06.1 and SPEC-06.5 visual rules.
+The SPEC-08 final UI contract supersedes older priority border/weight rules.
 
 ---
 
@@ -713,13 +724,21 @@ Do not display Ticket ID.
 
 The mobile card remains a summary and is a full-card interaction target: tapping the card opens the selected Ticket Chat defined by SPEC-07.
 
+Mobile cards do not show the desktop Action column; Accept/Assign/Close remain
+inside Chat. The compact X closes Chat without a close-only list refetch.
+Chat stays within the mobile viewport; conversation is the vertical touch-scroll
+region while the composer and action row remain reachable.
+
 Priority uses the same rule as desktop:
 
 ```text
-normal text
-red content-sized border
+soft red background on the primary Title
+no outline-only red treatment
+priority does not make Title bold
 no Priority badge
 ```
+
+Location is the stronger/bold ticket metadata.
 
 ---
 
@@ -1145,6 +1164,25 @@ Close
 
 The Chat shell uses persisted selected-ticket data and does not invent fake click-through content or runtime mock messages.
 
+SPEC-08 supersedes the earlier Accept shell state: Accept is now implemented in
+the desktop Action column and Chat. Assign and Close remain disabled and
+non-mutating. Successful Accept patches only the matching ticket row by ID,
+does not refetch the entire list, and cannot replace a newer Chat selection.
+
+Current SPEC-08 acceptance contract:
+
+```text
+POST /api/v1/tickets/:id/accept
+pending → accepted
+actor = authenticated server-session user only
+Owner = accepted_by = first successful accepter
+accepted_at is server/database controlled
+accepted_at, updated_at, and the accepted activity are one event
+ticket update + exactly one ticket_activity(action='accepted') are atomic
+same-user replay is idempotent; different-user replay → 409
+closed ticket → 409; no assignment or original-department side effect
+```
+
 ---
 
 # 27. Attachments product direction vs current implementation
@@ -1427,6 +1465,8 @@ SPEC-06.4 ✅ CLOSED
 SPEC-06.5 ✅ CLOSED
 SPEC-06.6 ✅ CLOSED
 SPEC-06.7 ✅ CLOSED
+SPEC-07   ✅ CLOSED
+SPEC-08   ✅ CLOSED
 ```
 
 Verified SPEC-06.7 cleanup state:
@@ -1452,7 +1492,7 @@ SPEC-05
 
 SPEC-06.1
   Due/Priority placement later superseded by SPEC-06.5 and SPEC-06.6
-  current priority = red content-sized title border, normal text
+  historical priority border treatment superseded by SPEC-08 soft-red Title background
 
 SPEC-06.3
   96 Villas dataset remains valid
@@ -1474,6 +1514,14 @@ SPEC-06.6
 SPEC-06.7
   current authoritative BWP room master data
   cleanup deactivates only the obsolete generic Room 8020 / Room 7309 placeholders
+
+SPEC-08
+  current ticket acceptance lifecycle and desktop Action-column contract
+  Accept is implemented; Assign and Close remain non-mutating
+  priority Title uses a soft red background without priority-caused bold text
+
+SPEC-09
+  next roadmap item only: Assign Ticket; not created or implemented
 ```
 
 Agents must read the later SPEC when an older rule appears contradictory.
@@ -1546,10 +1594,12 @@ without explicit approval.
 
 ```text
 SPEC-07 ✅ CLOSED
-→ SPEC-08 — Accept Ticket
+→ SPEC-08 ✅ CLOSED — Accept Ticket
+→ SPEC-09 — Assign Ticket
 ```
 
-This context alignment does not implement SPEC-08. Its backend/frontend work begins only under the canonical SPEC-08 contract.
+SPEC-09 is roadmap-only in this context update. Do not create or implement it
+until separately specified and authorized.
 
 ---
 
@@ -1585,11 +1635,14 @@ separate from status
 multi-department + multi-user capable
 
 TICKET LIST:
-Requester / Location / Title / Description / Status / Owner / Created On / Due Date
+Requester / Location / Title / Description / Status / Owner / Created On / Due Date / Action
+Action = Accept (implemented) / Assign (not implemented) / Close (not implemented)
+Accept is available in desktop Action column and Ticket Chat; row updates by ID without list-wide refetch
 
 PRIORITY UI:
-normal Title text + red content-sized border
-no Priority badge
+soft red background on primary Title
+no outline-only red treatment, no priority-caused bold Title, no Priority badge
+Location is the stronger/bold ticket metadata
 
 SPEC-07:
 ✅ CLOSED — Ticket Chat Shell + Conversation Foundation
@@ -1598,6 +1651,14 @@ whole desktop row and mobile card open Chat
 compact Sara-style summary
 persisted selected-ticket activity
 no runtime mock data
+
+SPEC-08:
+✅ CLOSED — Accept Ticket
+pending → accepted; Owner = first accepter (`accepted_by`)
+same-user replay is idempotent; different-user replay returns 409
+closed ticket returns 409; one atomic accepted activity per transition
+no assignment or original-department side effect; no migration 0021
+manually accepted and PostgreSQL-persistence-verified for tickets 15 and 16
 
 CREATE TICKET:
 department + optional location + title + optional description + boolean priority + optional due time
@@ -1631,6 +1692,5 @@ measure first
 future dedicated load-test phase up to ~10k concurrency where meaningful
 
 NEXT:
-SPEC-07 ✅ CLOSED
-then SPEC-08 — Accept Ticket
+SPEC-09 — Assign Ticket (roadmap only; not created or implemented)
 ```

@@ -8,7 +8,7 @@
 >
 > Required before implementation: **SPEC-07 must be independently reviewed and marked CLOSED, then `PROJECT_CONTEXT.md` must be aligned to the final SPEC-07 Chat contract.**
 >
-> Status: **OPEN / NOT CLOSED**
+> Status: **✅ CLOSED**
 >
 > SPEC-08 activates the first real ticket lifecycle action in the Ticket Chat shell: **Accept**.
 
@@ -1536,7 +1536,9 @@ no unrelated changes staged
 
 Do not update `PROJECT_CONTEXT.md` in the implementation commit.
 
-Do not mark SPEC-08 CLOSED until independent review + manual product verification.
+Pre-closure gate: do not mark SPEC-08 CLOSED until independent review and
+manual product verification. This gate was later satisfied as recorded in
+Section 59.
 
 Suggested commit:
 
@@ -1576,6 +1578,9 @@ Pre-existing changes preserved
 Commit SHA
 ```
 
+This implementation-stage report template predates closure; current status and
+final verification are recorded in Section 59.
+
 Explicitly confirm:
 
 ```text
@@ -1600,9 +1605,10 @@ SPEC-08 implementation is ready for independent review; it is not marked CLOSED 
 
 # Latest UI supersession for SPEC-08 hardening
 
-SPEC-08 remains **OPEN / NOT CLOSED**. The following UI rules are the latest
-binding corrections for the implementation and supersede any earlier list
-presentation assumption that actions only live inside Chat.
+These UI rules were added before closure and remain the latest binding
+corrections for the implementation; they supersede any earlier list
+presentation assumption that actions only live inside Chat. Current status is
+recorded in Section 59.
 
 ## Desktop ticket list
 
@@ -1642,8 +1648,9 @@ not replace a newer Chat selection.
 
 ## Final action UI hardening amendment
 
-SPEC-08 remains **OPEN / NOT CLOSED**. The desktop and Chat action controls
-share the following presentation contract:
+This pre-closure amendment defines the desktop and Chat action controls'
+presentation contract. Its UI requirements remain binding; current status is
+recorded in Section 59.
 
 - `Accept` uses a semantic green treatment.
 - `Assign` uses a semantic blue treatment.
@@ -1661,3 +1668,54 @@ share the following presentation contract:
 The existing mobile contract remains unchanged: mobile cards do not receive a
 desktop Action column, while Chat continues to show the compact colored action
 row.
+
+---
+
+# 59. Final closure amendment — ✅ CLOSED
+
+> Closed: 2026-09-18. This amendment supersedes the pre-closure status and
+> closure instructions above. Earlier implementation requirements remain the
+> historical contract; their `OPEN / NOT CLOSED` wording describes the state
+> before this verified closure.
+
+## Backend
+
+- `POST /api/v1/tickets/:id/accept` uses only the authenticated server-session
+  actor. A pending ticket transitions to accepted; `accepted_by` is the first
+  successful accepter, and `accepted_at` is server/database controlled.
+- `accepted_at`, `updated_at`, and the accepted activity timestamp represent
+  the same event. The ticket update and
+  `ticket_activity(action='accepted')` insert are atomic, with PostgreSQL
+  concurrency protection so the first accepter wins.
+- Same-user replay is idempotent; another user's replay returns
+  `409 ticket_already_accepted`; a closed ticket returns `409 ticket_closed`.
+- Accept does not change assignments or the ticket's original department.
+
+## Frontend and UI
+
+- Accept works from the desktop Action column and Ticket Chat. Success patches
+  only the matching list row by ID without refetching the whole list, and a
+  late result cannot replace a different selected Chat.
+- Assign and Close remain disabled, non-mutating shells.
+- Desktop has a far-right Action column with horizontally aligned Accept,
+  Assign, and Close controls in semantic green, blue, and red. Action clicks
+  do not bubble into the row's Chat-open interaction.
+- Mobile cards have no desktop Action column; actions remain in Chat. The
+  compact X closes Chat, Chat stays within the mobile viewport, conversation
+  is the touch-scroll region, and composer/actions remain reachable.
+- Priority uses a soft red background on the primary Title, not an outline-only
+  treatment, and does not make Title bold. Location is the stronger/bold
+  ticket metadata.
+
+## Verification and closure
+
+- Manual authenticated Accept succeeded through the normal UI.
+- Read-only PostgreSQL verification passed independently for tickets 15 and
+  16: each is accepted by Ho Thien Ty (IT), has non-null acceptance fields,
+  exactly one matching accepted activity, and remains not closed. Their
+  `accepted_at`, `updated_at`, and activity timestamps match; no assignment
+  rows were created by these Accept operations.
+- No migration `0021` was created.
+
+SPEC-08 is **✅ CLOSED**. Assign/Close mutations and Chat message sending remain
+out of scope and are not implemented by this closure.
