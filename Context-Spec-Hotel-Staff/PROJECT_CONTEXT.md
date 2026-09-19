@@ -12,7 +12,7 @@
 >
 > **Local PostgreSQL database:** `hotel_staff`
 >
-> **Current feature state:** SPEC-01 through SPEC-08.1 are ✅ CLOSED. SPEC-08.2 post-rebrand repository hardening is **OPEN**: its application hardening passes local verification, but Baron code-map refresh is blocked by unavailable Graphify tooling and leaves the managed Stack Map materially stale. SPEC-09 Assign Ticket is next only after SPEC-08.2 closes; SPEC-09 has not been created or implemented.
+> **Current feature state:** SPEC-01 through SPEC-08.2 are ✅ CLOSED. SPEC-08.2 records an accepted optional `graphify-local`/managed Stack Map compatibility exception; no Stack Map refresh is claimed and no wrapper or manual Baron-state repair was retained. SPEC-09 Assign Ticket is next; SPEC-09 has not been created or implemented.
 
 ---
 
@@ -196,24 +196,29 @@ not a product closure blocker.
 
 ### 4.1 SPEC-08.2 post-rebrand hardening state
 
-SPEC-08.2 is **OPEN / NOT CLOSED**. Hardening implementation commit
+SPEC-08.2 is **✅ CLOSED**. Hardening implementation commit
 `397b097f75a7c6a64d62076ca93668ba86ea6eaa` is pushed to `origin/main` and its GitHub Actions CI
 run [35347035603](https://github.com/thienty1207/Hotel_Staff/actions/runs/35347035603) completed
-successfully for both Frontend and Backend. The bounded application hardening removes retired runtime
-assets and the Svelte starter favicon; the existing Hotel Staff
-icon is the favicon; `robots.txt` disallows crawling; frontend environment-file exceptions are gone;
-the backup script refuses any database target other than `hotel_staff` before `pg_dump`; a GitHub
-Actions workflow verifies Bun and Go against a synthetic PostgreSQL service; and unsafe requests
-with a supplied foreign Origin receive the `forbidden_origin` error envelope while configured and
+successfully for both Frontend and Backend. The closure documentation is carried by the separate
+docs-only closure commit reported in the final Git history. The bounded application hardening
+removes retired runtime assets and the Svelte starter favicon; the existing Hotel Staff icon is the
+favicon; `robots.txt` disallows crawling; frontend environment-file exceptions are gone; the backup
+script refuses any database target other than `hotel_staff` before `pg_dump`; a GitHub Actions
+workflow verifies Bun and Go against a synthetic PostgreSQL service; and unsafe requests with a
+supplied foreign Origin receive the `forbidden_origin` error envelope while configured and
 no-Origin requests remain usable.
 
 `baron automation reconcile` succeeded, and the supported current plan, Harness intent, and
-continuity checkpoint now identify SPEC-08.2. `baron automation code-map refresh` cannot complete
-because Graphify is unavailable on this host, leaving `docs/baron/platform/STACK_MAP.md` with stale
-missing-entrypoint/build/test detection. Repository rules prohibit manually repairing that managed
-file, so this is a closure blocker rather than a reason to fabricate state. No migration, seed,
-schema, or persisted BWP dataset change was made; the next product feature remains SPEC-09, not
-implemented.
+continuity records identify SPEC-08.2. The repository capability contract classifies
+`graphify-local` code-map generation as **optional**. Native Baron/Graphify refresh and query were
+not made a closure prerequisite because the installed CLI contract does not match Baron 5.0.0;
+the managed `docs/baron/platform/STACK_MAP.md` remains at its last supported generated state and
+was not hand-edited. A temporary compatibility probe was removed and no wrapper, fake receipt, or
+fake Stack Map output was committed. The supported `baron plan complete` command was also refused
+because the current environment has no trusted execution receipt; no receipt was fabricated. This
+is an accepted optional-tooling/lifecycle exception, not a product closure blocker. No migration,
+seed, schema, or persisted BWP dataset change was made; the next product feature remains SPEC-09,
+not implemented.
 
 Pre-production login rate limiting remains deferred until a deployment and trusted-proxy/client-IP
 contract exists. Production frontend/backend routing and deployment architecture are also deferred.
@@ -1094,6 +1099,8 @@ SPEC-07   ✅ CLOSED
 SPEC-08   ✅ CLOSED
 SPEC-08.1 ✅ CLOSED — Hotel Staff rebrand; runtime, automated, desktop, and user-reported
 mobile/narrow verification recorded
+SPEC-08.2 ✅ CLOSED — post-rebrand repository hardening; optional Graphify code-map exception
+documented without a managed Stack Map refresh claim
 SPEC-09   NOT CREATED / NOT IMPLEMENTED
 ```
 
@@ -1137,6 +1144,7 @@ change product runtime identity or block this product closure.
 ```text
 SPEC-08 ✅ CLOSED
 → SPEC-08.1 ✅ CLOSED — Hotel Staff rebrand
+→ SPEC-08.2 ✅ CLOSED — post-rebrand repository hardening
 → SPEC-09 Assign Ticket design (SPEC-09 is not yet created)
 ```
 
@@ -1210,7 +1218,8 @@ RUNTIME MOCK DATA:
 forbidden
 
 CURRENT:
-SPEC-08.1 — ✅ CLOSED; Hotel Staff rebrand and recorded runtime/UI verification complete
+SPEC-08.2 — ✅ CLOSED; post-rebrand hardening and recorded runtime/CI/DB verification complete
+with the optional Graphify/managed Stack Map compatibility exception documented
 
 NEXT FEATURE:
 SPEC-09 — Assign Ticket design; not created or implemented

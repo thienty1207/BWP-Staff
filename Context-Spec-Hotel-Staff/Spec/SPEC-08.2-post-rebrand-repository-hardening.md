@@ -3,7 +3,7 @@
 **Project:** Hotel Staff
 **Repository:** `thienty1207/Hotel_Staff`
 **Baseline:** `main` at `7ceb9dc493244350a2408bd572925176c95756f0`
-**Status:** **OPEN / NOT CLOSED**
+**Status:** **✅ CLOSED**
 **Predecessors:** SPEC-07 ✅ CLOSED, SPEC-08 ✅ CLOSED, SPEC-08.1 ✅ CLOSED
 **Next product feature after closure:** SPEC-09 — Assign Ticket
 **Schema migration required:** **No**
@@ -11,7 +11,7 @@
 
 ---
 
-## Implementation status — 2026-09-18
+## Implementation and closure status — 2026-09-19
 
 The bounded application hardening is implemented and locally verified. This includes runtime static
 asset cleanup, the Hotel Staff favicon, a disallow-all robots policy, frontend environment-file
@@ -19,14 +19,24 @@ ignore alignment, the `hotel_staff` backup-target guard and regression test, a s
 GitHub Actions workflow, and foreign-Origin rejection for unsafe backend methods with the existing
 request-ID error envelope.
 
-`baron automation reconcile` succeeded, and supported plan/Harness/continuity operations now target
-SPEC-08.2. `baron automation code-map refresh` remains blocked because Graphify is unavailable on
-this host, leaving the managed Stack Map with materially stale missing-entrypoint/build/test
-detection. The repository contract forbids manually rewriting that state. GitHub Actions CI run
-[35347035603](https://github.com/thienty1207/Hotel_Staff/actions/runs/35347035603) for hardening
-commit `397b097f75a7c6a64d62076ca93668ba86ea6eaa` completed successfully for Frontend and Backend.
-Therefore this SPEC remains **OPEN / NOT CLOSED** pending supported tooling reconciliation only; no
-closure evidence is claimed here.
+`baron automation reconcile` succeeded, and supported plan/Harness/continuity operations identify
+SPEC-08.2. The repository capability contract classifies `graphify-local` code-map generation as
+optional. Native Baron/Graphify refresh and query were checked but cannot complete with the
+installed CLI contract; the managed `docs/baron/platform/STACK_MAP.md` remains at its last
+supported generated state and was not hand-edited. The temporary compatibility probe used for
+diagnosis was removed, and no wrapper, fake receipt, or fake Stack Map output was committed. Under
+the approved optional-tooling exception, this does not block closure because the canonical context,
+application source, hosted CI, local verification, runtime smoke, and database-preservation
+evidence are complete. The supported `baron plan complete` command was attempted but refused because
+the current environment has no trusted execution receipt; no receipt was fabricated.
+
+GitHub Actions CI run [35347035603](https://github.com/thienty1207/Hotel_Staff/actions/runs/35347035603)
+for hardening commit `397b097f75a7c6a64d62076ca93668ba86ea6eaa` completed successfully for Frontend
+and Backend. The follow-up CI run [35347412623](https://github.com/thienty1207/Hotel_Staff/actions/runs/35347412623)
+for the verification documentation commit also completed successfully for Frontend and Backend.
+SPEC-08.2 is therefore **✅ CLOSED** by the docs-only closure commit carrying this evidence. No
+migration `0021`, schema change, seed rewrite, or persisted BWP master-data/ticket-data change was
+made.
 
 ---
 
@@ -397,6 +407,11 @@ If supported Baron tooling cannot safely reconcile the active CURRENT/PLAN/HARNE
 
 SPEC-08.2 must remain OPEN until future agents can no longer be routed by materially stale "current" state.
 
+For the final closure gate, this rule is satisfied when the active CURRENT/PLAN/HARNESS state is
+reconciled to SPEC-08.2 and the only remaining limitation is the explicitly optional
+`graphify-local` provider. In that case, document the compatibility exception and preserve the last
+supported managed Stack Map; do not hand-edit it or fabricate a refresh receipt.
+
 ---
 
 ## 8. Runtime static asset cleanup
@@ -653,6 +668,7 @@ Allowed remaining categories:
 - legacy seed ownership markers
 - historical screenshots/assets under archive/reference paths
 - Baron legacy internal slug exception
+- optional `graphify-local` code-map/managed Stack Map compatibility exception
 - explicitly documented non-user-facing security test vector
 
 Not allowed:
@@ -816,31 +832,32 @@ Never use:
 
 SPEC-08.2 may be marked **✅ CLOSED** only when all applicable items pass:
 
-- [ ] canonical Hotel Staff identity unchanged
-- [ ] Baron active/current state no longer materially routes agents to stale SPEC-01/SPEC-05/Rust state
-- [ ] Baron legacy project slug handled only through supported tooling or documented accepted exception
-- [ ] runtime-public `bwp-logo.png` removed
-- [ ] unused runtime `login-background.png` removed
-- [ ] historical BWP artifacts outside runtime static storage preserved
-- [ ] Svelte starter favicon removed from active product use
-- [ ] robots policy disallows crawling
-- [ ] frontend `.gitignore` no longer permits `.env.example` / `.env.test`
-- [ ] backup script refuses non-`hotel_staff` database targets
-- [ ] no credentials printed/committed
-- [ ] GitHub CI workflow added
-- [ ] frontend local verification passes
-- [ ] backend local verification passes
-- [ ] mutation Origin validation implemented and tested
-- [ ] runtime smoke passes
-- [ ] DB business data unchanged
-- [ ] no migration 0021
-- [ ] SPEC-07 remains CLOSED
-- [ ] SPEC-08 remains CLOSED
-- [ ] SPEC-08.1 remains CLOSED
-- [ ] SPEC-09 remains unimplemented
-- [ ] PROJECT_CONTEXT updated to final post-08.2 reality
+- [x] canonical Hotel Staff identity unchanged
+- [x] Baron active/current state no longer materially routes agents to stale SPEC-01/SPEC-05/Rust state
+- [x] Baron legacy project slug handled only through supported tooling or documented accepted exception
+- [x] runtime-public `bwp-logo.png` removed
+- [x] unused runtime `login-background.png` removed
+- [x] historical BWP artifacts outside runtime static storage preserved
+- [x] Svelte starter favicon removed from active product use
+- [x] robots policy disallows crawling
+- [x] frontend `.gitignore` no longer permits `.env.example` / `.env.test`
+- [x] backup script refuses non-`hotel_staff` database targets
+- [x] no credentials printed/committed
+- [x] GitHub CI workflow added
+- [x] frontend local verification passes
+- [x] backend local verification passes
+- [x] mutation Origin validation implemented and tested
+- [x] runtime smoke passes
+- [x] DB business data unchanged
+- [x] no migration 0021
+- [x] SPEC-07 remains CLOSED
+- [x] SPEC-08 remains CLOSED
+- [x] SPEC-08.1 remains CLOSED
+- [x] SPEC-09 remains unimplemented
+- [x] PROJECT_CONTEXT updated to final post-08.2 reality
 
-If any required item fails, SPEC-08.2 remains OPEN.
+The optional `graphify-local` refresh/query incompatibility is recorded as an accepted tooling
+exception. The managed Stack Map was not manually changed and no fresh Stack Map is claimed.
 
 ---
 
